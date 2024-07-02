@@ -1,4 +1,5 @@
 venv
 .git
-.gitignore
 README.md
+poetry.lock
+pyproject.toml
