@@ -1,8 +1,10 @@
 # Quizz App
 ## Table of Contents
 - [Installation](#installation)
-- [Starting the Application](#starting-the-application)
-- [Running Tests](#running-tests)
+- [Running without Docker](#starting-the-application)
+- - [Running Tests](#running-tests)
+- [Running in Docker](#running-in-docker)
+- - [Running Tests](#running-tests)
 
 ## Installation
 
@@ -13,39 +15,92 @@
     cd meduzzen_internship
     ```
 
-2. Create and activate a virtual environment:
+## Running without Docker
+
+1. Make sure you are in the project directory and install poetry.
+    ```bash
+    pip install poetry
+    ```
+2. Install the dependencies:
 
     ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv/Scripts/activate`
+    poetry install
     ```
-
-3. Install the dependencies:
+   
+3. Create and activate a virtual environment:
 
     ```bash
-    pip install -r requirements.txt
+    poetry shell
     ```
 
-## Starting the Application
-
-1. Make sure you are in the project directory and the virtual environment is activated.
-
-2. Run the FastAPI application using Uvicorn:
+4. Run the FastAPI application using Uvicorn:
 
     ```bash
     uvicorn main:app --reload
     ```
 
-3. Open your browser and go to `http://127.0.0.1:8000` to see the application running.
+5. Open your browser and go to `http://127.0.0.1:8000` to see the application running.
 
-## Running Tests
+### Running Tests
 
-1. Ensure the virtual environment is activated.
-
-2. Run the tests using `pytest`:
+1. Open bash console :
 
     ```bash
     pytest
     ```
 
-3. You should see output indicating that the tests have passed.
+2. You should see output indicating that the tests have passed.
+
+
+## Running in Docker
+
+Before you begin, make sure you have the following programs installed on your computer:
+
+```bash
+docker --version
+```
+
+If after running this command, you were shown the docker version, then go to the next step, else follow these steps:
+
+- Docker: [Docker Installation Guide](https://docs.docker.com/get-docker/)
+- Docker Compose: [Docker Compose Installation Guide](https://docs.docker.com/compose/install/)
+
+### Steps
+
+1. Start containers using Docker Compose:
+
+    ```bash
+    docker-compose up -d --build
+    ``` 
+   
+_The `-d` option runs containers in the background._
+
+2. After successful launch, you can access your project at `http://localhost:8000` in your web browser.
+
+### Running Tests
+
+1. To run tests inside the Docker container:
+
+    - First, identify the container ID by listing all running containers:
+
+        ```bash
+        docker ps
+        ```
+
+    - Note down the `CONTAINER ID` of your `quizz-app` container.
+
+    - Open a bash shell inside the container using its ID:
+
+        ```bash
+        docker exec -it [CONTAINER ID] bash
+        ```
+
+    - Inside the container's bash shell, run pytest to execute tests:
+
+        ```bash
+        pytest
+        ```
+
+
+2. You should see output indicating that the tests have passed.
+
