@@ -1,5 +1,4 @@
 # Quizz App
-git 
 ## Table of Contents
 - [Installation](#installation)
 - [Starting the Application](#starting-the-application)
