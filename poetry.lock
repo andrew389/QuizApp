@@ -19,7 +19,6 @@ typing-extensions = "*"
 hiredis = ["hiredis (>=1.0)"]
 
 [[package]]
-<<<<<<< HEAD
 name = "alembic"
 version = "1.13.2"
 description = "A database migration tool for SQLAlchemy."
@@ -39,8 +38,6 @@ typing-extensions = ">=4"
 tz = ["backports.zoneinfo"]
 
 [[package]]
-=======
->>>>>>> b4635a118d0d4f169d76b55ec60e285c531b3fdd
 name = "annotated-types"
 version = "0.7.0"
 description = "Reusable constraint types to use with typing.Annotated"
@@ -490,7 +487,6 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
-<<<<<<< HEAD
 name = "mako"
 version = "1.3.5"
 description = "A super-fast templating language that borrows the best ideas from the existing templating languages."
@@ -510,8 +506,6 @@ lingua = ["lingua"]
 testing = ["pytest"]
 
 [[package]]
-=======
->>>>>>> b4635a118d0d4f169d76b55ec60e285c531b3fdd
 name = "markdown-it-py"
 version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
@@ -960,7 +954,6 @@ files = [
 ]
 
 [[package]]
-<<<<<<< HEAD
 name = "redis"
 version = "5.0.7"
 description = "Python client for Redis database and key-value store"
@@ -976,8 +969,6 @@ hiredis = ["hiredis (>=1.0.0)"]
 ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"]
 
 [[package]]
-=======
->>>>>>> b4635a118d0d4f169d76b55ec60e285c531b3fdd
 name = "rich"
 version = "13.7.1"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
@@ -1476,8 +1467,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-<<<<<<< HEAD
 content-hash = "b681e1e62218b6020627357d7cf22493c1c7fa77aea2d02c01eeff0ab1ab08e0"
-=======
-content-hash = "98ecc0106f7dde31ed16e775a26f31f877b7d85f128e2819381b3cd695dee505"
->>>>>>> b4635a118d0d4f169d76b55ec60e285c531b3fdd
