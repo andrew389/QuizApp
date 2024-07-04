@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,7 +23,7 @@ async def ping_redis():
     except ConnectionError as e:
         logger.error("Redis connection error: %s", e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Could not connect to Redis",
         )
 
@@ -39,6 +37,6 @@ async def ping_db(session: AsyncSession = Depends(get_async_session)):
     except Exception as e:
         logger.error(f"Database connection error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Database connection error: {str(e)}",
         )
