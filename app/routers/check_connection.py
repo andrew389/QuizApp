@@ -18,7 +18,7 @@ async def health_check():
 
 
 @router.get("/redis")
-async def read_items():
+async def ping_redis():
     try:
         await redis.ping()
         return {"status": "PONG"}
