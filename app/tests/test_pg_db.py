@@ -3,9 +3,9 @@ from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
-from app.core.config import settings
-from app.db.pg_db import get_async_session
-from app.main import app
+from core.config import settings
+from db.pg_db import get_async_session
+from main import app
 
 test_engine = create_async_engine(settings.postgres_db_test_async_url, echo=True)
 test_session = AsyncSession(test_engine)

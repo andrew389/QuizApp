@@ -1,9 +1,11 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.pg_db import get_async_session
-from app.db.redis_db import redis
+from db.pg_db import get_async_session
+from db.redis_db import redis
 
 router = APIRouter()
 

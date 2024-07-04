@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from redis import RedisError
-from app.db.redis_db import RedisConnection
+from db.redis_db import RedisConnection
 
 
 @pytest.fixture

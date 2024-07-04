@@ -1,7 +1,8 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-import dotenv
+from pathlib import Path
 
-env_file = dotenv.find_dotenv(".env")
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+env_file = Path(__file__).resolve().parents[2] / ".env"
 
 
 class Settings(BaseSettings):

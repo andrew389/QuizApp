@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db.redis_db import redis
+from db.redis_db import redis
 
 from routers import check_connection
 
@@ -21,7 +21,7 @@ app = FastAPI(lifespan=lifespan)
 
 origins = [
     "http://localhost",
-    "http://localhost:8000",
+    "http://localhost:8010",
 ]
 
 app.add_middleware(
