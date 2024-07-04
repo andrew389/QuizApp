@@ -7,7 +7,7 @@ class RedisConnection:
 
     def start_connection(self):
         try:
-            self.redisconn = Redis.from_url(settings.redis_db_url)
+            self.redisconn = Redis.from_url(settings.redis.redis_db_url)
             self.redisconn.ping()
         except RedisError as e:
             raise ConnectionError("Connection to Redis. Check is Redis is up")
