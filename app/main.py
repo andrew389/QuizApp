@@ -1,14 +1,28 @@
-from fastapi import FastAPI, Depends
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from db.redis_db import redis_client, get_redis
-from utils.config import settings
+from app.db.redis_db import redis
 
-app = FastAPI()
+from app.routers import check_connection
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    redis.start_connection()
+    redis.write(key="whisky", value=0)
+
+    yield
+    redis.close_connection()
+
+
+app = FastAPI(lifespan=lifespan)
 
 origins = [
     "http://localhost",
     "http://localhost:8000",
+    "http://localhost:8010",
 ]
 
 app.add_middleware(
@@ -19,25 +33,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/")
-async def health_check():
-    return {
-        "status_code": settings.postgres_db_port,
-        "detail": "ok",
-        "result": "working"
-    }
-
-@app.on_event("startup")
-async def startup():
-    await redis_client.initialize()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await redis_client.close()
-
-@app.get("/redis/")
-async def read_redis(redis=Depends(get_redis)):
-    await redis.set("key", "value")
-    value = await redis.get("key")
-    return {"key": value.decode("utf-8")}
+app.include_router(check_connection.router)

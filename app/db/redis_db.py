@@ -1,25 +1,28 @@
-from redis import Redis
-from utils.config import redis_db_url
+from redis import Redis, RedisError
+from app.core.config import settings
 
-class RedisClient:
-    def __init__(self):
-        self.redis: Redis = None
 
-    async def initialize(self):
-        self.redis = Redis.from_url(redis_db_url)
-        self.redis.ping()
+class RedisConnection:
+    redisconn = None
 
-    async def close(self):
-        if self.redis:
-            self.redis.close()
+    def start_connection(self):
+        try:
+            self.redisconn = Redis.from_url(settings.redis_db_url)
+            self.redisconn.ping()
+        except RedisError as e:
+            raise ConnectionError("Connection to Redis. Check is Redis is up")
+        else:
+            print("Connection to Redis is up.")
 
-redis_client = RedisClient()
+    def close_connection(self):
+        self.redisconn.close()
+        print("Connection to Redis is down.")
 
-async def get_redis():
-    return redis_client.redis
+    def write(self, key: str, value: int):
+        self.redisconn.set(key, value)
 
-async def start_redis(app):
-    await redis_client.initialize()
+    def read(self, key: str):
+        return self.redisconn.get(key)
 
-async def stop_redis(app):
-    await redis_client.close()
+
+redis = RedisConnection()
