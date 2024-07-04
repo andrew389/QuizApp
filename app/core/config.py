@@ -55,4 +55,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-print(settings.database.postgres_db_name)
