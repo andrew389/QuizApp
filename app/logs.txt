@@ -1,0 +1,5 @@
+INFO:asyncio_redis:Connecting to redis
+INFO:asyncio_redis:Redis connection made
+INFO:core.logger:Connected to Redis.
+INFO:core.logger:Disconnected from Redis.
+INFO:asyncio_redis:Redis connection lost

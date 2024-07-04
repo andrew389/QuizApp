@@ -1,28 +1,46 @@
-from redis import Redis, RedisError
+import asyncio_redis
 from core.config import settings
+from core.logger import logger
 
 
-class RedisConnection:
-    redisconn = None
+class AsyncRedisConnection:
+    def __init__(self):
+        self.redis = None
 
-    def start_connection(self):
+    async def connect(self):
         try:
-            self.redisconn = Redis.from_url(settings.redis.redis_db_url)
-            self.redisconn.ping()
-        except RedisError as e:
-            raise ConnectionError("Connection to Redis. Check is Redis is up")
+            self.redis = await asyncio_redis.Connection.create(
+                host=settings.redis.host, port=int(settings.redis.port)
+            )
+            await self.redis.ping()
+        except asyncio_redis.ConnectionError as e:
+            logger.error("Connection to Redis failed: %s", e)
+            raise ConnectionError("Connection to Redis failed") from e
         else:
-            print("Connection to Redis is up.")
+            logger.info("Connected to Redis.")
 
-    def close_connection(self):
-        self.redisconn.close()
-        print("Connection to Redis is down.")
+    async def disconnect(self):
+        if self.redis:
+            self.redis.close()
+            logger.info("Disconnected from Redis.")
 
-    def write(self, key: str, value: int):
-        self.redisconn.set(key, value)
+    async def write(self, key: str, value: int):
+        if self.redis:
+            await self.redis.set(key, value)
+        else:
+            raise ConnectionError("Redis connection is not established.")
 
-    def read(self, key: str):
-        return self.redisconn.get(key)
+    async def read(self, key: str):
+        if self.redis:
+            return await self.redis.get(key)
+        else:
+            raise ConnectionError("Redis connection is not established.")
+
+    async def ping(self):
+        if self.redis:
+            return await self.redis.ping()
+        else:
+            raise ConnectionError("Redis connection is not established.")
 
 
-redis = RedisConnection()
+redis = AsyncRedisConnection()

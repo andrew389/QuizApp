@@ -13,24 +13,24 @@ class DatabaseSettings(BaseSettings):
         env_file_encoding="utf-8",
         extra="allow",
     )
-    postgres_db_user: str = Field(env="POSTGRES_DB_USER")
-    postgres_db_password: str = Field(env="POSTGRES_DB_PASSWORD")
-    postgres_db_host: str = Field(env="POSTGRES_DB_HOST")
-    postgres_db_port: str = Field(env="POSTGRES_DB_PORT")
-    postgres_db_name: str = Field(env="POSTGRES_DB_NAME")
-    postgres_db_test_name: str = Field(env="POSTGRES_DB_TEST_NAME")
+    user: str = Field(alias="POSTGRES_DB_USER")
+    password: str = Field(alias="POSTGRES_DB_PASSWORD")
+    host: str = Field(alias="POSTGRES_DB_HOST")
+    port: str = Field(alias="POSTGRES_DB_PORT")
+    name: str = Field(alias="POSTGRES_DB_NAME")
+    test_name: str = Field(alias="POSTGRES_DB_TEST_NAME")
 
     @property
-    def postgres_db_url(self):
-        return f"postgresql://{self.postgres_db_user}:{self.postgres_db_password}@{self.postgres_db_host}:{self.postgres_db_port}/{self.postgres_db_name}"
+    def url(self):
+        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
     @property
-    def postgres_db_async_url(self):
-        return f"postgresql+asyncpg://{self.postgres_db_user}:{self.postgres_db_password}@{self.postgres_db_host}:{self.postgres_db_port}/{self.postgres_db_name}"
+    def async_url(self):
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
     @property
-    def postgres_db_test_async_url(self):
-        return f"postgresql+asyncpg://{self.postgres_db_user}:{self.postgres_db_password}@{self.postgres_db_host}:{self.postgres_db_port}/{self.postgres_db_test_name}"
+    def test_async_url(self):
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.test_name}"
 
 
 class RedisSettings(BaseSettings):
@@ -41,12 +41,12 @@ class RedisSettings(BaseSettings):
         extra="allow",
     )
 
-    redis_db_host: str = Field(env="REDIS_DB_HOST")
-    redis_db_port: str = Field(env="REDIS_DB_PORT")
+    host: str = Field(alias="REDIS_DB_HOST")
+    port: str = Field(alias="REDIS_DB_PORT")
 
     @property
-    def redis_db_url(self):
-        return f"redis://{self.redis_db_host}:{self.redis_db_port}"
+    def url(self):
+        return f"redis://{self.host}:{self.port}"
 
 
 class Settings(BaseSettings):

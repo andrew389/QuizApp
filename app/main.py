@@ -4,17 +4,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db.redis_db import redis
-
 from routers import check_connection
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    redis.start_connection()
-    redis.write(key="whisky", value=0)
-
-    yield
-    redis.close_connection()
+    await redis.connect()
+    try:
+        yield
+    finally:
+        await redis.disconnect()
 
 
 app = FastAPI(lifespan=lifespan)

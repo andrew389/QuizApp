@@ -6,9 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from core.config import settings
 
 
-DATABASE_URL = settings.database.postgres_db_async_url
-
-engine = create_async_engine(DATABASE_URL)
+engine = create_async_engine(settings.database.async_url)
 async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 

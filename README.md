@@ -1,10 +1,18 @@
 # Quizz App
+
 ## Table of Contents
+
 - [Installation](#installation)
 - [Running without Docker](#starting-the-application)
-- - [Running Tests](#running-tests)
+-
+    - [Running Tests](#running-tests)
+-
+    - [Running Migrations](#running-migrations)
 - [Running in Docker](#running-in-docker)
-- - [Running Tests](#running-tests)
+-
+    - [Running Tests](#running-tests)
+-
+    - [Running Migrations](#running-migrations)
 
 ## Installation
 
@@ -51,6 +59,20 @@
 
 2. You should see output indicating that the tests have passed.
 
+### Running Migrations
+
+1. Open bash console :
+
+    ```bash
+    alembic -n main_db revision --autogenerate -m "first commit"
+    ```
+
+2. Update db to last migration:
+
+    ```bash
+    alembic -n main_db upgrade head
+    alembic -n test_db upgrade head
+    ```
 
 ## Running in Docker
 
@@ -103,3 +125,18 @@ _The `-d` option runs containers in the background._
 
 
 2. You should see output indicating that the tests have passed.
+
+### Running Migrations
+
+1. Open a bash shell inside the container:
+
+    ```bash
+    alembic -n main_db revision --autogenerate -m "init"
+    ```
+
+2. Update db to last migration:
+
+    ```bash
+    alembic -n main_db upgrade head
+    alembic -n test_db upgrade head
+    ```
