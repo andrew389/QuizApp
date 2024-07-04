@@ -1,10 +1,18 @@
 # Quizz App
+
 ## Table of Contents
+
 - [Installation](#installation)
 - [Running without Docker](#starting-the-application)
-- - [Running Tests](#running-tests)
+-
+    - [Running Tests](#running-tests)
+-
+    - [Running Migrations](#running-migrations)
 - [Running in Docker](#running-in-docker)
-- - [Running Tests](#running-tests)
+-
+    - [Running Tests](#running-tests)
+-
+    - [Running Migrations](#running-migrations)
 
 ## Installation
 
@@ -26,7 +34,7 @@
     ```bash
     poetry install
     ```
-   
+
 3. Create and activate a virtual environment:
 
     ```bash
@@ -43,14 +51,36 @@
 
 ### Running Tests
 
+1. Open .env file and change REDIS_DB_HOST and POSTGRES_DB_HOST:
+
+    ```bash
+    REDIS_DB_HOST=localhost
+    POSTGRES_DB_HOST=localhost
+    ```
+
+2. Open also file app/tests/test_redis.py and make sure this line looks like this.
+    ```bash
+    with patch.object(settings.redis, 'host', 'localhost')
+    ```
+3. Open console and type:
+    ```bash
+    pytest -v
+    ```
+
+### Running Migrations
+
 1. Open bash console :
 
     ```bash
-    pytest
+    alembic -n main_db revision --autogenerate -m "first commit"
     ```
 
-2. You should see output indicating that the tests have passed.
+2. Update db to last migration:
 
+    ```bash
+    alembic -n main_db upgrade head
+    alembic -n test_db upgrade head
+    ```
 
 ## Running in Docker
 
@@ -71,16 +101,25 @@ If after running this command, you were shown the docker version, then go to the
 
     ```bash
     docker-compose up -d --build
-    ``` 
-   
-_The `-d` option runs containers in the background._
+    ```
 
-2. After successful launch, you can access your project at `http://localhost:8000` in your web browser.
+ _The `-d` option runs containers in the background._
+
+2. After successful launch, you can access your project at `http://localhost:8010` in your web browser.
 
 ### Running Tests
+1. Open .env file and change REDIS_DB_HOST and POSTGRES_DB_HOST:
 
-1. To run tests inside the Docker container:
+    ```bash
+    REDIS_DB_HOST=redis
+    POSTGRES_DB_HOST=main_db
+    ```
 
+2. Open also file app/tests/test_redis.py and make sure this line looks like this.
+    ```bash
+    with patch.object(settings.redis, 'host', 'redis')
+    ```
+3. To run tests inside the Docker container:
     - First, identify the container ID by listing all running containers:
 
         ```bash
@@ -98,9 +137,23 @@ _The `-d` option runs containers in the background._
     - Inside the container's bash shell, run pytest to execute tests:
 
         ```bash
-        pytest
+        pytest -v
         ```
 
 
-2. You should see output indicating that the tests have passed.
+4. You should see output indicating that the tests have passed.
 
+### Running Migrations
+
+1. Open a bash shell inside the container:
+
+    ```bash
+    alembic -n main_db revision --autogenerate -m "init"
+    ```
+
+2. Update db to last migration:
+
+    ```bash
+    alembic -n main_db upgrade head
+    alembic -n test_db upgrade head
+    ```

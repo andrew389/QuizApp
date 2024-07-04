@@ -1,26 +1,36 @@
+import sys
+from pathlib import Path
+
+project_root = Path(__file__).resolve().parents[1]
+sys.path.append(str(project_root))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+from app.db.redis_db import redis
+from app.routers import check_connection
 
-origins = [
-    "http://localhost",
-    "http://localhost:8000",
-]
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await redis.connect()
+    try:
+        yield
+    finally:
+        await redis.disconnect()
+
+
+app = FastAPI(lifespan=lifespan)
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-
-@app.get("/")
-async def health_check():
-    return {
-        "status_code": 200,
-        "detail": "ok",
-        "result": "working"
-    }
+app.include_router(check_connection.router)
