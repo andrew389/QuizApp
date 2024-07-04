@@ -26,7 +26,7 @@
     ```bash
     poetry install
     ```
-   
+
 3. Create and activate a virtual environment:
 
     ```bash
@@ -71,8 +71,8 @@ If after running this command, you were shown the docker version, then go to the
 
     ```bash
     docker-compose up -d --build
-    ``` 
-   
+    ```
+
 _The `-d` option runs containers in the background._
 
 2. After successful launch, you can access your project at `http://localhost:8000` in your web browser.
@@ -103,4 +103,3 @@ _The `-d` option runs containers in the background._
 
 
 2. You should see output indicating that the tests have passed.
-

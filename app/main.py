@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.redis_db import redis
 
-from app.routers import check_connection
+from routers import check_connection
 
 
 @asynccontextmanager
@@ -22,7 +22,6 @@ app = FastAPI(lifespan=lifespan)
 origins = [
     "http://localhost",
     "http://localhost:8000",
-    "http://localhost:8010",
 ]
 
 app.add_middleware(
