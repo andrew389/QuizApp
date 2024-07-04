@@ -1,46 +1,37 @@
 import pytest
-from unittest.mock import patch, MagicMock
-from redis import RedisError
-from db.redis_db import RedisConnection
+from unittest.mock import patch
+from app.core.config import settings
+from app.db.redis_db import AsyncRedisConnection
 
 
 @pytest.fixture
-def redis():
-    redis_instance = RedisConnection()
-    redis_instance.start_connection()
-    yield redis_instance
-    redis_instance.close_connection()
+def mock_redis_connection():
+    return AsyncRedisConnection()
 
 
 @pytest.mark.asyncio
-async def test_redis_write(redis):
-    key = "test_key"
-    value = 123
-    redis.write(key, value)
-    assert int(redis.read(key)) == value
+async def test_redis_connection_success(mock_redis_connection):
+    with patch.object(settings.redis, "host", "redis"), patch.object(
+        settings.redis, "port", 6379
+    ):
+        await mock_redis_connection.connect()
+        assert mock_redis_connection.redis is not None
+        status = await mock_redis_connection.ping()
+        assert status.status == "PONG"
 
 
 @pytest.mark.asyncio
-async def test_redis_read(redis):
-    key = "test_key"
-    value = 123
-    redis.write(key, value)
-    assert int(redis.read(key)) == value
+async def test_redis_write_and_read(mock_redis_connection):
+    await mock_redis_connection.connect()
+    await mock_redis_connection.write("test_key", "123")
+    result = await mock_redis_connection.read("test_key")
+    assert result == "123"
 
 
 @pytest.mark.asyncio
-async def test_redis_connection_error():
-    with patch("redis.Redis.from_url", side_effect=ConnectionError):
-        redis = RedisConnection()
-        with pytest.raises(ConnectionError):
-            redis.start_connection()
+async def test_redis_operations_without_connection(mock_redis_connection):
+    with pytest.raises(ConnectionError):
+        await mock_redis_connection.write("test_key", "123")
 
-
-@pytest.mark.asyncio
-async def test_redis_ping_error():
-    mock_redis = MagicMock()
-    mock_redis.ping.side_effect = RedisError("Mocked Redis Error")
-    with patch("redis.Redis.from_url", return_value=mock_redis):
-        redis = RedisConnection()
-        with pytest.raises(ConnectionError):
-            redis.start_connection()
+    with pytest.raises(ConnectionError):
+        await mock_redis_connection.read("test_key")

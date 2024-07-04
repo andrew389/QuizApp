@@ -1,6 +1,6 @@
 import asyncio_redis
-from core.config import settings
-from core.logger import logger
+from app.core.config import settings
+from app.core.logger import logger
 
 
 class AsyncRedisConnection:
@@ -13,7 +13,7 @@ class AsyncRedisConnection:
                 host=settings.redis.host, port=int(settings.redis.port)
             )
             await self.redis.ping()
-        except asyncio_redis.ConnectionError as e:
+        except ConnectionError as e:
             logger.error("Connection to Redis failed: %s", e)
             raise ConnectionError("Connection to Redis failed") from e
         else:

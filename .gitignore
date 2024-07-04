@@ -1,4 +1,4 @@
 .idea
 .env
-app/logs.log
+*.log
 __pycache__/

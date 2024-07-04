@@ -51,13 +51,21 @@
 
 ### Running Tests
 
-1. Open bash console :
+1. Open .env file and change REDIS_DB_HOST and POSTGRES_DB_HOST:
 
     ```bash
-    pytest
+    REDIS_DB_HOST=localhost
+    POSTGRES_DB_HOST=localhost
     ```
 
-2. You should see output indicating that the tests have passed.
+2. Open also file app/tests/test_redis.py and make sure this line looks like this.
+    ```bash
+    with patch.object(settings.redis, 'host', 'localhost')
+    ```
+3. Open console and type:
+    ```bash
+    pytest -v
+    ```
 
 ### Running Migrations
 
@@ -95,14 +103,23 @@ If after running this command, you were shown the docker version, then go to the
     docker-compose up -d --build
     ```
 
-_The `-d` option runs containers in the background._
+ _The `-d` option runs containers in the background._
 
-2. After successful launch, you can access your project at `http://localhost:8000` in your web browser.
+2. After successful launch, you can access your project at `http://localhost:8010` in your web browser.
 
 ### Running Tests
+1. Open .env file and change REDIS_DB_HOST and POSTGRES_DB_HOST:
 
-1. To run tests inside the Docker container:
+    ```bash
+    REDIS_DB_HOST=redis
+    POSTGRES_DB_HOST=main_db
+    ```
 
+2. Open also file app/tests/test_redis.py and make sure this line looks like this.
+    ```bash
+    with patch.object(settings.redis, 'host', 'redis')
+    ```
+3. To run tests inside the Docker container:
     - First, identify the container ID by listing all running containers:
 
         ```bash
@@ -120,11 +137,11 @@ _The `-d` option runs containers in the background._
     - Inside the container's bash shell, run pytest to execute tests:
 
         ```bash
-        pytest
+        pytest -v
         ```
 
 
-2. You should see output indicating that the tests have passed.
+4. You should see output indicating that the tests have passed.
 
 ### Running Migrations
 

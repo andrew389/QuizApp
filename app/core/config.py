@@ -42,7 +42,7 @@ class RedisSettings(BaseSettings):
     )
 
     host: str = Field(alias="REDIS_DB_HOST")
-    port: str = Field(alias="REDIS_DB_PORT")
+    port: int = Field(alias="REDIS_DB_PORT")
 
     @property
     def url(self):

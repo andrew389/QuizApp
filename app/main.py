@@ -1,10 +1,16 @@
-from contextlib import asynccontextmanager
+import sys
+from pathlib import Path
+
+project_root = Path(__file__).resolve().parents[1]
+sys.path.append(str(project_root))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from db.redis_db import redis
-from routers import check_connection
+from app.db.redis_db import redis
+from app.routers import check_connection
+
+from contextlib import asynccontextmanager
 
 
 @asynccontextmanager
@@ -18,14 +24,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-origins = [
-    "http://localhost",
-    "http://localhost:8010",
-]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],

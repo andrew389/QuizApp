@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.pg_db import get_async_session
-from db.redis_db import redis
+from app.db.pg_db import get_async_session
+from app.db.redis_db import redis
 
-from core.logger import logger
+from app.core.logger import logger
 
 router = APIRouter()
 
