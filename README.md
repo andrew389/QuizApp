@@ -68,25 +68,16 @@
     ```
 
 ### Running Migrations
-1. Make sure that these lines look like this in app/alembic.ini:
-    ```bash
-   [main_db]
-   sqlalchemy.url = postgresql+psycopg2://postgres:postgres@localhost/main
-
-   [test_db]
-   sqlalchemy.url = postgresql+psycopg2://postgres:postgres@localhost/test
-   ```
-2. Open bash console :
+1. Open bash console :
 
     ```bash
     alembic -n main_db revision --autogenerate -m "first commit"
     ```
 
-3. Update db to last migration:
+2. Update db to last migration:
 
     ```bash
     alembic -n main_db upgrade head
-    alembic -n test_db upgrade head
     ```
 
 ## Running in Docker
@@ -119,7 +110,7 @@ If after running this command, you were shown the docker version, then go to the
 
     ```bash
     REDIS_DB_HOST=redis
-    POSTGRES_DB_HOST=main_db
+    POSTGRES_DB_HOST=test_db
     ```
 
 2. Open also file app/tests/test_redis.py and make sure this line looks like this.
@@ -127,9 +118,11 @@ If after running this command, you were shown the docker version, then go to the
     with patch.object(settings.redis, 'host', 'redis')
     ```
 3. To run tests inside the Docker container:
- - First, identify the container ID by listing all running containers:
+ - First, stop docker if it's running and start docker-compose for tests:
 
      ```bash
+     docker-compose down
+     docker-compose -f docker-compose.test.yml up -d --build
      docker ps
      ```
 
@@ -146,29 +139,17 @@ If after running this command, you were shown the docker version, then go to the
      ```bash
      pytest -v
      ```
-
-
 4. You should see output indicating that the tests have passed.
 
 ### Running Migrations
-1. Make sure that these lines look like this in app/alembic.ini:
-    ```bash
-    [main_db]
-    sqlalchemy.url = postgresql+psycopg2://postgres:postgres@main_db/main
-
-    [test_db]
-    sqlalchemy.url = postgresql+psycopg2://postgres:postgres@test_db/test
-    ```
-
-2. Open a bash shell inside the container:
+1. Open a bash shell inside the container:
 
     ```bash
     alembic -n main_db revision --autogenerate -m "init"
     ```
 
-3. Update db to last migration:
+2. Update db to last migration:
 
     ```bash
     alembic -n main_db upgrade head
-    alembic -n test_db upgrade head
     ```
