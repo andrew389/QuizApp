@@ -68,14 +68,21 @@
     ```
 
 ### Running Migrations
+1. Make sure that these lines look like this in app/alembic.ini:
+    ```bash
+   [main_db]
+   sqlalchemy.url = postgresql+psycopg2://postgres:postgres@localhost/main
 
-1. Open bash console :
+   [test_db]
+   sqlalchemy.url = postgresql+psycopg2://postgres:postgres@localhost/test
+   ```
+2. Open bash console :
 
     ```bash
     alembic -n main_db revision --autogenerate -m "first commit"
     ```
 
-2. Update db to last migration:
+3. Update db to last migration:
 
     ```bash
     alembic -n main_db upgrade head
@@ -120,38 +127,46 @@ If after running this command, you were shown the docker version, then go to the
     with patch.object(settings.redis, 'host', 'redis')
     ```
 3. To run tests inside the Docker container:
-    - First, identify the container ID by listing all running containers:
+ - First, identify the container ID by listing all running containers:
 
-        ```bash
-        docker ps
-        ```
+     ```bash
+     docker ps
+     ```
 
-    - Note down the `CONTAINER ID` of your `quizz-app` container.
+ - Note down the `CONTAINER ID` of your `quizz-app` container.
 
-    - Open a bash shell inside the container using its ID:
+ - Open a bash shell inside the container using its ID:
 
-        ```bash
-        docker exec -it [CONTAINER ID] bash
-        ```
+     ```bash
+     docker exec -it [CONTAINER ID] bash
+     ```
 
-    - Inside the container's bash shell, run pytest to execute tests:
+ - Inside the container's bash shell, run pytest to execute tests:
 
-        ```bash
-        pytest -v
-        ```
+     ```bash
+     pytest -v
+     ```
 
 
 4. You should see output indicating that the tests have passed.
 
 ### Running Migrations
+1. Make sure that these lines look like this in app/alembic.ini:
+    ```bash
+    [main_db]
+    sqlalchemy.url = postgresql+psycopg2://postgres:postgres@main_db/main
 
-1. Open a bash shell inside the container:
+    [test_db]
+    sqlalchemy.url = postgresql+psycopg2://postgres:postgres@test_db/test
+    ```
+
+2. Open a bash shell inside the container:
 
     ```bash
     alembic -n main_db revision --autogenerate -m "init"
     ```
 
-2. Update db to last migration:
+3. Update db to last migration:
 
     ```bash
     alembic -n main_db upgrade head
