@@ -11,7 +11,7 @@ def mock_redis_connection():
 
 @pytest.mark.asyncio
 async def test_redis_connection_success(mock_redis_connection):
-    with patch.object(settings.redis, "host", "redis"), patch.object(
+    with patch.object(settings.redis, "host", "localhost"), patch.object(
         settings.redis, "port", 6379
     ):
         await mock_redis_connection.connect()
