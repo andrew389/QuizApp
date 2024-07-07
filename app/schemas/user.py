@@ -11,19 +11,20 @@ class UserBase(BaseModel):
 
 
 class UserResponse(BaseModel):
+    status_code: str
     user: Optional[UserBase] = None
 
 
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
-    password: str
+    hashed_password: str
 
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
-    password: Optional[str] = None
+    hashed_password: Optional[str] = None
 
 
 class UsersList(BaseModel):
@@ -36,10 +37,10 @@ class UserDetail(UserBase):
 
 class SignIn(BaseModel):
     username: str
-    password: str
+    hashed_password: str
 
 
 class SignUp(BaseModel):
     username: str
     email: EmailStr
-    password: str
+    hashed_password: str

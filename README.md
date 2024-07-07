@@ -153,16 +153,13 @@ If after running this command, you were shown the docker version, then go to the
 ### Running Migrations
 1. Make sure that these lines look like this in app/alembic.ini:
     ```bash
-    [main_db]
-    sqlalchemy.url = postgresql+psycopg2://postgres:postgres@main_db/main
-
-    [test_db]
-    sqlalchemy.url = postgresql+psycopg2://postgres:postgres@test_db/test
+    sqlalchemy.url = postgresql://postgres:postgres@main_db/main
     ```
 
 2. Open a bash shell inside the container:
 
     ```bash
+    cd app
     alembic -n main_db revision --autogenerate -m "init"
     ```
 
@@ -170,5 +167,4 @@ If after running this command, you were shown the docker version, then go to the
 
     ```bash
     alembic -n main_db upgrade head
-    alembic -n test_db upgrade head
     ```
