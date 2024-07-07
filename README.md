@@ -70,23 +70,18 @@
 ### Running Migrations
 1. Make sure that these lines look like this in app/alembic.ini:
     ```bash
-   [main_db]
-   sqlalchemy.url = postgresql+psycopg2://postgres:postgres@localhost/main
-
-   [test_db]
-   sqlalchemy.url = postgresql+psycopg2://postgres:postgres@localhost/test
+   sqlalchemy.url = postgresql://postgres:postgres@localhost/main
    ```
 2. Open bash console :
 
     ```bash
-    alembic -n main_db revision --autogenerate -m "first commit"
+    alembic revision --autogenerate -m "first commit"
     ```
 
 3. Update db to last migration:
 
     ```bash
-    alembic -n main_db upgrade head
-    alembic -n test_db upgrade head
+    alembic upgrade head
     ```
 
 ## Running in Docker
@@ -119,7 +114,7 @@ If after running this command, you were shown the docker version, then go to the
 
     ```bash
     REDIS_DB_HOST=redis
-    POSTGRES_DB_HOST=main_db
+    POSTGRES_DB_HOST=test_db
     ```
 
 2. Open also file app/tests/test_redis.py and make sure this line looks like this.
@@ -127,13 +122,20 @@ If after running this command, you were shown the docker version, then go to the
     with patch.object(settings.redis, 'host', 'redis')
     ```
 3. To run tests inside the Docker container:
- - First, identify the container ID by listing all running containers:
+   - Stop your docker-compose if it's running and start docker-compose for tests:
+
+    ```bash
+    docker-compose -f docker-compose.yml down
+    docker-compose -f docker-compose.test.yml up -d --build
+    ```
+    
+ - Then, identify the container ID by listing all running containers:
 
      ```bash
      docker ps
      ```
 
- - Note down the `CONTAINER ID` of your `quizz-app` container.
+ - Note down the `CONTAINER ID` of your `app` container.
 
  - Open a bash shell inside the container using its ID:
 
@@ -147,8 +149,16 @@ If after running this command, you were shown the docker version, then go to the
      pytest -v
      ```
 
-
 4. You should see output indicating that the tests have passed.
+5. Leave bash console with combination:
+       ```bash
+    Ctrl + z
+    ```
+6. Stop docker-compose:
+
+     ```bash
+     docker-compose -f docker-compose.test.yml down
+     ```
 
 ### Running Migrations
 1. Make sure that these lines look like this in app/alembic.ini:
@@ -160,11 +170,16 @@ If after running this command, you were shown the docker version, then go to the
 
     ```bash
     cd app
-    alembic -n main_db revision --autogenerate -m "init"
+    alembic revision --autogenerate -m "init"
     ```
 
 3. Update db to last migration:
 
     ```bash
-    alembic -n main_db upgrade head
+    alembic upgrade head
     ```
+4. Leave bash console with combination:
+       ```bash
+    Ctrl + z
+    ```
+5. Continue use app.
