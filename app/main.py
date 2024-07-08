@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.redis_db import redis
-from app.routers import check_connection, user
+from app.routers import check_connection, user, auth
 
 from contextlib import asynccontextmanager
 
@@ -35,3 +35,4 @@ app.add_middleware(
 
 app.include_router(check_connection.router)
 app.include_router(user.router)
+app.include_router(auth.router)

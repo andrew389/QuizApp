@@ -32,7 +32,7 @@ class UsersList(BaseModel):
 
 
 class UserDetail(UserBase):
-    pass
+    hashed_password: Optional[str] = None
 
 
 class SignIn(BaseModel):

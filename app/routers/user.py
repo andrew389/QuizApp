@@ -1,13 +1,13 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status
 from app.core.dependencies import UOWDep
-from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersList, UserDetail
+from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersList
 from app.services.user import UserService
 from app.core.logger import logger
 
 router = APIRouter(prefix="/user", tags=["User"])
 
 
-@router.post("/create", response_model=UserResponse)
+@router.post("/", response_model=UserResponse)
 async def add_user(
     user: UserCreate,
     uow: UOWDep,
@@ -55,7 +55,7 @@ async def get_user_by_id(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error")
 
 
-@router.put("update/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
     user_id: int,
     user_update: UserUpdate,
@@ -70,7 +70,7 @@ async def update_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error")
 
 
-@router.delete("/delete/{user_id}", response_model=UserResponse)
+@router.delete("/{user_id}", response_model=UserResponse)
 async def delete_user(
     user_id: int,
     uow: UOWDep,

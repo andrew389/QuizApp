@@ -31,6 +31,13 @@ class UserService:
                 return UserDetail(**user.__dict__)
 
     @staticmethod
+    async def get_user_by_username(uow: IUnitOfWork, username: str) -> UserDetail:
+        async with uow:
+            user = await uow.user.find_one(username=username)
+            if user:
+                return UserDetail(**user.__dict__)
+
+    @staticmethod
     async def update_user(
         uow: IUnitOfWork, user_id: int, user_update: UserUpdate
     ) -> UserDetail:
