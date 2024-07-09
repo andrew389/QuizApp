@@ -33,8 +33,11 @@ class UnitOfWork:
 
         self.user = UserRepository(self.session)
 
-    async def __aexit__(self, *args):
-        await self.rollback()
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        if exc_type:
+            await self.rollback()
+        else:
+            await self.commit()
         await self.session.close()
 
     async def commit(self):

@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import insert, select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from abc import ABC, abstractmethod
@@ -5,11 +7,11 @@ from abc import ABC, abstractmethod
 
 class AbstractRepository(ABC):
     @abstractmethod
-    async def add_one(self, data: dict) -> int:
+    async def add_one(self, data: dict) -> Any:
         raise NotImplementedError
 
     @abstractmethod
-    async def find_all(self):
+    async def find_all(self, skip: int = 0, limit: int = 10):
         raise NotImplementedError
 
     @abstractmethod
@@ -17,7 +19,7 @@ class AbstractRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def edit_one(self, id: int, data: dict) -> int:
+    async def edit_one(self, id: int, data: dict) -> Any:
         raise NotImplementedError
 
     @abstractmethod
@@ -31,20 +33,18 @@ class SQLAlchemyRepository(AbstractRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def add_one(self, data: dict) -> int:
-        stmt = insert(self.model).values(**data).returning(self.model.id)
+    async def add_one(self, data: dict) -> Any:
+        stmt = insert(self.model).values(**data).returning(self.model)
         res = await self.session.execute(stmt)
         return res.scalar_one()
 
-    async def edit_one(self, id: int, data: dict) -> int:
-        stmt = (
-            update(self.model).values(**data).filter_by(id=id).returning(self.model.id)
-        )
+    async def edit_one(self, id: int, data: dict) -> Any:
+        stmt = update(self.model).values(**data).filter_by(id=id).returning(self.model)
         res = await self.session.execute(stmt)
         return res.scalar_one()
 
-    async def find_all(self):
-        stmt = select(self.model)
+    async def find_all(self, skip: int = 0, limit: int = 10):
+        stmt = select(self.model).offset(skip).limit(limit)
         res = await self.session.execute(stmt)
         return res.scalars().all()
 
@@ -54,6 +54,6 @@ class SQLAlchemyRepository(AbstractRepository):
         return res.scalar_one_or_none()
 
     async def delete_one(self, id: int) -> int:
-        stmt = delete(self.model).filter_by(id=id).returning(self.model.id)
+        stmt = delete(self.model).filter_by(id=id).returning(self.model)
         res = await self.session.execute(stmt)
         return res.scalar_one()
