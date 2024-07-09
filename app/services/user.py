@@ -67,29 +67,19 @@ class UserService:
     @staticmethod
     async def validate_user_update(
         uow: IUnitOfWork, user_id: int, user_update: UserUpdate
-    ):
+    ) -> UserUpdate:
         current_user = await uow.user.find_one(id=user_id)
         if not current_user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        fields_to_check = [
-            "email",
-            "username",
-            "hashed_password",
-            "firstname",
-            "lastname",
-            "city",
-            "phone",
-            "avatar",
-        ]
+        user_data = user_update.model_dump()
+        fields_to_check = user_data.keys()
         default_values = ["string", "user@example.com"]
 
-        for field in fields_to_check:
-            if (
-                getattr(user_update, field) is None
-                or getattr(user_update, field) in default_values
-            ):
-                setattr(user_update, field, getattr(current_user, field))
+        for field_name in fields_to_check:
+            field_value = user_data[field_name]
+            if field_value in [None, *default_values]:
+                setattr(user_update, field_name, getattr(current_user, field_name))
 
         return user_update
 
