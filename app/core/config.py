@@ -50,6 +50,8 @@ class RedisSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
+    api_v1_prefix: str = "/api/v1"
+
     database: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
 

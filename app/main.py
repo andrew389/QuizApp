@@ -8,7 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.redis_db import redis
-from app.routers import check_connection
+from app.routers import check_connection, user
+from app.core.config import settings
 
 from contextlib import asynccontextmanager
 
@@ -33,4 +34,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(check_connection.router)
+app.include_router(check_connection.router, prefix=settings.api_v1_prefix)
+app.include_router(user.router, prefix=settings.api_v1_prefix)
