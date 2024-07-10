@@ -1,7 +1,9 @@
 from datetime import timedelta, datetime
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException
 from jose import jwt, JWTError
+from jose.jwt import decode
+from jwt import PyJWKClient, exceptions
 from starlette import status
 
 from app.core.config import settings
@@ -26,9 +28,9 @@ class AuthService:
     def create_access_token(self, data: dict, expires_delta: timedelta | None = None):
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = datetime.now() + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=15)
+            expire = datetime.now() + timedelta(minutes=15)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
             to_encode, settings.auth.secret_key, algorithm=settings.auth.algorithm
@@ -72,3 +74,33 @@ class AuthService:
 
 
 auth_service = AuthService()
+
+
+class VerifyToken:
+    """Does all the token verification using PyJWT"""
+
+    def __init__(self, token):
+        self.token = token
+        jwks_url = f"https://{settings.auth.domain}/.well-known/jwks.json"
+        self.jwks_client = PyJWKClient(jwks_url)
+
+    def verify(self):
+        try:
+            self.signing_key = self.jwks_client.get_signing_key_from_jwt(self.token).key
+        except exceptions.PyJWKClientError as error:
+            return {"status": "error", "msg": error.__str__()}
+        except exceptions.DecodeError as error:
+            return {"status": "error", "msg": error.__str__()}
+
+        try:
+            payload = decode(
+                self.token,
+                self.signing_key,
+                algorithms=[settings.auth.auth0_algorithm],
+                audience=settings.auth.audience,
+                issuer=settings.auth.issuer,
+            )
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+        return payload

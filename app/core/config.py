@@ -61,6 +61,14 @@ class AuthSettings(BaseSettings):
     algorithm: str = Field(alias="ALGORITHM")
     access_token_expire_minutes: int = Field(alias="ACCESS_TOKEN_EXPIRE_MINUTES")
 
+    domain: str = Field(alias="AUTH0_DOMAIN")
+    audience: str = Field(alias="AUTH0_AUDIENCE")
+    auth0_algorithm: str = Field(alias="AUTH0_ALGORITHM")
+
+    @property
+    def issuer(self):
+        return f"https://{self.domain}/"
+
 
 class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"

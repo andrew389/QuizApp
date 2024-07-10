@@ -36,8 +36,8 @@ class UserCreate(BaseModel):
     city: str
     phone: str
     avatar: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
 
 class UserUpdate(BaseModel):
