@@ -49,11 +49,25 @@ class RedisSettings(BaseSettings):
         return f"redis://{self.host}:{self.port}"
 
 
+class AuthSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        case_sensitive=False,
+        env_file=env_file,
+        env_file_encoding="utf-8",
+        extra="allow",
+    )
+
+    secret_key: str = Field(alias="SECRET_KEY")
+    algorithm: str = Field(alias="ALGORITHM")
+    access_token_expire_minutes: int = Field(alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+
+
 class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
 
     database: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
+    auth: AuthSettings = AuthSettings()
 
 
 settings = Settings()

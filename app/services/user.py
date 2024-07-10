@@ -23,12 +23,14 @@ class UserService:
                 logger.error("User with this email already exists")
                 raise ValueError()
 
-        user_dict = user.model_dump()
-        user_dict["hashed_password"] = Hasher.hash_password(user_dict.pop("password"))
-        user_dict["created_at"] = datetime.utcnow()
-        user_dict["updated_at"] = datetime.utcnow()
-        user_model = await uow.user.add_one(user_dict)
-        await uow.commit()
+            user_dict = user.model_dump()
+            user_dict["hashed_password"] = Hasher.hash_password(
+                user_dict.pop("password")
+            )
+            user_dict["created_at"] = datetime.now()
+            user_dict["updated_at"] = datetime.now()
+            user_model = await uow.user.add_one(user_dict)
+            await uow.commit()
 
         return UserDetail(**user_model.__dict__)
 

@@ -53,7 +53,7 @@ class UserUpdate(BaseModel):
 
 
 class UserDetail(UserBase):
-    pass
+    hashed_password: Optional[str] = None
 
 
 class UserResponse(BaseModel):
