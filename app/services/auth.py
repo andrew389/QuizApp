@@ -58,9 +58,10 @@ class AuthService:
                 algorithms=[settings.auth.algorithm],
             )
             username: str = payload.get("sub")
+            email: str = payload.get("email")
             if username is None:
                 raise credentials_exception
-            token_data = TokenData(username=username)
+            token_data = TokenData(username=username, email=email)
         except JWTError:
             raise credentials_exception
 
