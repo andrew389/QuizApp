@@ -9,5 +9,5 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: str
+    token: str
     email: str

@@ -63,7 +63,7 @@ class AuthSettings(BaseSettings):
 
     domain: str = Field(alias="AUTH0_DOMAIN")
     audience: str = Field(alias="AUTH0_AUDIENCE")
-    auth0_algorithm: str = Field(alias="AUTH0_ALGORITHM")
+    signing_key: str = Field(alias="SIGNING_KEY")
 
     @property
     def issuer(self):
