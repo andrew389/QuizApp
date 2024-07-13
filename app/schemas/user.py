@@ -1,14 +1,14 @@
-from fastapi import HTTPException
 from pydantic import (
     BaseModel,
     EmailStr,
     ConfigDict,
     field_validator,
     Field,
-    model_validator,
 )
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime
+
+from app.exceptions.user import UserCannotChangeEmailException
 
 
 class UserBase(BaseModel):

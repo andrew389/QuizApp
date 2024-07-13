@@ -1,37 +1,31 @@
-import secrets
-import string
 from datetime import timedelta, datetime
-from typing import Union
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from jose import jwt, JWTError
 from jose.jwt import decode
 from jwt import PyJWKClient
-from starlette import status
 
 from app.core.config import settings
-from app.core.dependencies import token_scheme
-from app.models.user import User
-from app.repositories.unitofwork import UnitOfWork
-from app.schemas.user import UserCreate
+from app.repositories.unitofwork import UnitOfWork, IUnitOfWork
 from app.services.user import UserService
 from app.utils.hasher import Hasher
-from fastapi.security import HTTPAuthorizationCredentials
+from app.exceptions.auth import ValidateCredentialsException, NotAuthenticatedException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.utils.user_create import create_user
 
 
 class AuthService:
-    async def authenticate_user(
-        self, uow: UnitOfWork, username: str, password: str
-    ) -> Union[User, None]:
+    @staticmethod
+    async def authenticate_user(uow: IUnitOfWork, username: str, password: str):
         async with uow:
             user = await UserService.get_user_by_username(uow, username)
             if not user or not Hasher.verify_password(password, user.hashed_password):
                 return None
             return user
 
-    def create_access_token(self, data: dict, expires_delta: timedelta | None = None):
+    @staticmethod
+    def create_access_token(data: dict, expires_delta: timedelta | None = None):
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.now() + expires_delta
@@ -43,20 +37,13 @@ class AuthService:
         )
         return encoded_jwt
 
-    def verify_token_credentials(self, token: HTTPAuthorizationCredentials):
+    @staticmethod
+    def verify_token_credentials(token: HTTPAuthorizationCredentials):
         if not token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not authenticated",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise NotAuthenticatedException()
 
-    def get_payload_from_token(self, token: HTTPAuthorizationCredentials):
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    @staticmethod
+    def get_payload_from_token(token: HTTPAuthorizationCredentials):
         try:
             verify_token = VerifyToken(token.credentials)
             if len(str(token.credentials)) > 168:
@@ -64,40 +51,35 @@ class AuthService:
             else:
                 payload = verify_token.verify_jwt()
             if "status" in payload and payload["status"] == "error":
-                raise credentials_exception
+                raise ValidateCredentialsException()
             return payload
         except JWTError:
-            raise credentials_exception
+            raise ValidateCredentialsException()
 
-    def get_email_from_payload(self, payload: dict):
+    @staticmethod
+    def get_email_from_payload(payload: dict):
         email = payload.get("email")
         if email is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise ValidateCredentialsException()
         return email
 
-    async def get_user_by_email_or_create(self, uow: UnitOfWork, email: str):
+    @staticmethod
+    async def get_user_by_email_or_create(uow: IUnitOfWork, email: str):
         async with uow:
             user = await UserService.get_user_by_email(uow, email=email)
             if user is None:
                 user = await create_user(uow, email)
             return user
 
+    @staticmethod
     async def get_current_user(
-        self,
-        token: HTTPAuthorizationCredentials = Depends(token_scheme),
+        token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
         uow: UnitOfWork = Depends(UnitOfWork),
     ):
-        self.verify_token_credentials(token)
-        payload = self.get_payload_from_token(token)
-        email = self.get_email_from_payload(payload)
-        return await self.get_user_by_email_or_create(uow, email)
-
-
-auth_service = AuthService()
+        AuthService.verify_token_credentials(token)
+        payload = AuthService.get_payload_from_token(token)
+        email = AuthService.get_email_from_payload(payload)
+        return await AuthService.get_user_by_email_or_create(uow, email)
 
 
 class VerifyToken:

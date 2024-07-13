@@ -6,6 +6,7 @@ from app.db.pg_db import get_async_session
 from app.db.redis_db import redis
 
 from app.core.logger import logger
+from app.exceptions.db import BadConnectRedis, BadConnectPostgres
 
 router = APIRouter()
 
@@ -23,10 +24,7 @@ async def ping_redis():
         return {"status": "PONG"}
     except ConnectionError as e:
         logger.error("Redis connection error: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Could not connect to Redis",
-        )
+        raise BadConnectRedis()
 
 
 @router.get("/db")
@@ -37,7 +35,4 @@ async def ping_db(session: AsyncSession = Depends(get_async_session)):
         return {"status_code": 200, "detail": "ok", "result": "working"}
     except Exception as e:
         logger.error(f"Database connection error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Database connection error: {str(e)}",
-        )
+        raise BadConnectPostgres(str(e))

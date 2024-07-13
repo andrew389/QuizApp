@@ -1,8 +1,7 @@
 from datetime import datetime
 
-from fastapi import HTTPException
-
 from app.core.logger import logger
+from app.exceptions.user import NotFoundUserException
 from app.schemas.user import (
     UserCreate,
     UsersListResponse,
@@ -72,7 +71,7 @@ class UserService:
     ) -> UserUpdate:
         current_user = await uow.user.find_one(id=user_id)
         if not current_user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise NotFoundUserException()
 
         user_data = user_update.model_dump()
         fields_to_check = user_data.keys()
