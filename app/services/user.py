@@ -75,7 +75,7 @@ class UserService:
 
         user_data = user_update.model_dump()
         fields_to_check = user_data.keys()
-        default_values = ["string", "user@example.com"]
+        default_values = ["string"]
 
         for field_name in fields_to_check:
             field_value = user_data[field_name]

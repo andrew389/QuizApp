@@ -71,11 +71,15 @@ async def update_user(
     user_update: UserUpdate,
     uow: UOWDep,
     user_service: UserServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        updated_user = await user_service.update_user(uow, user_id, user_update)
-        logger.info(f"Updated user with ID: {user_id}")
-        return UserResponse(user=updated_user)
+        if current_user.id == user_id:
+            updated_user = await user_service.update_user(uow, user_id, user_update)
+            logger.info(f"Updated user with ID: {user_id}")
+            return UserResponse(user=updated_user)
+        else:
+            raise UnAuthorizedException()
     except Exception as e:
         logger.error(f"Error updating user with ID {user_id}: {e}")
         raise UpdatingUserException()
@@ -86,11 +90,15 @@ async def delete_user(
     user_id: int,
     uow: UOWDep,
     user_service: UserServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        deleted_user_id = await user_service.delete_user(uow, user_id)
-        logger.info(f"Deleted user with ID: {deleted_user_id}")
-        return {"status_code": 200}
+        if current_user.id == user_id:
+            deleted_user_id = await user_service.delete_user(uow, user_id)
+            logger.info(f"Deleted user with ID: {deleted_user_id}")
+            return {"status_code": 200}
+        else:
+            raise UnAuthorizedException()
     except Exception as e:
         logger.error(f"Error deleting user with ID {user_id}: {e}")
         raise DeletingUserException()
