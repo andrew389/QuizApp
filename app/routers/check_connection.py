@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +8,7 @@ from app.db.redis_db import redis
 from app.core.logger import logger
 from app.exceptions.db import BadConnectRedis, BadConnectPostgres
 
-router = APIRouter()
+router = APIRouter(tags=["Health Check"])
 
 
 @router.get("/")

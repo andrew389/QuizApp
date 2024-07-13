@@ -2,7 +2,7 @@ import secrets
 import string
 from datetime import datetime
 
-from app.repositories.unitofwork import UnitOfWork
+from app.uow.unitofwork import UnitOfWork
 from app.schemas.user import UserCreate
 from app.services.user import UserService
 

@@ -8,8 +8,6 @@ from pydantic import (
 from typing import Optional, List
 from datetime import datetime
 
-from app.exceptions.user import UserCannotChangeEmailException
-
 
 class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -43,7 +41,13 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
     username: Optional[str] = None
+    email: Optional[EmailStr] = None
     hashed_password: Optional[str] = None
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
+    city: Optional[str] = None
+    phone: Optional[str] = None
+    avatar: Optional[str] = None
 
 
 class UserDetail(UserBase):

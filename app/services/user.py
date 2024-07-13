@@ -10,7 +10,7 @@ from app.schemas.user import (
     UserUpdate,
 )
 from app.utils.hasher import Hasher
-from app.repositories.unitofwork import IUnitOfWork
+from app.uow.unitofwork import IUnitOfWork
 
 
 class UserService:

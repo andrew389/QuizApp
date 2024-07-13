@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from app.core.config import settings
 from app.core.dependencies import UOWDep, AuthServiceDep
-from app.models.user import User
+from app.models.models import User
 from app.schemas.token import Token
 from app.schemas.user import UserResponse, SignInRequest
 from app.exceptions.auth import AuthenticationException

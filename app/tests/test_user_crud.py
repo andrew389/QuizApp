@@ -1,10 +1,9 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from app.exceptions.user import UpdatingUserException
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.user import UserService
-from app.repositories.unitofwork import IUnitOfWork
+from app.uow.unitofwork import IUnitOfWork
 
 
 @pytest.mark.asyncio

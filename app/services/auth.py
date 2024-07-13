@@ -6,7 +6,7 @@ from jose.jwt import decode
 from jwt import PyJWKClient
 
 from app.core.config import settings
-from app.repositories.unitofwork import UnitOfWork, IUnitOfWork
+from app.uow.unitofwork import UnitOfWork, IUnitOfWork
 from app.services.user import UserService
 from app.utils.hasher import Hasher
 from app.exceptions.auth import ValidateCredentialsException, NotAuthenticatedException

@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 from typing import Type
 
 from app.db.pg_db import async_session_maker
+from app.repositories.company import CompanyRepository
 from app.repositories.user import UserRepository
 
 
 class IUnitOfWork(ABC):
     user: UserRepository
+    company: CompanyRepository
 
     @abstractmethod
     def __init__(self): ...
@@ -32,6 +34,7 @@ class UnitOfWork:
         self.session = self.session_factory()
 
         self.user = UserRepository(self.session)
+        self.company = CompanyRepository(self.session)
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         if exc_type:

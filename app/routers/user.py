@@ -1,14 +1,14 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, Query, Depends
 from app.core.dependencies import UOWDep, UserServiceDep, AuthServiceDep
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.user import (
-    DeletingUserException,
-    UpdatingUserException,
-    FetchingUserException,
-    CreatingUserException,
-    NotFoundUserException,
+from app.exceptions.user import NotFoundUserException
+from app.exceptions.base import (
+    UpdatingException,
+    DeletingException,
+    FetchingException,
+    CreatingException,
 )
-from app.models.user import User
+from app.models.models import User
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger
 
@@ -29,7 +29,7 @@ async def add_user(
         return UserResponse(user=new_user)
     except Exception as e:
         logger.error(f"Error creating user: {e}")
-        raise CreatingUserException()
+        raise CreatingException()
 
 
 @router.get("/", response_model=UsersListResponse)
@@ -44,7 +44,7 @@ async def get_users(
         return users
     except Exception as e:
         logger.error(f"Error fetching users: {e}")
-        raise FetchingUserException()
+        raise FetchingException()
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -62,7 +62,7 @@ async def get_user_by_id(
         return UserResponse(user=user)
     except Exception as e:
         logger.error(f"Error fetching user by ID {user_id}: {e}")
-        raise FetchingUserException()
+        raise FetchingException()
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -82,7 +82,7 @@ async def update_user(
             raise UnAuthorizedException()
     except Exception as e:
         logger.error(f"Error updating user with ID {user_id}: {e}")
-        raise UpdatingUserException()
+        raise UpdatingException()
 
 
 @router.delete("/{user_id}", response_model=dict)
@@ -101,4 +101,4 @@ async def delete_user(
             raise UnAuthorizedException()
     except Exception as e:
         logger.error(f"Error deleting user with ID {user_id}: {e}")
-        raise DeletingUserException()
+        raise DeletingException()

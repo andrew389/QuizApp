@@ -4,8 +4,8 @@ from fastapi.testclient import TestClient
 from fastapi import status
 from app.main import app
 from app.services.auth import AuthService
-from app.models.user import User
-from app.repositories.unitofwork import IUnitOfWork
+from app.models.models import User
+from app.uow.unitofwork import IUnitOfWork
 
 client = TestClient(app)
 
