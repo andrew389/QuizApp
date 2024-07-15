@@ -31,7 +31,7 @@ services:
     ports:
       - "8010:8000"
     environment:
-      - POSTGRES_DB_HOST=main_db
+      - POSTGRES_DB_HOST=test_db
       - REDIS_DB_HOST=redis
     depends_on:
       - test_db

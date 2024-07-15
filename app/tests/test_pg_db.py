@@ -18,7 +18,3 @@ async def test_get_async_session(mock_async_session):
     async with mock_async_session() as session:
         async for _ in get_async_session():
             assert isinstance(session, AsyncSession)
-
-
-test_engine = create_async_engine(settings.database.test_async_url, echo=True)
-test_session = AsyncSession(test_engine)

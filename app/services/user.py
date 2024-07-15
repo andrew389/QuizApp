@@ -1,8 +1,7 @@
 from datetime import datetime
 
-from fastapi import HTTPException
-
 from app.core.logger import logger
+from app.exceptions.user import NotFoundUserException
 from app.schemas.user import (
     UserCreate,
     UsersListResponse,
@@ -23,12 +22,14 @@ class UserService:
                 logger.error("User with this email already exists")
                 raise ValueError()
 
-        user_dict = user.model_dump()
-        user_dict["hashed_password"] = Hasher.hash_password(user_dict.pop("password"))
-        user_dict["created_at"] = datetime.utcnow()
-        user_dict["updated_at"] = datetime.utcnow()
-        user_model = await uow.user.add_one(user_dict)
-        await uow.commit()
+            user_dict = user.model_dump()
+            user_dict["hashed_password"] = Hasher.hash_password(
+                user_dict.pop("password")
+            )
+            user_dict["created_at"] = datetime.now()
+            user_dict["updated_at"] = datetime.now()
+            user_model = await uow.user.add_one(user_dict)
+            await uow.commit()
 
         return UserDetail(**user_model.__dict__)
 
@@ -70,7 +71,7 @@ class UserService:
     ) -> UserUpdate:
         current_user = await uow.user.find_one(id=user_id)
         if not current_user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise NotFoundUserException()
 
         user_data = user_update.model_dump()
         fields_to_check = user_data.keys()

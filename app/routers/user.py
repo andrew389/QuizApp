@@ -1,7 +1,12 @@
-from datetime import datetime
-
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi import APIRouter, Query
 from app.core.dependencies import UOWDep, UserServiceDep
+from app.exceptions.user import (
+    DeletingUserException,
+    UpdatingUserException,
+    FetchingUserException,
+    CreatingUserException,
+    NotFoundUserException,
+)
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger
 
@@ -22,9 +27,7 @@ async def add_user(
         return UserResponse(user=new_user)
     except Exception as e:
         logger.error(f"Error creating user: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating user"
-        )
+        raise CreatingUserException()
 
 
 @router.get("/", response_model=UsersListResponse)
@@ -39,10 +42,7 @@ async def get_users(
         return users
     except Exception as e:
         logger.error(f"Error fetching users: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error fetching users",
-        )
+        raise FetchingUserException()
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -55,19 +55,12 @@ async def get_user_by_id(
         user = await user_service.get_user_by_id(uow, user_id)
         if not user:
             logger.warning(f"User with ID {user_id} not found")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise NotFoundUserException()
         logger.info(f"Fetched user with ID: {user_id}")
         return UserResponse(user=user)
-    except HTTPException as e:
-        raise e
     except Exception as e:
         logger.error(f"Error fetching user by ID {user_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error fetching user",
-        )
+        raise FetchingUserException()
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -81,14 +74,9 @@ async def update_user(
         updated_user = await user_service.update_user(uow, user_id, user_update)
         logger.info(f"Updated user with ID: {user_id}")
         return UserResponse(user=updated_user)
-    except HTTPException as e:
-        raise e
     except Exception as e:
         logger.error(f"Error updating user with ID {user_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error updating user",
-        )
+        raise UpdatingUserException()
 
 
 @router.delete("/{user_id}", response_model=dict)
@@ -101,11 +89,6 @@ async def delete_user(
         deleted_user_id = await user_service.delete_user(uow, user_id)
         logger.info(f"Deleted user with ID: {deleted_user_id}")
         return {"status_code": 200}
-    except HTTPException as e:
-        raise e
     except Exception as e:
         logger.error(f"Error deleting user with ID {user_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error deleting user",
-        )
+        raise DeletingUserException()

@@ -1,13 +1,11 @@
-from fastapi import HTTPException
 from pydantic import (
     BaseModel,
     EmailStr,
     ConfigDict,
     field_validator,
     Field,
-    model_validator,
 )
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -36,8 +34,8 @@ class UserCreate(BaseModel):
     city: str
     phone: str
     avatar: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
 
 class UserUpdate(BaseModel):
@@ -53,7 +51,7 @@ class UserUpdate(BaseModel):
 
 
 class UserDetail(UserBase):
-    pass
+    hashed_password: Optional[str] = None
 
 
 class UserResponse(BaseModel):

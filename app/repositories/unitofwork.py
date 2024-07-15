@@ -6,7 +6,7 @@ from app.repositories.user import UserRepository
 
 
 class IUnitOfWork(ABC):
-    user: Type[UserRepository]
+    user: UserRepository
 
     @abstractmethod
     def __init__(self): ...
@@ -36,6 +36,7 @@ class UnitOfWork:
     async def __aexit__(self, exc_type, exc_value, traceback):
         if exc_type:
             await self.rollback()
+            raise exc_value
         else:
             await self.commit()
         await self.session.close()

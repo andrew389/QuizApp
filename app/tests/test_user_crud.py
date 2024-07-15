@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from app.core.logger import logger
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.user import UserService
 from app.repositories.unitofwork import IUnitOfWork
