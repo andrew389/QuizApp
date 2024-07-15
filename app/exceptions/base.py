@@ -1,4 +1,9 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException
+
+
+class NotFoundException(HTTPException):
+    def __init__(self):
+        super().__init__(status_code=403, detail="Not found")
 
 
 class CreatingException(HTTPException):
@@ -19,6 +24,6 @@ class UpdatingException(HTTPException):
 class DeletingException(HTTPException):
     def __init__(self):
         super().__init__(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=403,
             detail="Error deleting",
         )

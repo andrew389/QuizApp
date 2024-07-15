@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Query, Depends
 from app.core.dependencies import UOWDep, UserServiceDep, AuthServiceDep
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.user import NotFoundUserException
 from app.exceptions.base import (
     UpdatingException,
     DeletingException,
     FetchingException,
     CreatingException,
+    NotFoundException,
 )
 from app.models.models import User
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
@@ -57,7 +57,7 @@ async def get_user_by_id(
         user = await user_service.get_user_by_id(uow, user_id)
         if not user:
             logger.warning(f"User with ID {user_id} not found")
-            raise NotFoundUserException()
+            raise NotFoundException()
         logger.info(f"Fetched user with ID: {user_id}")
         return UserResponse(user=user)
     except Exception as e:
