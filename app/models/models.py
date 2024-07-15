@@ -22,13 +22,6 @@ class User(Base):
     updated_at = Column(DateTime, nullable=False)
 
     companies = relationship("Company", back_populates="user")
-    memberships = relationship("Member", back_populates="user")
-    sent_invitations = relationship(
-        "Invitation", foreign_keys="Invitation.sender_id", back_populates="sender"
-    )
-    received_invitations = relationship(
-        "Invitation", foreign_keys="Invitation.receiver_id", back_populates="receiver"
-    )
 
 
 class Company(Base):
@@ -43,39 +36,3 @@ class Company(Base):
     updated_at = Column(DateTime, nullable=False)
 
     user = relationship("User", back_populates="companies")
-    members = relationship("Member", back_populates="company")
-    invitations = relationship("Invitation", back_populates="company")
-
-
-class Invitation(Base):
-    __tablename__ = "invitation"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    sender_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    receiver_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime, nullable=False)
-    status = Column(String, default="pending")
-
-    sender = relationship(
-        "User", foreign_keys=[sender_id], back_populates="sent_invitations"
-    )
-    receiver = relationship(
-        "User", foreign_keys=[receiver_id], back_populates="received_invitations"
-    )
-    company = relationship("Company", back_populates="invitations")
-
-
-class Member(Base):
-    __tablename__ = "member"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    company_id = Column(Integer, ForeignKey("company.id"), nullable=True)
-    role = Column(Integer, nullable=False)
-
-    user = relationship("User", back_populates="memberships")
-    company = relationship("Company", back_populates="members")
