@@ -2,16 +2,12 @@ from abc import ABC, abstractmethod
 
 from app.db.pg_db import async_session_maker
 from app.repositories.company import CompanyRepository
-from app.repositories.invitation import InvitationRepository
-from app.repositories.member import MemberRepository
 from app.repositories.user import UserRepository
 
 
 class IUnitOfWork(ABC):
     user: UserRepository
     company: CompanyRepository
-    invitation: InvitationRepository
-    member: MemberRepository
 
     @abstractmethod
     def __init__(self): ...
@@ -38,8 +34,6 @@ class UnitOfWork:
 
         self.user = UserRepository(self.session)
         self.company = CompanyRepository(self.session)
-        self.invitation = InvitationRepository(self.session)
-        self.member = MemberRepository(self.session)
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         if exc_type:
