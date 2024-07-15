@@ -35,7 +35,7 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
     username: Optional[str] = None
-    hashed_password: Optional[str] = None
+    password: Optional[str] = None
 
 
 class UserDetail(UserBase):
