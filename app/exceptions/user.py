@@ -18,7 +18,7 @@ class CreatingUserException(HTTPException):
 
 class FetchingUserException(HTTPException):
     def __init__(self):
-        super().__init__(status_code=403, detail="Error fetching user")
+        super().__init__(status_code=403, detail="Error fetching users")
 
 
 class UpdatingUserException(HTTPException):
