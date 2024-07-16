@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from app.core.logger import logger
-from app.exceptions.user import NotFoundUserException
+from app.exceptions.base import NotFoundException
 from app.schemas.user import (
     UserCreate,
     UsersListResponse,
@@ -23,9 +23,7 @@ class UserService:
                 raise ValueError()
 
             user_dict = user.model_dump()
-            user_dict["hashed_password"] = Hasher.hash_password(
-                user_dict.pop("password")
-            )
+            user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
             user_dict["created_at"] = datetime.now()
             user_dict["updated_at"] = datetime.now()
             user_model = await uow.user.add_one(user_dict)
@@ -71,7 +69,7 @@ class UserService:
     ) -> UserUpdate:
         current_user = await uow.user.find_one(id=user_id)
         if not current_user:
-            raise NotFoundUserException()
+            raise NotFoundException()
 
         user_data = user_update.model_dump()
         fields_to_check = user_data.keys()

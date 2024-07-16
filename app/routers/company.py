@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Query, Depends
-from typing import List
 
 from app.core.dependencies import UOWDep, CompanyServiceDep, AuthServiceDep
 from app.exceptions.base import (
@@ -7,8 +6,8 @@ from app.exceptions.base import (
     DeletingException,
     FetchingException,
     CreatingException,
+    NotFoundException,
 )
-from app.exceptions.company import NotFoundCompanyException
 
 from app.exceptions.auth import UnAuthorizedException
 from app.models.models import User
@@ -71,7 +70,7 @@ async def get_company_by_id(
         company = await company_service.get_company_by_id(uow, company_id)
         if not company:
             logger.warning(f"Company with ID {company_id} not found")
-            raise NotFoundCompanyException()
+            raise NotFoundException()
         logger.info(f"Fetched company with ID: {company_id}")
         return company
     except Exception as e:

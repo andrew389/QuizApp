@@ -17,7 +17,7 @@ async def test_login_for_access_token():
         id=1,
         username="testuser",
         email="test@test.com",
-        hashed_password="hashedpassword",
+        password="hashedpassword",
         is_active=True,
         is_superuser=False,
     )
@@ -38,7 +38,7 @@ async def test_read_users_me():
         id=1,
         username="testuser",
         email="test@test.com",
-        hashed_password="hashedpassword",
+        password="hashedpassword",
         is_active=True,
         is_superuser=False,
     )

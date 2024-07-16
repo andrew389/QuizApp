@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from app.core.logger import logger
+from app.exceptions.auth import UnAuthorizedException
 from app.schemas.company import (
     CompanyCreate,
     CompanyDetail,
@@ -7,6 +9,7 @@ from app.schemas.company import (
     CompaniesListResponse,
     CompanyBase,
 )
+from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
 
 
@@ -16,14 +19,28 @@ class CompanyService:
         uow: IUnitOfWork, company: CompanyCreate, owner_id: int
     ) -> CompanyDetail:
         async with uow:
+
+            existing_member = await uow.member.find_one(user_id=owner_id)
+
+            if existing_member:
+                logger.error("User is already a member of another company")
+                raise UnAuthorizedException()
+
             company_dict = company.model_dump()
             company_dict["owner_id"] = owner_id
             company_dict["created_at"] = datetime.now()
             company_dict["updated_at"] = datetime.now()
             company_model = await uow.company.add_one(company_dict)
+
+            member_data = MemberCreate(
+                user_id=owner_id, company_id=company_model.id, role=1
+            )
+
+            await uow.member.add_one(member_data.model_dump(exclude={"id"}))
+
             await uow.commit()
 
-        return CompanyDetail(**company_model.__dict__)
+            return CompanyDetail(**company_model.__dict__)
 
     @staticmethod
     async def get_companies(
@@ -34,7 +51,7 @@ class CompanyService:
                 skip=skip, limit=limit
             )
             user_companies = await uow.company.find_all_by_owner(
-                owner_id=current_user_id
+                owner_id=current_user_id, skip=skip, limit=limit
             )
 
             combined_companies = list(
@@ -77,9 +94,9 @@ class CompanyService:
     @staticmethod
     async def delete_company(uow: IUnitOfWork, company_id: int) -> int:
         async with uow:
-            deleted_company_id = await uow.company.delete_one(company_id)
+            deleted_company = await uow.company.delete_one(company_id)
             await uow.commit()
-            return deleted_company_id
+            return deleted_company.id
 
     @staticmethod
     async def change_company_visibility(
@@ -87,14 +104,13 @@ class CompanyService:
     ) -> CompanyDetail:
         async with uow:
             company_model = await uow.company.find_one(id=company_id)
+
             if not company_model:
                 raise ValueError("Company not found")
 
-            # Update the attributes directly
             company_model.is_visible = is_visible
             company_model.updated_at = datetime.now()
 
-            # Save the changes
             await uow.company.edit_one(
                 company_id,
                 {
@@ -104,5 +120,4 @@ class CompanyService:
             )
             await uow.commit()
 
-            # Return updated company details
             return CompanyDetail(**company_model.__dict__)
