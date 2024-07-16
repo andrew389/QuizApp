@@ -1,14 +1,6 @@
-from pydantic import (
-    BaseModel,
-    EmailStr,
-    ConfigDict,
-    field_validator,
-    Field,
-)
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
-
-from app.exceptions.user import UserCannotChangeEmailException
 
 
 class UserBase(BaseModel):
@@ -43,11 +35,11 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
     username: Optional[str] = None
-    hashed_password: Optional[str] = None
+    password: Optional[str] = None
 
 
 class UserDetail(UserBase):
-    hashed_password: Optional[str] = None
+    password: str
 
 
 class UserResponse(BaseModel):
@@ -55,13 +47,11 @@ class UserResponse(BaseModel):
 
 
 class SignInRequest(BaseModel):
-    username: str
+    email: str
     password: str
 
 
 class SignUpRequest(UserCreate):
-    username: str
-    email: EmailStr
     password1: str
     password2: str
 
