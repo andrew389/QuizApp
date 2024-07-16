@@ -13,17 +13,17 @@ class UserCannotChangeEmailException(HTTPException):
 
 class CreatingUserException(HTTPException):
     def __init__(self):
-        super().__init__(status_code=403, detail="Error creating")
+        super().__init__(status_code=403, detail="Error creating user")
 
 
 class FetchingUserException(HTTPException):
     def __init__(self):
-        super().__init__(status_code=403, detail="Error fetching")
+        super().__init__(status_code=403, detail="Error fetching user")
 
 
 class UpdatingUserException(HTTPException):
     def __init__(self):
-        super().__init__(status_code=403, detail="Error updating")
+        super().__init__(status_code=403, detail="Error updating user")
 
 
 class DeletingUserException(HTTPException):
