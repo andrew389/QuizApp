@@ -3,7 +3,6 @@ from datetime import datetime
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
-from app.models.models import Company, Member
 from app.schemas.invitation import InvitationBase, SendInvitation, InvitationResponse
 from app.schemas.member import (
     MemberCreate,
@@ -15,12 +14,6 @@ from app.uow.unitofwork import IUnitOfWork
 
 
 class MemberService:
-    @staticmethod
-    async def create_member(uow: IUnitOfWork, member_data: MemberCreate) -> MemberBase:
-        async with uow:
-            member = await uow.member.add_one(member_data.dict())
-            return member
-
     @staticmethod
     async def get_members(
         uow: IUnitOfWork, company_id: int, skip: int = 0, limit: int = 10
@@ -40,22 +33,6 @@ class MemberService:
         async with uow:
             member = await uow.member.find_one(id=member_id)
             return member
-
-    @staticmethod
-    async def update_member(
-        uow: IUnitOfWork, member_id: int, member_data: MemberUpdate
-    ) -> MemberBase:
-        async with uow:
-            updated_member = await uow.member.edit_one(
-                member_id, member_data.dict(exclude_unset=True)
-            )
-            return updated_member
-
-    @staticmethod
-    async def delete_member(uow: IUnitOfWork, member_id: int) -> int:
-        async with uow:
-            deleted_member_id = await uow.member.delete_one(member_id)
-            return deleted_member_id
 
     @staticmethod
     async def request_to_join_company(

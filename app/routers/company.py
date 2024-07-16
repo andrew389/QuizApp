@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Query, Depends
 
-from app.core.dependencies import UOWDep, CompanyServiceDep, AuthServiceDep
+from app.core.dependencies import (
+    UOWDep,
+    CompanyServiceDep,
+    AuthServiceDep,
+    MemberServiceDep,
+)
 from app.exceptions.base import (
     UpdatingException,
     DeletingException,
@@ -18,6 +23,7 @@ from app.schemas.company import (
     CompaniesListResponse,
 )
 from app.core.logger import logger
+from app.schemas.member import MembersListResponse, MemberBase
 
 router = APIRouter(prefix="/company", tags=["Company"])
 
@@ -121,7 +127,7 @@ async def delete_company(
         raise DeletingException()
 
 
-@router.put("/{company_id}/visibility", response_model=CompanyDetail)
+@router.put("/visibility/{company_id}", response_model=CompanyDetail)
 async def change_company_visibility(
     company_id: int,
     is_visible: bool,
@@ -142,3 +148,51 @@ async def change_company_visibility(
     except Exception as e:
         logger.error(f"Error changing visibility for company with ID {company_id}: {e}")
         raise UpdatingException()
+
+
+@router.get("/members/", response_model=MembersListResponse)
+async def get_members(
+    company_id: int,
+    uow: UOWDep,
+    member_service: MemberServiceDep,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1),
+):
+    try:
+        members = await member_service.get_members(
+            uow, company_id=company_id, skip=skip, limit=limit
+        )
+        return members
+    except Exception as e:
+        logger.error(f"Error fetching members: {e}")
+        raise FetchingException()
+
+
+@router.post("/members/remove", response_model=MemberBase)
+async def remove_member(
+    member_id: int,
+    uow: UOWDep,
+    member_service: MemberServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    try:
+        result = await member_service.remove_member(uow, current_user.id, member_id)
+        return result
+    except Exception as e:
+        logger.error(f"Error removing member: {e}")
+        raise DeletingException()
+
+
+@router.post("/leave", response_model=MemberBase)
+async def leave_company(
+    company_id: int,
+    uow: UOWDep,
+    member_service: MemberServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    try:
+        result = await member_service.leave_company(uow, current_user.id, company_id)
+        return result
+    except Exception as e:
+        logger.error(f"Error leaving company: {e}")
+        raise DeletingException()

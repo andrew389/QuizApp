@@ -62,7 +62,7 @@ class InvitationService:
             return invitation_list
 
     @staticmethod
-    async def get_sended_invitations(
+    async def get_sent_invitations(
         uow: IUnitOfWork, user_id: int, skip: int = 0, limit: int = 10
     ) -> InvitationsListResponse:
         async with uow:
