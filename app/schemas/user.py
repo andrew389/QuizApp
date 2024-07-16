@@ -15,8 +15,8 @@ class UserBase(BaseModel):
     phone: str
     avatar: str
     is_superuser: bool
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
 
 
 class UserCreate(BaseModel):
@@ -28,12 +28,12 @@ class UserCreate(BaseModel):
     city: str
     phone: str
     avatar: str
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
 
 
 class UserUpdate(BaseModel):
-    updated_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime
     username: Optional[str] = None
     password: Optional[str] = None
 

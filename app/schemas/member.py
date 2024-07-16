@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 from typing import Optional, List
 
@@ -7,6 +9,8 @@ class MemberBase(BaseModel):
     user_id: int
     company_id: Optional[int] = None
     role: int
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
 
 
 class MemberCreate(MemberBase):
@@ -16,6 +20,7 @@ class MemberCreate(MemberBase):
 class MemberUpdate(BaseModel):
     company_id: Optional[int] = None
     role: int
+    updated_at: datetime = datetime.now()
 
 
 class MemberDelete(BaseModel):

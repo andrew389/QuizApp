@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class InvitationBase(BaseModel):
@@ -11,8 +11,8 @@ class InvitationBase(BaseModel):
     sender_id: int
     receiver_id: int
     company_id: int
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
     status: Optional[str] = "pending"
 
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class CompanyBase(BaseModel):
@@ -11,8 +11,8 @@ class CompanyBase(BaseModel):
     description: str
     owner_id: int
     is_visible: bool
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
 
 
 class CompanyCreate(BaseModel):
@@ -20,8 +20,8 @@ class CompanyCreate(BaseModel):
     description: str
     owner_id: int
     is_visible: bool
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
 
 
 class CompanyDetail(CompanyBase):

@@ -100,8 +100,16 @@ class UserService:
             return UserDetail(**updated_user.__dict__)
 
     @staticmethod
-    async def delete_user(uow: IUnitOfWork, user_id: int) -> int:
+    async def deactivate_user(uow: IUnitOfWork, user_id: int) -> UserDetail:
         async with uow:
-            deleted_user_id = await uow.user.delete_one(user_id)
+            user_model = await uow.user.find_one(id=user_id)
+            if not user_model:
+                raise NotFoundException()
+
+            user_model.is_active = False
+            user_model.updated_at = datetime.now()
+            await uow.user.edit_one(
+                user_id, {"is_active": False, "updated_at": user_model.updated_at}
+            )
             await uow.commit()
-            return deleted_user_id
+            return UserDetail(**user_model.__dict__)
