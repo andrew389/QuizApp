@@ -12,6 +12,7 @@ from app.uow.unitofwork import IUnitOfWork
 
 
 class MemberService:
+
     @staticmethod
     async def get_members(
         uow: IUnitOfWork, company_id: int, skip: int = 0, limit: int = 10
@@ -37,29 +38,45 @@ class MemberService:
         uow: IUnitOfWork, user_id: int, request: MemberRequest
     ) -> InvitationBase:
         async with uow:
-            existing_member = await uow.member.find_one(
-                user_id=user_id, company_id=request.company_id
-            )
-            logger.info(f"{existing_member}")
-            if existing_member:
-                logger.error("User is already a member of the company")
+            if await MemberService._is_existing_member(
+                uow, user_id, request.company_id
+            ):
                 raise UnAuthorizedException()
 
             owner = await uow.company.find_one(id=request.company_id)
-
-            invitation_data = SendInvitation(
-                title=request.title,
-                description=request.description,
-                receiver_id=owner.owner_id,
-                company_id=request.company_id,
+            invitation = await MemberService._create_invitation(
+                uow, request, user_id, owner.owner_id
             )
-            invitation_dict = invitation_data.model_dump()
-            invitation_dict["sender_id"] = user_id
-            invitation_dict["status"] = "pending"
-
-            invitation = await uow.invitation.add_one(invitation_dict)
             await uow.commit()
             return InvitationBase(**invitation.__dict__)
+
+    @staticmethod
+    async def _is_existing_member(
+        uow: IUnitOfWork, user_id: int, company_id: int
+    ) -> bool:
+        existing_member = await uow.member.find_one(
+            user_id=user_id, company_id=company_id
+        )
+        if existing_member:
+            logger.error("User is already a member of the company")
+            return True
+        return False
+
+    @staticmethod
+    async def _create_invitation(
+        uow: IUnitOfWork, request: MemberRequest, user_id: int, receiver_id: int
+    ):
+        invitation_data = SendInvitation(
+            title=request.title,
+            description=request.description,
+            receiver_id=receiver_id,
+            company_id=request.company_id,
+        )
+        invitation_dict = invitation_data.model_dump()
+        invitation_dict["sender_id"] = user_id
+        invitation_dict["status"] = "pending"
+        invitation = await uow.invitation.add_one(invitation_dict)
+        return invitation
 
     @staticmethod
     async def cancel_request_to_join(
@@ -67,21 +84,24 @@ class MemberService:
     ) -> int:
         async with uow:
             invitation = await uow.invitation.find_one(id=invitation_id)
-            if not invitation:
-                logger.error("Invitation not found")
-                raise NotFoundException()
-
-            if invitation.sender_id != sender_id:
-                logger.error("Only the sender can cancel the invitation")
-                raise UnAuthorizedException()
-
-            if invitation.status != "pending":
-                logger.error("Invitation has already been accepted or declined")
-                raise UnAuthorizedException()
-
+            MemberService._validate_invitation_for_cancel(invitation, sender_id)
             cancelled_invitation = await uow.invitation.delete_one(invitation_id)
             await uow.commit()
             return cancelled_invitation.id
+
+    @staticmethod
+    def _validate_invitation_for_cancel(invitation, sender_id):
+        if not invitation:
+            logger.error("Invitation not found")
+            raise NotFoundException()
+
+        if invitation.sender_id != sender_id:
+            logger.error("Only the sender can cancel the invitation")
+            raise UnAuthorizedException()
+
+        if invitation.status != "pending":
+            logger.error("Invitation has already been accepted or declined")
+            raise UnAuthorizedException()
 
     @staticmethod
     async def accept_request(
@@ -89,38 +109,50 @@ class MemberService:
     ) -> InvitationResponse:
         async with uow:
             request = await uow.invitation.find_one(id=request_id)
-            if not request:
-                logger.error("Request not found")
-                raise NotFoundException()
-
-            if request.status != "pending":
-                logger.error("Invitation has already been accepted or declined")
-                raise UnAuthorizedException()
-
-            owner = await uow.member.find_owner(
-                user_id=owner_id, company_id=request.company_id
-            )
-            if not owner:
-                logger.error("Only the owner can accept requests")
-                raise UnAuthorizedException()
-
+            MemberService._validate_request_for_accept(request)
+            await MemberService._validate_owner(uow, owner_id, request.company_id)
             await uow.invitation.edit_one(request_id, {"status": "accepted"})
-
-            member_data = MemberCreate(
-                user_id=request.sender_id, company_id=request.company_id, role=2
-            )
-            await uow.member.add_one(member_data.model_dump(exclude={"id"}))
+            await MemberService._add_member(uow, request.sender_id, request.company_id)
             await uow.commit()
-
-            company = await uow.company.find_one(id=request.company_id)
-            user = await uow.user.find_one(id=request.receiver_id)
-            return InvitationResponse(
-                title=request.title,
-                description=request.description,
-                company_name=company.name,
-                receiver_email=user.email,
-                status="accepted",
+            return await MemberService._create_invitation_response(
+                uow, request, "accepted"
             )
+
+    @staticmethod
+    def _validate_request_for_accept(request):
+        if not request:
+            logger.error("Request not found")
+            raise NotFoundException()
+
+        if request.status != "pending":
+            logger.error("Invitation has already been accepted or declined")
+            raise UnAuthorizedException()
+
+    @staticmethod
+    async def _validate_owner(uow: IUnitOfWork, user_id: int, company_id: int):
+        owner = await uow.member.find_owner(user_id=user_id, company_id=company_id)
+        if not owner:
+            logger.error("Only the owner can accept requests")
+            raise UnAuthorizedException()
+
+    @staticmethod
+    async def _add_member(uow: IUnitOfWork, user_id: int, company_id: int):
+        member_data = MemberCreate(user_id=user_id, company_id=company_id, role=2)
+        await uow.member.add_one(member_data.model_dump(exclude={"id"}))
+
+    @staticmethod
+    async def _create_invitation_response(
+        uow: IUnitOfWork, request, status: str
+    ) -> InvitationResponse:
+        company = await uow.company.find_one(id=request.company_id)
+        user = await uow.user.find_one(id=request.receiver_id)
+        return InvitationResponse(
+            title=request.title,
+            description=request.description,
+            company_name=company.name,
+            receiver_email=user.email,
+            status=status,
+        )
 
     @staticmethod
     async def decline_request(
@@ -128,31 +160,12 @@ class MemberService:
     ) -> InvitationResponse:
         async with uow:
             request = await uow.invitation.find_one(id=request_id)
-            if not request:
-                logger.error("Request not found")
-                raise NotFoundException()
-
-            if request.status != "pending":
-                logger.error("Invitation has already been accepted or declined")
-                raise UnAuthorizedException()
-
-            owner = await uow.member.find_owner(
-                user_id=owner_id, company_id=request.company_id
-            )
-            if not owner:
-                logger.error("Only the owner can decline requests")
-                raise UnAuthorizedException()
-
+            MemberService._validate_request_for_accept(request)
+            await MemberService._validate_owner(uow, owner_id, request.company_id)
             await uow.invitation.edit_one(request_id, {"status": "declined"})
             await uow.commit()
-            company = await uow.company.find_one(id=request.company_id)
-            user = await uow.user.find_one(id=request.receiver_id)
-            return InvitationResponse(
-                title=request.title,
-                description=request.description,
-                company_name=company.name,
-                receiver_email=user.email,
-                status="declined",
+            return await MemberService._create_invitation_response(
+                uow, request, "declined"
             )
 
     @staticmethod
@@ -161,25 +174,7 @@ class MemberService:
     ) -> MemberBase:
         async with uow:
             member = await uow.member.find_one(id=member_id)
-            if not member:
-                logger.error("Member not found")
-                raise NotFoundException()
-
-            owner = await uow.member.find_owner(
-                user_id=user_id, company_id=member.company_id
-            )
-            if not owner or owner.role != 1:
-                logger.error("Only the owner can remove members")
-                raise UnAuthorizedException()
-
-            if owner.id == member_id:
-                logger.error("You can't remove owner")
-                raise UnAuthorizedException()
-
-            if user_id == member_id:
-                logger.error("You can't remove yourself")
-                raise UnAuthorizedException()
-
+            MemberService._validate_member_for_remove(member, user_id, member_id)
             updated_member = await uow.member.edit_one(
                 member_id, {"role": 0, "company_id": None}
             )
@@ -187,18 +182,34 @@ class MemberService:
             return updated_member
 
     @staticmethod
+    def _validate_member_for_remove(member, user_id: int, member_id: int):
+        if not member:
+            logger.error("Member not found")
+            raise NotFoundException()
+
+        if member.role == 1:
+            logger.error("You can't remove owner")
+            raise UnAuthorizedException()
+
+        if user_id == member_id:
+            logger.error("You can't remove yourself")
+            raise UnAuthorizedException()
+
+    @staticmethod
     async def leave_company(
         uow: IUnitOfWork, user_id: int, company_id: int
     ) -> MemberBase:
         async with uow:
             member = await uow.member.find_one(user_id=user_id, company_id=company_id)
-
-            if not member or member.role == 1:
-                logger.error("Leaving exception")
-                raise UnAuthorizedException()
-
+            MemberService._validate_member_for_leave(member)
             updated_member = await uow.member.edit_one(
                 member.id, {"role": 0, "company_id": None}
             )
             await uow.commit()
             return updated_member
+
+    @staticmethod
+    def _validate_member_for_leave(member):
+        if not member or member.role == 1:
+            logger.error("Leaving exception")
+            raise UnAuthorizedException()

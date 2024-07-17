@@ -19,25 +19,14 @@ class CompanyService:
         uow: IUnitOfWork, company: CompanyCreate, owner_id: int
     ) -> CompanyDetail:
         async with uow:
-
-            existing_member = await uow.member.find_one(user_id=owner_id)
-
-            if existing_member:
-                logger.error("User is already a member of another company")
-                raise UnAuthorizedException()
+            await CompanyService._check_existing_member(uow, owner_id)
 
             company_dict = company.model_dump()
             company_dict["owner_id"] = owner_id
             company_model = await uow.company.add_one(company_dict)
-
-            member_data = MemberCreate(
-                user_id=owner_id, company_id=company_model.id, role=1
-            )
-
-            await uow.member.add_one(member_data.model_dump(exclude={"id"}))
+            await CompanyService._add_owner_as_member(uow, owner_id, company_model.id)
 
             await uow.commit()
-
             return CompanyDetail(**company_model.__dict__)
 
     @staticmethod
@@ -52,22 +41,17 @@ class CompanyService:
                 owner_id=current_user_id, skip=skip, limit=limit
             )
 
-            combined_companies = list(
-                {
-                    company.id: company
-                    for company in (visible_companies + user_companies)
-                }.values()
+            combined_companies = CompanyService._combine_and_paginate_companies(
+                visible_companies, user_companies, skip, limit
             )
 
-            paginated_companies = combined_companies[skip : skip + limit]
-
-            company_list = CompaniesListResponse(
+            return CompaniesListResponse(
                 companies=[
-                    CompanyBase(**company.__dict__) for company in paginated_companies
+                    CompanyBase(**company.__dict__)
+                    for company in combined_companies["paginated"]
                 ],
-                total=len(combined_companies),
+                total=combined_companies["total"],
             )
-            return company_list
 
     @staticmethod
     async def get_company_by_id(uow: IUnitOfWork, company_id: int) -> CompanyDetail:
@@ -81,10 +65,9 @@ class CompanyService:
         uow: IUnitOfWork, company_id: int, company_update: CompanyUpdate
     ) -> CompanyDetail:
         async with uow:
-            company_dict = company_update.model_dump()
-
-            await uow.company.edit_one(company_id, company_dict)
+            await uow.company.edit_one(company_id, company_update.model_dump())
             await uow.commit()
+
             updated_company = await uow.company.find_one(id=company_id)
             return CompanyDetail(**updated_company.__dict__)
 
@@ -101,18 +84,33 @@ class CompanyService:
     ) -> CompanyDetail:
         async with uow:
             company_model = await uow.company.find_one(id=company_id)
-
             if not company_model:
                 raise ValueError("Company not found")
 
             company_model.is_visible = is_visible
-
-            await uow.company.edit_one(
-                company_id,
-                {
-                    "is_visible": company_model.is_visible,
-                },
-            )
+            await uow.company.edit_one(company_id, {"is_visible": is_visible})
             await uow.commit()
 
             return CompanyDetail(**company_model.__dict__)
+
+    @staticmethod
+    async def _check_existing_member(uow: IUnitOfWork, owner_id: int):
+        existing_member = await uow.member.find_one(user_id=owner_id)
+        if existing_member:
+            logger.error("User is already a member of another company")
+            raise UnAuthorizedException()
+
+    @staticmethod
+    async def _add_owner_as_member(uow: IUnitOfWork, owner_id: int, company_id: int):
+        member_data = MemberCreate(user_id=owner_id, company_id=company_id, role=1)
+        await uow.member.add_one(member_data.model_dump(exclude={"id"}))
+
+    @staticmethod
+    def _combine_and_paginate_companies(visible_companies, user_companies, skip, limit):
+        combined_companies = list(
+            {
+                company.id: company for company in (visible_companies + user_companies)
+            }.values()
+        )
+        paginated_companies = combined_companies[skip : skip + limit]
+        return {"paginated": paginated_companies, "total": len(combined_companies)}

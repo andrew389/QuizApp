@@ -75,7 +75,7 @@ async def test_remove_member():
     )
 
     user_id = 1
-    member_id = 2
+    member_id = 1
 
     with pytest.raises(UnAuthorizedException):
         await MemberService.remove_member(
