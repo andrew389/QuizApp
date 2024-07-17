@@ -19,9 +19,12 @@ class User(Base):
     phone = Column(String)
     avatar = Column(String)
     is_superuser = Column(Boolean, default=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.now)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
     updated_at = Column(
-        DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
 
     companies = relationship("Company", back_populates="user")
@@ -35,9 +38,12 @@ class Company(Base):
     description = Column(String, nullable=True)
     owner_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     is_visible = Column(Boolean, default=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.now)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
     updated_at = Column(
-        DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
 
     user = relationship("User", back_populates="companies")

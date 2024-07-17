@@ -11,12 +11,6 @@ def generate_random_password(length: int = 12) -> str:
     return password
 
 
-def remove_timezone(dt: datetime) -> datetime:
-    if dt.tzinfo is not None:
-        return dt.replace(tzinfo=None)
-    return dt
-
-
 def create_user(email: str):
     random_password = generate_random_password()
     user_create = UserCreate(

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from app.schemas.company import (
     CompanyCreate,
     CompanyDetail,
@@ -18,8 +16,7 @@ class CompanyService:
         async with uow:
             company_dict = company.model_dump()
             company_dict["owner_id"] = owner_id
-            company_dict["created_at"] = datetime.now()
-            company_dict["updated_at"] = datetime.now()
+
             company_model = await uow.company.add_one(company_dict)
             await uow.commit()
 
@@ -67,7 +64,6 @@ class CompanyService:
     ) -> CompanyDetail:
         async with uow:
             company_dict = company_update.model_dump()
-            company_dict["updated_at"] = datetime.now()
 
             await uow.company.edit_one(company_id, company_dict)
             await uow.commit()
@@ -92,14 +88,12 @@ class CompanyService:
 
             # Update the attributes directly
             company_model.is_visible = is_visible
-            company_model.updated_at = datetime.now()
 
             # Save the changes
             await uow.company.edit_one(
                 company_id,
                 {
                     "is_visible": company_model.is_visible,
-                    "updated_at": company_model.updated_at,
                 },
             )
             await uow.commit()

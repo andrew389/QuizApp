@@ -1,6 +1,5 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from typing import Optional, List
-from datetime import datetime
 
 
 class UserBase(BaseModel):
@@ -14,8 +13,6 @@ class UserBase(BaseModel):
     phone: str
     avatar: str
     is_superuser: bool
-    created_at: datetime
-    updated_at: datetime
 
 
 class UserCreate(BaseModel):
@@ -26,12 +23,9 @@ class UserCreate(BaseModel):
     city: str
     phone: str
     avatar: str
-    created_at: datetime
-    updated_at: datetime
 
 
 class UserUpdate(BaseModel):
-    updated_at: datetime
     firstname: Optional[str] = None
     lastname: Optional[str] = None
     password: Optional[str] = None

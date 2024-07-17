@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional, List
 
 from pydantic import BaseModel, ConfigDict
@@ -11,8 +10,6 @@ class CompanyBase(BaseModel):
     description: str
     owner_id: int
     is_visible: bool
-    created_at: datetime
-    updated_at: datetime
 
 
 class CompanyCreate(BaseModel):
@@ -20,8 +17,6 @@ class CompanyCreate(BaseModel):
     description: str
     owner_id: int
     is_visible: bool
-    created_at: datetime
-    updated_at: datetime
 
 
 class CompanyDetail(CompanyBase):
