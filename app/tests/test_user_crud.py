@@ -1,8 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from app.exceptions.base import NotFoundException
-from app.schemas.user import UserCreate, UserUpdate, UserDetail
+from app.schemas.user import UserCreate, UserUpdate
 from app.services.user import UserService
 from app.uow.unitofwork import IUnitOfWork
 
@@ -15,7 +14,6 @@ async def test_add_user():
     mock_uow.user = mock_user_repo
 
     user_data = UserCreate(
-        username="testuser",
         email="test@test.com",
         password="password",
         firstname="John",
@@ -45,7 +43,6 @@ async def test_get_users():
     mock_users = [
         MagicMock(
             id=1,
-            username="testuser",
             email="test@example.com",
             password="password",
             firstname="John",
@@ -64,7 +61,6 @@ async def test_get_users():
     users_list = await UserService.get_users(mock_uow)
 
     assert len(users_list.users) == len(mock_users)
-    assert users_list.users[0].username == mock_users[0].username
     assert users_list.users[0].email == mock_users[0].email
     mock_uow.user.find_all.assert_called_once()
 
@@ -77,7 +73,6 @@ async def test_get_user_by_id():
     user_id = 1
     mock_user = MagicMock(
         id=user_id,
-        username="testuser",
         email="test@example.com",
         password="password",
         firstname="John",
@@ -95,7 +90,6 @@ async def test_get_user_by_id():
     user_detail = await UserService.get_user_by_id(mock_uow, user_id)
 
     assert user_detail.id == user_id
-    assert user_detail.username == mock_user.username
     assert user_detail.email == mock_user.email
     mock_uow.user.find_one.assert_called_once_with(id=user_id)
 
@@ -107,7 +101,6 @@ async def test_update_user():
 
     user_id = 1
     user_update = UserUpdate(
-        username="updateduser",
         email="updated@example.com",
         firstname="John",
         lastname="Doe",
@@ -121,7 +114,6 @@ async def test_update_user():
     )
     mock_user = MagicMock(
         id=user_id,
-        username="testuser",
         email="test@example.com",
         password="password",
         firstname="John",
@@ -136,7 +128,6 @@ async def test_update_user():
     )
     updated_user = MagicMock(
         id=user_id,
-        username="updateduser",
         email="updated@example.com",
         password="password",
         firstname="John",
@@ -168,7 +159,6 @@ async def test_deactivate_user():
     user_id = 1
     mock_user = MagicMock(
         id=user_id,
-        username="testuser",
         email="test@example.com",
         password="password",
         firstname="John",
@@ -187,9 +177,7 @@ async def test_deactivate_user():
     deactivated_user = await UserService.deactivate_user(mock_uow, user_id)
 
     assert deactivated_user.is_active == False
-    mock_uow.user.edit_one.assert_called_once_with(
-        user_id, {"is_active": False, "updated_at": mock_user.updated_at}
-    )
+    mock_uow.user.edit_one.assert_called_once_with(user_id, {"is_active": False})
     mock_uow.commit.assert_called_once()
 
 
@@ -200,7 +188,6 @@ async def test_failure_update_user():
 
     user_id = 1
     user_update = UserUpdate(
-        username="updateduser",
         email="updated@example.com",
         firstname="John",
         lastname="Doe",
@@ -214,7 +201,6 @@ async def test_failure_update_user():
     )
     mock_user = MagicMock(
         id=12,
-        username="testuser",
         email="test@example.com",
         password="password",
         firstname="John",
@@ -229,7 +215,6 @@ async def test_failure_update_user():
     )
     updated_user = MagicMock(
         id=13,
-        username="updateduser",
         email="updated@example.com",
         password="password",
         firstname="John",

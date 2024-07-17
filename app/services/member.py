@@ -1,14 +1,12 @@
-from datetime import datetime
-
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
 from app.schemas.invitation import InvitationBase, SendInvitation, InvitationResponse
 from app.schemas.member import (
     MemberCreate,
-    MemberUpdate,
     MembersListResponse,
     MemberBase,
+    MemberRequest,
 )
 from app.uow.unitofwork import IUnitOfWork
 
@@ -36,29 +34,27 @@ class MemberService:
 
     @staticmethod
     async def request_to_join_company(
-        uow: IUnitOfWork, user_id: int, company_id: int, title: str, description: str
+        uow: IUnitOfWork, user_id: int, request: MemberRequest
     ) -> InvitationBase:
         async with uow:
             existing_member = await uow.member.find_one(
-                user_id=user_id, company_id=company_id
+                user_id=user_id, company_id=request.company_id
             )
             logger.info(f"{existing_member}")
             if existing_member:
                 logger.error("User is already a member of the company")
                 raise UnAuthorizedException()
 
-            owner = await uow.company.find_one(id=company_id)
+            owner = await uow.company.find_one(id=request.company_id)
 
             invitation_data = SendInvitation(
-                title=title,
-                description=description,
+                title=request.title,
+                description=request.description,
                 receiver_id=owner.owner_id,
-                company_id=company_id,
+                company_id=request.company_id,
             )
             invitation_dict = invitation_data.model_dump()
             invitation_dict["sender_id"] = user_id
-            invitation_dict["created_at"] = datetime.now()
-            invitation_dict["updated_at"] = datetime.now()
             invitation_dict["status"] = "pending"
 
             invitation = await uow.invitation.add_one(invitation_dict)
@@ -108,9 +104,7 @@ class MemberService:
                 logger.error("Only the owner can accept requests")
                 raise UnAuthorizedException()
 
-            await uow.invitation.edit_one(
-                request_id, {"status": "accepted", "updated_at": datetime.now()}
-            )
+            await uow.invitation.edit_one(request_id, {"status": "accepted"})
 
             member_data = MemberCreate(
                 user_id=request.sender_id, company_id=request.company_id, role=2
@@ -124,7 +118,7 @@ class MemberService:
                 title=request.title,
                 description=request.description,
                 company_name=company.name,
-                receiver_name=user.username,
+                receiver_email=user.email,
                 status="accepted",
             )
 
@@ -149,9 +143,7 @@ class MemberService:
                 logger.error("Only the owner can decline requests")
                 raise UnAuthorizedException()
 
-            await uow.invitation.edit_one(
-                request_id, {"status": "declined", "updated_at": datetime.now()}
-            )
+            await uow.invitation.edit_one(request_id, {"status": "declined"})
             await uow.commit()
             company = await uow.company.find_one(id=request.company_id)
             user = await uow.user.find_one(id=request.receiver_id)
@@ -159,7 +151,7 @@ class MemberService:
                 title=request.title,
                 description=request.description,
                 company_name=company.name,
-                receiver_name=user.username,
+                receiver_email=user.email,
                 status="declined",
             )
 

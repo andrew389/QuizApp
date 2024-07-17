@@ -11,8 +11,8 @@ class CompanyBase(BaseModel):
     description: str
     owner_id: int
     is_visible: bool
-    created_at: datetime = datetime.now()
-    updated_at: datetime = datetime.now()
+    created_at: datetime
+    updated_at: datetime
 
 
 class CompanyCreate(BaseModel):
@@ -20,8 +20,8 @@ class CompanyCreate(BaseModel):
     description: str
     owner_id: int
     is_visible: bool
-    created_at: datetime = datetime.now()
-    updated_at: datetime = datetime.now()
+    created_at: datetime
+    updated_at: datetime
 
 
 class CompanyDetail(CompanyBase):

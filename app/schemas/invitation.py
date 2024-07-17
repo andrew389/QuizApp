@@ -11,8 +11,6 @@ class InvitationBase(BaseModel):
     sender_id: int
     receiver_id: int
     company_id: int
-    created_at: datetime = datetime.now()
-    updated_at: datetime = datetime.now()
     status: Optional[str] = "pending"
 
 
@@ -28,7 +26,7 @@ class InvitationResponse(BaseModel):
     title: str
     description: str
     company_name: str
-    receiver_name: str
+    receiver_email: str
     status: Optional[str] = "pending"
 
 

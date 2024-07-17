@@ -1,4 +1,3 @@
-from datetime import datetime
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
@@ -37,8 +36,6 @@ class InvitationService:
 
             invitation_dict = invitation_data.model_dump()
             invitation_dict["sender_id"] = sender_id
-            invitation_dict["created_at"] = datetime.now()
-            invitation_dict["updated_at"] = datetime.now()
             invitation = await uow.invitation.add_one(invitation_dict)
             await uow.commit()
 
@@ -122,9 +119,7 @@ class InvitationService:
                 user_id=receiver_id, company_id=invitation.company_id, role=2
             )
             await uow.member.add_one(member_data.model_dump(exclude={"id"}))
-            await uow.invitation.edit_one(
-                invitation_id, {"status": "accepted", "updated_at": datetime.now()}
-            )
+            await uow.invitation.edit_one(invitation_id, {"status": "accepted"})
             await uow.commit()
 
             company = await uow.company.find_one(id=invitation.company_id)
@@ -133,7 +128,7 @@ class InvitationService:
                 title=invitation.title,
                 description=invitation.description,
                 company_name=company.name,
-                receiver_name=user.username,
+                receiver_email=user.email,
                 status="accepted",
             )
 
@@ -155,9 +150,7 @@ class InvitationService:
                 logger.error("Invitation has already been accepted or declined")
                 raise UnAuthorizedException()
 
-            await uow.invitation.edit_one(
-                invitation_id, {"status": "declined", "updated_at": datetime.now()}
-            )
+            await uow.invitation.edit_one(invitation_id, {"status": "declined"})
             await uow.commit()
 
             company = await uow.company.find_one(id=invitation.company_id)
@@ -166,7 +159,7 @@ class InvitationService:
                 title=invitation.title,
                 description=invitation.description,
                 company_name=company.name,
-                receiver_name=user.username,
+                receiver_email=user.email,
                 status="declined",
             )
             return response

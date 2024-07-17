@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, status
 
 from app.core.dependencies import UOWDep, MemberServiceDep, AuthServiceDep
 from app.core.logger import logger
@@ -6,27 +6,24 @@ from app.exceptions.base import (
     CreatingException,
     DeletingException,
     UpdatingException,
-    FetchingException,
 )
 from app.models.models import User
 from app.schemas.invitation import InvitationBase, InvitationResponse
-from app.schemas.member import MembersListResponse
+from app.schemas.member import MemberRequest
 
 router = APIRouter(prefix="/member", tags=["Member"])
 
 
 @router.post("/user/send", response_model=InvitationBase)
 async def request_to_join_company_to_owner(
-    company_id: int,
-    title: str,
-    description: str,
+    request: MemberRequest,
     uow: UOWDep,
     member_service: MemberServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
         invitation = await member_service.request_to_join_company(
-            uow, current_user.id, company_id, title, description
+            uow, current_user.id, request
         )
         return invitation
     except Exception as e:
@@ -34,7 +31,7 @@ async def request_to_join_company_to_owner(
         raise CreatingException()
 
 
-@router.post("/user/cancel", response_model=dict)
+@router.post("/user/cancel", response_model=dict, status_code=status.HTTP_200_OK)
 async def cancel_request_to_join_to_owner(
     invitation_id: int,
     uow: UOWDep,
@@ -45,7 +42,7 @@ async def cancel_request_to_join_to_owner(
         invitation_id = await member_service.cancel_request_to_join(
             uow, invitation_id, current_user.id
         )
-        return {"status_code": 200, "canceled_invitation_id": invitation_id}
+        return {"canceled_invitation_id": invitation_id}
     except Exception as e:
         logger.error(f"Error canceling request to join company: {e}")
         raise DeletingException()

@@ -24,8 +24,6 @@ class UserService:
 
             user_dict = user.model_dump()
             user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
-            user_dict["created_at"] = datetime.now()
-            user_dict["updated_at"] = datetime.now()
             user_model = await uow.user.add_one(user_dict)
             await uow.commit()
 
@@ -92,7 +90,6 @@ class UserService:
             )
             user_dict = user_update.model_dump()
             user_dict["id"] = user_id
-            user_dict["updated_at"] = datetime.now()
 
             await uow.user.edit_one(user_id, user_dict)
             await uow.commit()
@@ -108,8 +105,6 @@ class UserService:
 
             user_model.is_active = False
             user_model.updated_at = datetime.now()
-            await uow.user.edit_one(
-                user_id, {"is_active": False, "updated_at": user_model.updated_at}
-            )
+            await uow.user.edit_one(user_id, {"is_active": False})
             await uow.commit()
             return UserDetail(**user_model.__dict__)

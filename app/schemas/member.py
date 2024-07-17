@@ -9,8 +9,6 @@ class MemberBase(BaseModel):
     user_id: int
     company_id: Optional[int] = None
     role: int
-    created_at: datetime = datetime.now()
-    updated_at: datetime = datetime.now()
 
 
 class MemberCreate(MemberBase):
@@ -20,11 +18,16 @@ class MemberCreate(MemberBase):
 class MemberUpdate(BaseModel):
     company_id: Optional[int] = None
     role: int
-    updated_at: datetime = datetime.now()
 
 
 class MemberDelete(BaseModel):
     id: int
+
+
+class MemberRequest(BaseModel):
+    company_id: int
+    title: str
+    description: str
 
 
 class MembersListResponse(BaseModel):

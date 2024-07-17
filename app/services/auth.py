@@ -13,7 +13,7 @@ from app.utils.hasher import Hasher
 from app.exceptions.auth import ValidateCredentialsException, NotAuthenticatedException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.utils.user_create import create_user
+from app.utils.user import create_user
 
 
 class AuthService:
@@ -25,6 +25,8 @@ class AuthService:
             user = await UserService.get_user_by_email(uow, email)
             if user and Hasher.verify_password(password, user.password):
                 return user
+            else:
+                raise NotAuthenticatedException()
 
     @staticmethod
     def create_access_token(data: dict):
@@ -71,7 +73,8 @@ class AuthService:
         async with uow:
             user = await UserService.get_user_by_email(uow, email=email)
             if user is None:
-                user = await create_user(uow, email)
+                user = create_user(email)
+                await UserService.add_user(uow, user)
             return user
 
     @staticmethod
