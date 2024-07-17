@@ -6,7 +6,6 @@ from datetime import datetime
 class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: Optional[int] = None
-    username: str
     email: EmailStr
     is_active: bool
     firstname: str
@@ -20,7 +19,6 @@ class UserBase(BaseModel):
 
 
 class UserCreate(BaseModel):
-    username: str
     email: EmailStr
     password: str
     firstname: str
@@ -34,7 +32,8 @@ class UserCreate(BaseModel):
 
 class UserUpdate(BaseModel):
     updated_at: datetime
-    username: Optional[str] = None
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
     password: Optional[str] = None
 
 

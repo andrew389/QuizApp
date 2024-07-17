@@ -2,9 +2,7 @@ import secrets
 import string
 from datetime import datetime
 
-from app.uow.unitofwork import UnitOfWork
 from app.schemas.user import UserCreate
-from app.services.user import UserService
 
 
 def generate_random_password(length: int = 12) -> str:
@@ -13,7 +11,13 @@ def generate_random_password(length: int = 12) -> str:
     return password
 
 
-async def create_user(uow: UnitOfWork, email: str):
+def remove_timezone(dt: datetime) -> datetime:
+    if dt.tzinfo is not None:
+        return dt.replace(tzinfo=None)
+    return dt
+
+
+def create_user(email: str):
     random_password = generate_random_password()
     user_create = UserCreate(
         username=email.split("@")[0],
@@ -27,4 +31,4 @@ async def create_user(uow: UnitOfWork, email: str):
         created_at=datetime.now(),
         updated_at=datetime.now(),
     )
-    return await UserService.add_user(uow, user_create)
+    return user_create

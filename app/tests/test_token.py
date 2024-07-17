@@ -15,9 +15,8 @@ async def test_login_for_access_token():
     mock_uow = AsyncMock(IUnitOfWork)
     mock_user = User(
         id=1,
-        username="testuser",
         email="test@test.com",
-        hashed_password="hashedpassword",
+        password="hashedpassword",
         is_active=True,
         is_superuser=False,
     )
@@ -26,7 +25,7 @@ async def test_login_for_access_token():
     AuthService.create_access_token = MagicMock(return_value="mock_access_token")
 
     response = client.post(
-        "api/v1/auth/login", data={"username": "testuser", "password": "password"}
+        "api/v1/auth/login", data={"email": "test@test.com", "password": "password"}
     )
 
     assert response.status_code == 422
@@ -36,9 +35,8 @@ async def test_login_for_access_token():
 async def test_read_users_me():
     mock_user = User(
         id=1,
-        username="testuser",
         email="test@test.com",
-        hashed_password="hashedpassword",
+        password="hashedpassword",
         is_active=True,
         is_superuser=False,
     )
@@ -58,7 +56,7 @@ async def test_incorrect_login():
     AuthService.authenticate_user = AsyncMock(return_value=None)
 
     response = client.post(
-        "api/v1/auth/login", data={"username": "wronguser", "password": "wrongpassword"}
+        "api/v1/auth/login", data={"email": "wronguser", "password": "wrongpassword"}
     )
 
     assert response.status_code == 422

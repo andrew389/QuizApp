@@ -10,7 +10,6 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
     password = Column(String)
     email = Column(String, unique=True, index=True)
     is_active = Column(Boolean, default=True)

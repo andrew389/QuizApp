@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from app.core.logger import logger
 from app.exceptions.base import NotFoundException
 from app.schemas.user import (
@@ -11,6 +9,7 @@ from app.schemas.user import (
 )
 from app.utils.hasher import Hasher
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.user import remove_timezone
 
 
 class UserService:
@@ -24,8 +23,8 @@ class UserService:
 
             user_dict = user.model_dump()
             user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
-            user_dict["created_at"] = datetime.now()
-            user_dict["updated_at"] = datetime.now()
+            user_dict["created_at"] = remove_timezone(user_dict["created_at"])
+            user_dict["updated_at"] = remove_timezone(user_dict["updated_at"])
             user_model = await uow.user.add_one(user_dict)
             await uow.commit()
 
@@ -92,7 +91,7 @@ class UserService:
             )
             user_dict = user_update.model_dump()
             user_dict["id"] = user_id
-            user_dict["updated_at"] = datetime.now()
+            user_dict["updated_at"] = remove_timezone(user_dict["updated_at"])
 
             await uow.user.edit_one(user_id, user_dict)
             await uow.commit()
@@ -100,8 +99,13 @@ class UserService:
             return UserDetail(**updated_user.__dict__)
 
     @staticmethod
-    async def delete_user(uow: IUnitOfWork, user_id: int) -> int:
+    async def deactivate_user(uow: IUnitOfWork, user_id: int) -> UserDetail:
         async with uow:
-            deleted_user_id = await uow.user.delete_one(user_id)
+            user_model = await uow.user.find_one(id=user_id)
+            if not user_model:
+                raise NotFoundException()
+
+            user_model.is_active = False
+            await uow.user.edit_one(user_id, {"is_active": False})
             await uow.commit()
-            return deleted_user_id
+            return UserDetail(**user_model.__dict__)
