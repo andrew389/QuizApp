@@ -67,21 +67,17 @@ async def get_user_by_id(
 
 @router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
-    user_id: int,
     user_update: UserUpdate,
     uow: UOWDep,
     user_service: UserServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        if current_user.id == user_id:
-            updated_user = await user_service.update_user(uow, user_id, user_update)
-            logger.info(f"Updated user with ID: {user_id}")
-            return UserResponse(user=updated_user)
-        else:
-            raise UnAuthorizedException()
+        updated_user = await user_service.update_user(uow, current_user.id, user_update)
+        logger.info(f"Updated user with ID: {current_user.id}")
+        return UserResponse(user=updated_user)
     except Exception as e:
-        logger.error(f"Error updating user with ID {user_id}: {e}")
+        logger.error(f"Error updating user with ID {current_user.id}: {e}")
         raise UpdatingUserException()
 
 
