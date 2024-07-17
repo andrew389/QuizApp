@@ -16,11 +16,10 @@ class CompanyService:
         async with uow:
             company_dict = company.model_dump()
             company_dict["owner_id"] = owner_id
-
             company_model = await uow.company.add_one(company_dict)
-            await uow.commit()
 
-        return CompanyDetail(**company_model.__dict__)
+            await uow.commit()
+            return CompanyDetail(**company_model.__dict__)
 
     @staticmethod
     async def get_companies(
@@ -31,25 +30,20 @@ class CompanyService:
                 skip=skip, limit=limit
             )
             user_companies = await uow.company.find_all_by_owner(
-                owner_id=current_user_id
+                owner_id=current_user_id, skip=skip, limit=limit
             )
 
-            combined_companies = list(
-                {
-                    company.id: company
-                    for company in (visible_companies + user_companies)
-                }.values()
+            combined_companies = CompanyService._combine_and_paginate_companies(
+                visible_companies, user_companies, skip, limit
             )
 
-            paginated_companies = combined_companies[skip : skip + limit]
-
-            company_list = CompaniesListResponse(
+            return CompaniesListResponse(
                 companies=[
-                    CompanyBase(**company.__dict__) for company in paginated_companies
+                    CompanyBase(**company.__dict__)
+                    for company in combined_companies["paginated"]
                 ],
-                total=len(combined_companies),
+                total=combined_companies["total"],
             )
-            return company_list
 
     @staticmethod
     async def get_company_by_id(uow: IUnitOfWork, company_id: int) -> CompanyDetail:
@@ -63,19 +57,18 @@ class CompanyService:
         uow: IUnitOfWork, company_id: int, company_update: CompanyUpdate
     ) -> CompanyDetail:
         async with uow:
-            company_dict = company_update.model_dump()
-
-            await uow.company.edit_one(company_id, company_dict)
+            await uow.company.edit_one(company_id, company_update.model_dump())
             await uow.commit()
+
             updated_company = await uow.company.find_one(id=company_id)
             return CompanyDetail(**updated_company.__dict__)
 
     @staticmethod
     async def delete_company(uow: IUnitOfWork, company_id: int) -> int:
         async with uow:
-            deleted_company_id = await uow.company.delete_one(company_id)
+            deleted_company = await uow.company.delete_one(company_id)
             await uow.commit()
-            return deleted_company_id
+            return deleted_company.id
 
     @staticmethod
     async def change_company_visibility(
@@ -86,17 +79,18 @@ class CompanyService:
             if not company_model:
                 raise ValueError("Company not found")
 
-            # Update the attributes directly
             company_model.is_visible = is_visible
-
-            # Save the changes
-            await uow.company.edit_one(
-                company_id,
-                {
-                    "is_visible": company_model.is_visible,
-                },
-            )
+            await uow.company.edit_one(company_id, {"is_visible": is_visible})
             await uow.commit()
 
-            # Return updated company details
             return CompanyDetail(**company_model.__dict__)
+
+    @staticmethod
+    def _combine_and_paginate_companies(visible_companies, user_companies, skip, limit):
+        combined_companies = list(
+            {
+                company.id: company for company in (visible_companies + user_companies)
+            }.values()
+        )
+        paginated_companies = combined_companies[skip : skip + limit]
+        return {"paginated": paginated_companies, "total": len(combined_companies)}
