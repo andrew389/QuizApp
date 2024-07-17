@@ -11,7 +11,6 @@ from app.schemas.user import (
 )
 from app.utils.hasher import Hasher
 from app.repositories.unitofwork import IUnitOfWork
-from app.utils.user import remove_timezone
 
 
 class UserService:
@@ -25,8 +24,6 @@ class UserService:
 
             user_dict = user.model_dump()
             user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
-            user_dict["created_at"] = remove_timezone(user_dict["created_at"])
-            user_dict["updated_at"] = remove_timezone(user_dict["updated_at"])
 
             user_model = await uow.user.add_one(user_dict)
             await uow.commit()
@@ -94,7 +91,6 @@ class UserService:
             )
             user_dict = user_update.model_dump()
             user_dict["id"] = user_id
-            user_dict["updated_at"] = remove_timezone(user_dict["updated_at"])
 
             await uow.user.edit_one(user_id, user_dict)
             await uow.commit()
