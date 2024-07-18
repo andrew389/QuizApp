@@ -1,5 +1,10 @@
 from fastapi import APIRouter, Query, Depends
-from app.core.dependencies import UOWDep, UserServiceDep, AuthServiceDep
+from app.core.dependencies import (
+    UOWDep,
+    UserServiceDep,
+    AuthServiceDep,
+    InvitationServiceDep,
+)
 from app.exceptions.base import (
     DeletingException,
     UpdatingException,
@@ -8,6 +13,7 @@ from app.exceptions.base import (
     NotFoundException,
 )
 from app.models.models import User
+from app.schemas.invitation import InvitationsListResponse
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger
 
@@ -99,3 +105,57 @@ async def deactivate_user(
     except Exception as e:
         logger.error(f"Error deleting user with ID {user_id}: {e}")
         raise DeletingException()
+
+
+@router.delete("/{user_id}", response_model=dict)
+async def deactivate_user(
+    user_id: int,
+    uow: UOWDep,
+    user_service: UserServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    try:
+        deactivated_user_id = await user_service.deactivate_user(
+            uow, user_id, current_user.id
+        )
+        logger.info(f"Deleted user with ID: {deactivated_user_id}")
+        return {"status_code": 200}
+    except Exception as e:
+        logger.error(f"Error deleting user with ID {user_id}: {e}")
+        raise DeletingException()
+
+
+@router.get("/invitations/new", response_model=InvitationsListResponse)
+async def get_new_invitations(
+    uow: UOWDep,
+    invitation_service: InvitationServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1),
+):
+    try:
+        invitations = await invitation_service.get_invitations(
+            uow, current_user.id, skip=skip, limit=limit
+        )
+        return invitations
+    except Exception as e:
+        logger.error(f"Error fetching invitations: {e}")
+        raise FetchingException()
+
+
+@router.get("/invitations/sent", response_model=InvitationsListResponse)
+async def get_sent_invitations(
+    uow: UOWDep,
+    invitation_service: InvitationServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1),
+):
+    try:
+        invitations = await invitation_service.get_sent_invitations(
+            uow, current_user.id, skip=skip, limit=limit
+        )
+        return invitations
+    except Exception as e:
+        logger.error(f"Error fetching invitations for owner: {e}")
+        raise FetchingException()
