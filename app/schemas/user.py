@@ -36,7 +36,7 @@ class UserDetail(UserBase):
 
 
 class UserResponse(BaseModel):
-    user: Optional[UserDetail] = None
+    user: Optional[UserBase] = None
 
 
 class SignInRequest(BaseModel):
