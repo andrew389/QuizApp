@@ -1,18 +1,10 @@
-from pydantic import (
-    BaseModel,
-    EmailStr,
-    ConfigDict,
-    field_validator,
-    Field,
-)
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from typing import Optional, List
-from datetime import datetime
 
 
 class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: Optional[int] = None
-    username: str
     email: EmailStr
     is_active: bool
     firstname: str
@@ -21,12 +13,9 @@ class UserBase(BaseModel):
     phone: str
     avatar: str
     is_superuser: bool
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
 
 
 class UserCreate(BaseModel):
-    username: str
     email: EmailStr
     password: str
     firstname: str
@@ -34,38 +23,28 @@ class UserCreate(BaseModel):
     city: str
     phone: str
     avatar: str
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
 
 
 class UserUpdate(BaseModel):
-    updated_at: datetime = Field(default_factory=datetime.now)
-    username: Optional[str] = None
-    email: Optional[EmailStr] = None
-    hashed_password: Optional[str] = None
     firstname: Optional[str] = None
     lastname: Optional[str] = None
-    city: Optional[str] = None
-    phone: Optional[str] = None
-    avatar: Optional[str] = None
+    password: Optional[str] = None
 
 
 class UserDetail(UserBase):
-    hashed_password: Optional[str] = None
+    password: str
 
 
 class UserResponse(BaseModel):
-    user: Optional[UserDetail] = None
+    user: Optional[UserBase] = None
 
 
 class SignInRequest(BaseModel):
-    username: str
+    email: str
     password: str
 
 
 class SignUpRequest(UserCreate):
-    username: str
-    email: EmailStr
     password1: str
     password2: str
 
