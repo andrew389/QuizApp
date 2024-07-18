@@ -2,12 +2,12 @@ from typing import Annotated, Type
 
 from fastapi import Depends
 
+from app.services.auth import AuthService
 from app.services.company import CompanyService
 from app.services.invitation import InvitationService
 from app.services.member import MemberService
-from app.uow.unitofwork import IUnitOfWork, UnitOfWork
-from app.services.auth import AuthService
 from app.services.user import UserService
+from app.uow.unitofwork import IUnitOfWork, UnitOfWork
 
 UOWDep: Type[IUnitOfWork] = Annotated[IUnitOfWork, Depends(UnitOfWork)]
 

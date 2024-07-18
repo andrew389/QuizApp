@@ -2,14 +2,14 @@ from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
 from app.schemas.user import (
-    UserCreate,
-    UsersListResponse,
     UserBase,
+    UserCreate,
     UserDetail,
+    UsersListResponse,
     UserUpdate,
 )
-from app.utils.hasher import Hasher
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.hasher import Hasher
 
 
 class UserService:

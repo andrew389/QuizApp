@@ -1,18 +1,14 @@
 from fastapi import APIRouter, Depends, status
 
-from app.core.dependencies import UOWDep, MemberServiceDep, AuthServiceDep
+from app.core.dependencies import AuthServiceDep, MemberServiceDep, UOWDep
 from app.core.logger import logger
-from app.exceptions.base import (
-    CreatingException,
-    DeletingException,
-    UpdatingException,
-)
+from app.exceptions.base import CreatingException, DeletingException, UpdatingException
 from app.models.models import User
 from app.schemas.invitation import InvitationBase, InvitationResponse
 from app.schemas.member import (
-    MemberRequest,
-    MemberBase,
     AdminRequest,
+    MemberBase,
+    MemberRequest,
     MembersListResponse,
 )
 

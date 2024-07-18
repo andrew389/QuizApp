@@ -1,5 +1,7 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
+
 from app.core.config import settings
 from app.db.redis_db import AsyncRedisConnection
 

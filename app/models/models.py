@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, event
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, event
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -110,3 +110,63 @@ class Member(Base):
 
     user = relationship("User", back_populates="memberships")
     company = relationship("Company", back_populates="members")
+
+
+class Quiz(Base):
+    __tablename__ = "quiz"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    frequency = Column(Integer, default=0)
+    creator_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
+    )
+
+    creator = relationship("User", back_populates="quizzes")
+    questions = relationship(
+        "Question", back_populates="quiz", cascade="all, delete-orphan"
+    )
+
+
+class Question(Base):
+    __tablename__ = "question"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    quiz_id = Column(Integer, ForeignKey("quiz.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
+    )
+
+    quiz = relationship("Quiz", back_populates="questions")
+    answer = relationship(
+        "Answer", back_populates="question", cascade="all, delete-orphan"
+    )
+
+
+class Answer(Base):
+    __tablename__ = "answer"
+
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String, nullable=False)
+    is_correct = Column(Boolean, nullable=False, default=False)
+    question_id = Column(Integer, ForeignKey("question.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
+    )
+
+    question = relationship("Question", back_populates="answer")

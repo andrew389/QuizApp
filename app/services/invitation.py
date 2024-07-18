@@ -3,13 +3,12 @@ from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
 from app.schemas.invitation import (
     InvitationBase,
-    SendInvitation,
     InvitationResponse,
     InvitationsListResponse,
+    SendInvitation,
 )
 from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
-
 from app.utils.role import Role
 
 

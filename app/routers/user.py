@@ -1,21 +1,22 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Depends, Query
+
 from app.core.dependencies import (
-    UOWDep,
-    UserServiceDep,
     AuthServiceDep,
     InvitationServiceDep,
+    UOWDep,
+    UserServiceDep,
 )
+from app.core.logger import logger
 from app.exceptions.base import (
-    DeletingException,
-    UpdatingException,
-    FetchingException,
     CreatingException,
+    DeletingException,
+    FetchingException,
     NotFoundException,
+    UpdatingException,
 )
 from app.models.models import User
 from app.schemas.invitation import InvitationsListResponse
-from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
-from app.core.logger import logger
+from app.schemas.user import UserCreate, UserResponse, UsersListResponse, UserUpdate
 
 router = APIRouter(prefix="/user", tags=["User"])
 

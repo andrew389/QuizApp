@@ -1,10 +1,14 @@
 from abc import ABC, abstractmethod
 
 from app.db.pg_db import async_session_maker
+from app.repositories.answer import AnswerRepository
 from app.repositories.company import CompanyRepository
 from app.repositories.invitation import InvitationRepository
 from app.repositories.member import MemberRepository
+from app.repositories.question import QuestionRepository
+from app.repositories.quiz import QuizRepository
 from app.repositories.user import UserRepository
+from app.utils.role import Role
 
 
 class IUnitOfWork(ABC):
@@ -12,6 +16,9 @@ class IUnitOfWork(ABC):
     company: CompanyRepository
     invitation: InvitationRepository
     member: MemberRepository
+    quiz: QuizRepository
+    question: QuestionRepository
+    answer: AnswerRepository
 
     @abstractmethod
     def __init__(self): ...
@@ -40,6 +47,9 @@ class UnitOfWork:
         self.company = CompanyRepository(self.session)
         self.invitation = InvitationRepository(self.session)
         self.member = MemberRepository(self.session)
+        self.quiz = QuizRepository(self.session)
+        self.question = QuestionRepository(self.session)
+        self.answer = AnswerRepository(self.session)
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         if exc_type:

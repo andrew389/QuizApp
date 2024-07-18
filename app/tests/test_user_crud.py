@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from app.exceptions.auth import UnAuthorizedException
 from app.schemas.user import UserCreate, UserUpdate

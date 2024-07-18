@@ -2,11 +2,11 @@ from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
 from app.schemas.company import (
+    CompaniesListResponse,
+    CompanyBase,
     CompanyCreate,
     CompanyDetail,
     CompanyUpdate,
-    CompaniesListResponse,
-    CompanyBase,
 )
 from app.uow.unitofwork import IUnitOfWork
 

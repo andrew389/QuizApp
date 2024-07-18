@@ -1,27 +1,26 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.core.dependencies import (
-    UOWDep,
-    CompanyServiceDep,
     AuthServiceDep,
+    CompanyServiceDep,
     MemberServiceDep,
+    UOWDep,
 )
+from app.core.logger import logger
+from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import (
-    UpdatingException,
+    CreatingException,
     DeletingException,
     FetchingException,
-    CreatingException,
+    UpdatingException,
 )
-
-from app.exceptions.auth import UnAuthorizedException
 from app.models.models import User
 from app.schemas.company import (
+    CompaniesListResponse,
     CompanyCreate,
     CompanyDetail,
     CompanyUpdate,
-    CompaniesListResponse,
 )
-from app.core.logger import logger
 from app.schemas.member import MemberBase, MembersListResponse
 
 router = APIRouter(prefix="/company", tags=["Company"])

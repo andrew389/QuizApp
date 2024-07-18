@@ -4,14 +4,14 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db.redis_db import redis
-from app.routers import check_connection, user, auth, company, invitation, member
 from app.core.config import settings
-
-from contextlib import asynccontextmanager
+from app.db.redis_db import redis
+from app.routers import auth, check_connection, company, invitation, member, user
 
 
 @asynccontextmanager

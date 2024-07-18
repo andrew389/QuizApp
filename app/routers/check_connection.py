@@ -2,11 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logger import logger
 from app.db.pg_db import get_async_session
 from app.db.redis_db import redis
-
-from app.core.logger import logger
-from app.exceptions.db import BadConnectRedis, BadConnectPostgres
+from app.exceptions.db import BadConnectPostgres, BadConnectRedis
 
 router = APIRouter(tags=["Health Check"])
 

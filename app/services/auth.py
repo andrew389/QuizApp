@@ -1,18 +1,17 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 from fastapi import Depends
-from jose import jwt, JWTError
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
 from jose.jwt import decode
 from jwt import PyJWKClient
 
 from app.core.config import settings
+from app.exceptions.auth import NotAuthenticatedException, ValidateCredentialsException
 from app.schemas.user import UserDetail
-from app.uow.unitofwork import UnitOfWork, IUnitOfWork
 from app.services.user import UserService
+from app.uow.unitofwork import IUnitOfWork, UnitOfWork
 from app.utils.hasher import Hasher
-from app.exceptions.auth import ValidateCredentialsException, NotAuthenticatedException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-
 from app.utils.user import create_user
 
 

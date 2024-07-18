@@ -28,6 +28,7 @@ pyjwt = "^2.8.0"
 python-jose = "^3.3.0"
 cryptography = "^42.0.8"
 anyio = "^4.4.0"
+isort = "^5.13.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
@@ -51,6 +52,9 @@ exclude = '''
   | dist
 )/
 '''
+[tool.isort]
+profile = "hug"
+
 
 [build-system]
 requires = ["poetry-core"]

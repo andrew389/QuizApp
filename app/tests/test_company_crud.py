@@ -1,13 +1,14 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from app.schemas.company import (
-    CompanyCreate,
-    CompanyUpdate,
-    CompanyBase,
     CompaniesListResponse,
+    CompanyBase,
+    CompanyCreate,
     CompanyDetail,
+    CompanyUpdate,
 )
 from app.services.company import CompanyService
 from app.uow.unitofwork import IUnitOfWork

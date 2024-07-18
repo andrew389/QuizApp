@@ -1,8 +1,8 @@
+from abc import ABC, abstractmethod
 from typing import Any
 
-from sqlalchemy import insert, select, update, delete
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from abc import ABC, abstractmethod
 
 
 class AbstractRepository(ABC):
