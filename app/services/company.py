@@ -1,7 +1,6 @@
-from datetime import datetime
-
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
+from app.exceptions.base import NotFoundException
 from app.schemas.company import (
     CompanyCreate,
     CompanyDetail,
@@ -9,7 +8,6 @@ from app.schemas.company import (
     CompaniesListResponse,
     CompanyBase,
 )
-from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
 
 
@@ -19,12 +17,9 @@ class CompanyService:
         uow: IUnitOfWork, company: CompanyCreate, owner_id: int
     ) -> CompanyDetail:
         async with uow:
-            await CompanyService._check_existing_member(uow, owner_id)
-
             company_dict = company.model_dump()
             company_dict["owner_id"] = owner_id
             company_model = await uow.company.add_one(company_dict)
-            await CompanyService._add_owner_as_member(uow, owner_id, company_model.id)
 
             await uow.commit()
             return CompanyDetail(**company_model.__dict__)
@@ -57,14 +52,20 @@ class CompanyService:
     async def get_company_by_id(uow: IUnitOfWork, company_id: int) -> CompanyDetail:
         async with uow:
             company_model = await uow.company.find_one(id=company_id)
-            if company_model:
-                return CompanyDetail(**company_model.__dict__)
+            if not company_model:
+                logger.warning(f"Company with ID {company_id} not found")
+                raise NotFoundException()
+            return CompanyDetail(**company_model.__dict__)
 
     @staticmethod
     async def update_company(
-        uow: IUnitOfWork, company_id: int, company_update: CompanyUpdate
+        uow: IUnitOfWork,
+        company_id: int,
+        current_user_id: int,
+        company_update: CompanyUpdate,
     ) -> CompanyDetail:
         async with uow:
+            await CompanyService.ensure_owner(uow, company_id, current_user_id)
             await uow.company.edit_one(company_id, company_update.model_dump())
             await uow.commit()
 
@@ -72,17 +73,21 @@ class CompanyService:
             return CompanyDetail(**updated_company.__dict__)
 
     @staticmethod
-    async def delete_company(uow: IUnitOfWork, company_id: int) -> int:
+    async def delete_company(
+        uow: IUnitOfWork, company_id: int, current_user_id: int
+    ) -> int:
         async with uow:
+            await CompanyService.ensure_owner(uow, company_id, current_user_id)
             deleted_company = await uow.company.delete_one(company_id)
             await uow.commit()
             return deleted_company.id
 
     @staticmethod
     async def change_company_visibility(
-        uow: IUnitOfWork, company_id: int, is_visible: bool
+        uow: IUnitOfWork, company_id: int, current_user_id: int, is_visible: bool
     ) -> CompanyDetail:
         async with uow:
+            await CompanyService.ensure_owner(uow, company_id, current_user_id)
             company_model = await uow.company.find_one(id=company_id)
             if not company_model:
                 raise ValueError("Company not found")
@@ -94,18 +99,6 @@ class CompanyService:
             return CompanyDetail(**company_model.__dict__)
 
     @staticmethod
-    async def _check_existing_member(uow: IUnitOfWork, owner_id: int):
-        existing_member = await uow.member.find_one(user_id=owner_id)
-        if existing_member:
-            logger.error("User is already a member of another company")
-            raise UnAuthorizedException()
-
-    @staticmethod
-    async def _add_owner_as_member(uow: IUnitOfWork, owner_id: int, company_id: int):
-        member_data = MemberCreate(user_id=owner_id, company_id=company_id, role=1)
-        await uow.member.add_one(member_data.model_dump(exclude={"id"}))
-
-    @staticmethod
     def _combine_and_paginate_companies(visible_companies, user_companies, skip, limit):
         combined_companies = list(
             {
@@ -114,3 +107,10 @@ class CompanyService:
         )
         paginated_companies = combined_companies[skip : skip + limit]
         return {"paginated": paginated_companies, "total": len(combined_companies)}
+
+    @staticmethod
+    async def ensure_owner(uow: IUnitOfWork, company_id: int, user_id: int):
+        company = await CompanyService.get_company_by_id(uow, company_id)
+        if company.owner_id != user_id:
+            raise UnAuthorizedException()
+        return company

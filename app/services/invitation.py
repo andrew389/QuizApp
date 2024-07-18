@@ -10,6 +10,8 @@ from app.schemas.invitation import (
 from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
 
+from app.utils.role import Role
+
 
 class InvitationService:
 
@@ -84,7 +86,9 @@ class InvitationService:
             InvitationService._check_pending_status(invitation)
 
             member_data = MemberCreate(
-                user_id=receiver_id, company_id=invitation.company_id, role=2
+                user_id=receiver_id,
+                company_id=invitation.company_id,
+                role=Role.MEMBER.value,
             )
             await uow.member.add_one(member_data.model_dump(exclude={"id"}))
             await uow.invitation.edit_one(invitation_id, {"status": "accepted"})

@@ -9,6 +9,7 @@ from app.schemas.member import (
     MemberRequest,
 )
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.role import Role
 
 
 class MemberService:
@@ -176,7 +177,7 @@ class MemberService:
             member = await uow.member.find_one(id=member_id)
             MemberService._validate_member_for_remove(member, user_id, member_id)
             updated_member = await uow.member.edit_one(
-                member_id, {"role": 0, "company_id": None}
+                member_id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
             await uow.commit()
             return updated_member
@@ -187,7 +188,7 @@ class MemberService:
             logger.error("Member not found")
             raise NotFoundException()
 
-        if member.role == 1:
+        if member.role == Role.OWNER.value:
             logger.error("You can't remove owner")
             raise UnAuthorizedException()
 
@@ -203,13 +204,13 @@ class MemberService:
             member = await uow.member.find_one(user_id=user_id, company_id=company_id)
             MemberService._validate_member_for_leave(member)
             updated_member = await uow.member.edit_one(
-                member.id, {"role": 0, "company_id": None}
+                member.id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
             await uow.commit()
             return updated_member
 
     @staticmethod
     def _validate_member_for_leave(member):
-        if not member or member.role == 1:
+        if not member or member.role == Role.OWNER.value:
             logger.error("Leaving exception")
             raise UnAuthorizedException()

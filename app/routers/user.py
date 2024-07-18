@@ -1,20 +1,13 @@
-from fastapi import APIRouter, Query, Depends, status
-from app.core.dependencies import (
-    UOWDep,
-    UserServiceDep,
-    AuthServiceDep,
-    InvitationServiceDep,
-)
-from app.exceptions.auth import UnAuthorizedException
+from fastapi import APIRouter, Query, Depends
+from app.core.dependencies import UOWDep, UserServiceDep, AuthServiceDep
 from app.exceptions.base import (
-    UpdatingException,
     DeletingException,
+    UpdatingException,
     FetchingException,
     CreatingException,
     NotFoundException,
 )
 from app.models.models import User
-from app.schemas.invitation import InvitationsListResponse
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger
 
@@ -71,15 +64,18 @@ async def get_user_by_id(
         raise FetchingException()
 
 
-@router.put("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
+@router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
     user_update: UserUpdate,
     uow: UOWDep,
+    user_id: int,
     user_service: UserServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        updated_user = await user_service.update_user(uow, current_user.id, user_update)
+        updated_user = await user_service.update_user(
+            uow, current_user.id, user_id, user_update
+        )
         logger.info(f"Updated user with ID: {current_user.id}")
         return UserResponse(user=updated_user)
     except Exception as e:
@@ -95,48 +91,11 @@ async def deactivate_user(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        if current_user.id == user_id:
-            deleted_user_id = await user_service.deactivate_user(uow, user_id)
-            logger.info(f"Deleted user with ID: {deleted_user_id}")
-            return {"status_code": 200}
-        else:
-            raise UnAuthorizedException()
+        deactivated_user_id = await user_service.deactivate_user(
+            uow, user_id, current_user.id
+        )
+        logger.info(f"Deleted user with ID: {deactivated_user_id}")
+        return {"status_code": 200}
     except Exception as e:
         logger.error(f"Error deleting user with ID {user_id}: {e}")
         raise DeletingException()
-
-
-@router.get("/invitations/new", response_model=InvitationsListResponse)
-async def get_new_invitations(
-    uow: UOWDep,
-    invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1),
-):
-    try:
-        invitations = await invitation_service.get_invitations(
-            uow, current_user.id, skip=skip, limit=limit
-        )
-        return invitations
-    except Exception as e:
-        logger.error(f"Error fetching invitations: {e}")
-        raise FetchingException()
-
-
-@router.get("/invitations/sent", response_model=InvitationsListResponse)
-async def get_sent_invitations(
-    uow: UOWDep,
-    invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1),
-):
-    try:
-        invitations = await invitation_service.get_sent_invitations(
-            uow, current_user.id, skip=skip, limit=limit
-        )
-        return invitations
-    except Exception as e:
-        logger.error(f"Error fetching invitations for owner: {e}")
-        raise FetchingException()
