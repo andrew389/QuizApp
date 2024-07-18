@@ -138,7 +138,9 @@ class MemberService:
 
     @staticmethod
     async def _add_member(uow: IUnitOfWork, user_id: int, company_id: int):
-        member_data = MemberCreate(user_id=user_id, company_id=company_id, role=2)
+        member_data = MemberCreate(
+            user_id=user_id, company_id=company_id, role=Role.MEMBER.value
+        )
         await uow.member.add_one(member_data.model_dump(exclude={"id"}))
 
     @staticmethod
@@ -175,7 +177,9 @@ class MemberService:
     ) -> MemberBase:
         async with uow:
             member = await uow.member.find_one(id=member_id)
-            MemberService._validate_member_for_remove(member, user_id, member_id)
+            await MemberService._validate_member_for_remove(
+                uow, member, user_id, member_id
+            )
             updated_member = await uow.member.edit_one(
                 member_id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
@@ -183,7 +187,17 @@ class MemberService:
             return updated_member
 
     @staticmethod
-    def _validate_member_for_remove(member, user_id: int, member_id: int):
+    async def _validate_member_for_remove(
+        uow: IUnitOfWork, member, user_id: int, member_id: int
+    ):
+        owner_or_admin = await uow.member.find_one(id=user_id)
+
+        if (
+            owner_or_admin.role != Role.OWNER.value
+            or owner_or_admin.role != Role.ADMIN.value
+        ):
+            raise UnAuthorizedException()
+
         if not member:
             logger.error("Member not found")
             raise NotFoundException()
