@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from typing import Optional, List
-from datetime import datetime
 
 
 class UserBase(BaseModel):
@@ -37,7 +36,7 @@ class UserDetail(UserBase):
 
 
 class UserResponse(BaseModel):
-    user: Optional[UserDetail] = None
+    user: Optional[UserBase] = None
 
 
 class SignInRequest(BaseModel):
