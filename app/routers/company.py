@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Query, Depends
-from typing import List
 
 from app.core.dependencies import UOWDep, CompanyServiceDep, AuthServiceDep
 from app.exceptions.base import (
@@ -7,7 +6,6 @@ from app.exceptions.base import (
     DeletingException,
     FetchingException,
     CreatingException,
-    NotFoundException,
 )
 
 from app.exceptions.auth import UnAuthorizedException
@@ -69,9 +67,6 @@ async def get_company_by_id(
 ):
     try:
         company = await company_service.get_company_by_id(uow, company_id)
-        if not company:
-            logger.warning(f"Company with ID {company_id} not found")
-            raise NotFoundException()
         logger.info(f"Fetched company with ID: {company_id}")
         return company
     except Exception as e:
@@ -88,15 +83,11 @@ async def update_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        company = await company_service.get_company_by_id(uow, company_id)
-        if company.owner_id == current_user.id:
-            updated_company = await company_service.update_company(
-                uow, company_id, company_update
-            )
-            logger.info(f"Updated company with ID: {company_id}")
-            return updated_company
-        else:
-            raise UnAuthorizedException()
+        updated_company = await company_service.update_company(
+            uow, company_id, current_user.id, company_update
+        )
+        logger.info(f"Updated company with ID: {company_id}")
+        return updated_company
     except Exception as e:
         logger.error(f"Error updating company with ID {company_id}: {e}")
         raise UpdatingException()
@@ -110,13 +101,11 @@ async def delete_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        company = await company_service.get_company_by_id(uow, company_id)
-        if company.owner_id == current_user.id:
-            deleted_company_id = await company_service.delete_company(uow, company_id)
-            logger.info(f"Deleted company with ID: {deleted_company_id}")
-            return {"status_code": 200}
-        else:
-            raise UnAuthorizedException()
+        deleted_company_id = await company_service.delete_company(
+            uow, company_id, current_user.id
+        )
+        logger.info(f"Deleted company with ID: {deleted_company_id}")
+        return {"status_code": 200}
     except Exception as e:
         logger.error(f"Error deleting company with ID {company_id}: {e}")
         raise DeletingException()
@@ -131,15 +120,11 @@ async def change_company_visibility(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        company = await company_service.get_company_by_id(uow, company_id)
-        if company.owner_id == current_user.id:
-            updated_company = await company_service.change_company_visibility(
-                uow, company_id, is_visible
-            )
-            logger.info(f"Changed visibility for company with ID: {company_id}")
-            return updated_company
-        else:
-            raise UnAuthorizedException()
+        updated_company = await company_service.change_company_visibility(
+            uow, company_id, current_user.id, is_visible
+        )
+        logger.info(f"Changed visibility for company with ID: {company_id}")
+        return updated_company
     except Exception as e:
         logger.error(f"Error changing visibility for company with ID {company_id}: {e}")
         raise UpdatingException()

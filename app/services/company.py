@@ -1,3 +1,6 @@
+from app.core.logger import logger
+from app.exceptions.auth import UnAuthorizedException
+from app.exceptions.base import NotFoundException
 from app.schemas.company import (
     CompanyCreate,
     CompanyDetail,
@@ -49,14 +52,20 @@ class CompanyService:
     async def get_company_by_id(uow: IUnitOfWork, company_id: int) -> CompanyDetail:
         async with uow:
             company_model = await uow.company.find_one(id=company_id)
-            if company_model:
-                return CompanyDetail(**company_model.__dict__)
+            if not company_model:
+                logger.warning(f"Company with ID {company_id} not found")
+                raise NotFoundException()
+            return CompanyDetail(**company_model.__dict__)
 
     @staticmethod
     async def update_company(
-        uow: IUnitOfWork, company_id: int, company_update: CompanyUpdate
+        uow: IUnitOfWork,
+        company_id: int,
+        current_user_id: int,
+        company_update: CompanyUpdate,
     ) -> CompanyDetail:
         async with uow:
+            await CompanyService.ensure_owner(uow, company_id, current_user_id)
             await uow.company.edit_one(company_id, company_update.model_dump())
             await uow.commit()
 
@@ -64,17 +73,21 @@ class CompanyService:
             return CompanyDetail(**updated_company.__dict__)
 
     @staticmethod
-    async def delete_company(uow: IUnitOfWork, company_id: int) -> int:
+    async def delete_company(
+        uow: IUnitOfWork, company_id: int, current_user_id: int
+    ) -> int:
         async with uow:
+            await CompanyService.ensure_owner(uow, company_id, current_user_id)
             deleted_company = await uow.company.delete_one(company_id)
             await uow.commit()
             return deleted_company.id
 
     @staticmethod
     async def change_company_visibility(
-        uow: IUnitOfWork, company_id: int, is_visible: bool
+        uow: IUnitOfWork, company_id: int, current_user_id: int, is_visible: bool
     ) -> CompanyDetail:
         async with uow:
+            await CompanyService.ensure_owner(uow, company_id, current_user_id)
             company_model = await uow.company.find_one(id=company_id)
             if not company_model:
                 raise ValueError("Company not found")
@@ -94,3 +107,10 @@ class CompanyService:
         )
         paginated_companies = combined_companies[skip : skip + limit]
         return {"paginated": paginated_companies, "total": len(combined_companies)}
+
+    @staticmethod
+    async def ensure_owner(uow: IUnitOfWork, company_id: int, user_id: int):
+        company = await CompanyService.get_company_by_id(uow, company_id)
+        if company.owner_id != user_id:
+            raise UnAuthorizedException()
+        return company

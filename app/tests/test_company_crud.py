@@ -126,7 +126,7 @@ async def test_update_company():
     mock_uow.company.edit_one.return_value = updated_company
 
     company_detail = await CompanyService.update_company(
-        mock_uow, company_id, company_update
+        mock_uow, company_id, 1, company_update
     )
 
     mock_uow.company.edit_one.assert_called_once()
@@ -176,7 +176,7 @@ async def test_change_company_visibility():
     mock_uow.company.edit_one.return_value = updated_company
 
     company_detail = await CompanyService.change_company_visibility(
-        mock_uow, company_id, is_visible
+        mock_uow, company_id, 1, is_visible
     )
 
     assert company_detail.is_visible == is_visible

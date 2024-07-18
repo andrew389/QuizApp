@@ -1,4 +1,5 @@
 from app.core.logger import logger
+from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
 from app.schemas.user import (
     UserCreate,
@@ -13,7 +14,7 @@ from app.uow.unitofwork import IUnitOfWork
 
 class UserService:
     @staticmethod
-    async def add_user(uow: IUnitOfWork, user: UserCreate) -> UserDetail:
+    async def add_user(uow: IUnitOfWork, user: UserCreate) -> UserBase:
         async with uow:
             existing_user = await uow.user.find_one(email=user.email)
             if existing_user:
@@ -26,7 +27,7 @@ class UserService:
             user_model = await uow.user.add_one(user_dict)
             await uow.commit()
 
-        return UserDetail(**user_model.__dict__)
+        return UserBase(**user_model.__dict__)
 
     @staticmethod
     async def get_users(
@@ -40,11 +41,11 @@ class UserService:
             return user_list
 
     @staticmethod
-    async def get_user_by_id(uow: IUnitOfWork, user_id: int) -> UserDetail:
+    async def get_user_by_id(uow: IUnitOfWork, user_id: int) -> UserBase:
         async with uow:
             user_model = await uow.user.find_one(id=user_id)
             if user_model:
-                return UserDetail(**user_model.__dict__)
+                return UserBase(**user_model.__dict__)
 
     @staticmethod
     async def get_user_by_username(uow: IUnitOfWork, username: str) -> UserDetail:
@@ -81,9 +82,12 @@ class UserService:
 
     @staticmethod
     async def update_user(
-        uow: IUnitOfWork, user_id: int, user_update: UserUpdate
+        uow: IUnitOfWork, current_user_id: int, user_id: int, user_update: UserUpdate
     ) -> UserDetail:
         async with uow:
+            if current_user_id != user_id:
+                raise UnAuthorizedException()
+
             user_update = await UserService.validate_user_update(
                 uow, user_id, user_update
             )
@@ -96,8 +100,13 @@ class UserService:
             return UserDetail(**updated_user.__dict__)
 
     @staticmethod
-    async def deactivate_user(uow: IUnitOfWork, user_id: int) -> UserDetail:
+    async def deactivate_user(
+        uow: IUnitOfWork, user_id: int, current_user_id: int
+    ) -> UserDetail:
         async with uow:
+            if current_user_id != user_id:
+                raise UnAuthorizedException()
+
             user_model = await uow.user.find_one(id=user_id)
             if not user_model:
                 raise NotFoundException()
