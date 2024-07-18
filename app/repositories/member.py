@@ -27,3 +27,16 @@ class MemberRepository(SQLAlchemyRepository):
         )
         res = await self.session.execute(stmt)
         return res.scalars().all()
+
+    async def find_all_by_company_and_role(
+        self, company_id: int, role: int, skip: int = 0, limit: int = 10
+    ):
+        stmt = (
+            select(Member)
+            .filter_by(company_id=company_id, role=role)
+            .offset(skip)
+            .limit(limit)
+        )
+
+        res = await self.session.execute(stmt)
+        return res.scalars().all()

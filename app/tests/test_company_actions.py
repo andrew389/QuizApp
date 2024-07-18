@@ -3,11 +3,12 @@ from unittest.mock import AsyncMock
 from datetime import datetime
 
 from app.exceptions.auth import UnAuthorizedException
-from app.schemas.invitation import InvitationBase, SendInvitation, InvitationResponse
+from app.schemas.invitation import SendInvitation
 from app.services.invitation import InvitationService
 from app.services.member import MemberService
-from app.schemas.member import MembersListResponse, MemberBase
+from app.schemas.member import MembersListResponse, MemberBase, AdminRequest
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.role import Role
 
 
 @pytest.mark.asyncio
@@ -19,7 +20,7 @@ async def test_get_members():
             id=1,
             user_id=1,
             company_id=1,
-            role=2,
+            role=Role.MEMBER.value,
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )
@@ -40,7 +41,7 @@ async def test_get_member_by_id():
         id=1,
         user_id=1,
         company_id=1,
-        role=2,
+        role=Role.MEMBER.value,
         created_at=datetime.now(),
         updated_at=datetime.now(),
     )
@@ -71,7 +72,7 @@ async def test_remove_member():
     mock_uow = AsyncMock(spec=IUnitOfWork)
     setattr(mock_uow, "member", AsyncMock())
     mock_uow.member.find_one.return_value = AsyncMock(
-        id=2, user_id=2, company_id=1, role=2
+        id=2, user_id=2, company_id=1, role=Role.MEMBER.value
     )
 
     user_id = 1
@@ -88,7 +89,7 @@ async def test_leave_company():
     mock_uow = AsyncMock(spec=IUnitOfWork)
     setattr(mock_uow, "member", AsyncMock())
     mock_uow.member.find_one.return_value = AsyncMock(
-        id=1, user_id=1, company_id=1, role=2
+        id=1, user_id=1, company_id=1, role=Role.MEMBER.value
     )
 
     user_id = 1
@@ -128,3 +129,47 @@ async def test_cancel_invitation():
     )
 
     assert isinstance(response, SendInvitation) == False
+
+
+@pytest.mark.asyncio
+async def test_appoint_admin():
+    mock_uow = AsyncMock(spec=IUnitOfWork)
+    setattr(mock_uow, "member", AsyncMock())
+
+    owner_id = 1
+    admin_request = AdminRequest(member_id=2, company_id=1)
+    member_data = AsyncMock(id=2, user_id=2, company_id=1, role=Role.MEMBER.value)
+    updated_member_data = AsyncMock(
+        id=2, user_id=2, company_id=1, role=Role.ADMIN.value
+    )
+
+    mock_uow.member.find_one.return_value = member_data
+    mock_uow.member.edit_one.return_value = updated_member_data
+
+    response = await MemberService.appoint_admin(mock_uow, owner_id, admin_request)
+
+    assert isinstance(response, MemberBase)
+    assert response.role == Role.ADMIN.value
+    mock_uow.commit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_admins():
+    mock_uow = AsyncMock(spec=IUnitOfWork)
+    setattr(mock_uow, "member", AsyncMock())
+
+    company_id = 1
+    admins_data = [
+        AsyncMock(id=1, user_id=1, company_id=1, role=Role.ADMIN.value),
+        AsyncMock(id=2, user_id=2, company_id=1, role=Role.ADMIN.value),
+    ]
+
+    mock_uow.member.find_all_by_company_and_role.return_value = admins_data
+
+    response = await MemberService.get_admins(
+        mock_uow, company_id=company_id, skip=0, limit=10
+    )
+
+    assert isinstance(response, MembersListResponse)
+    assert len(response.members) == 2
+    assert response.total == 2

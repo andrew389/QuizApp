@@ -9,7 +9,12 @@ from app.exceptions.base import (
 )
 from app.models.models import User
 from app.schemas.invitation import InvitationBase, InvitationResponse
-from app.schemas.member import MemberRequest
+from app.schemas.member import (
+    MemberRequest,
+    MemberBase,
+    AdminRequest,
+    MembersListResponse,
+)
 
 router = APIRouter(prefix="/member", tags=["Member"])
 
@@ -80,3 +85,13 @@ async def decline_request_for_owner(
     except Exception as e:
         logger.error(f"Error declining request to join company: {e}")
         raise UpdatingException()
+
+
+@router.post("/owner/admin/{member_id}", response_model=MemberBase)
+async def appoint_admin(
+    admin_request: AdminRequest,
+    uow: UOWDep,
+    member_service: MemberServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    return await member_service.appoint_admin(uow, current_user.id, admin_request)

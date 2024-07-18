@@ -154,6 +154,17 @@ async def get_members(
         raise FetchingException()
 
 
+@router.get("/admins", response_model=MembersListResponse)
+async def get_admins(
+    uow: UOWDep,
+    member_service: MemberServiceDep,
+    company_id: int,
+    skip: int = 0,
+    limit: int = 10,
+):
+    return await member_service.view_admins(uow, company_id, skip, limit)
+
+
 @router.post("/members/remove", response_model=MemberBase)
 async def remove_member(
     member_id: int,

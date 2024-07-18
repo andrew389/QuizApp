@@ -7,6 +7,7 @@ from app.schemas.member import (
     MembersListResponse,
     MemberBase,
     MemberRequest,
+    AdminRequest,
 )
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.role import Role
@@ -192,10 +193,7 @@ class MemberService:
     ):
         owner_or_admin = await uow.member.find_one(id=user_id)
 
-        if (
-            owner_or_admin.role != Role.OWNER.value
-            or owner_or_admin.role != Role.ADMIN.value
-        ):
+        if owner_or_admin.role not in [Role.OWNER.value, Role.ADMIN.value]:
             raise UnAuthorizedException()
 
         if not member:
@@ -228,3 +226,34 @@ class MemberService:
         if not member or member.role == Role.OWNER.value:
             logger.error("Leaving exception")
             raise UnAuthorizedException()
+
+    @staticmethod
+    async def appoint_admin(
+        uow: IUnitOfWork, owner_id: int, admin_request: AdminRequest
+    ) -> MemberBase:
+        async with uow:
+            await MemberService._validate_owner(uow, owner_id, admin_request.company_id)
+            member = await uow.member.find_one(id=admin_request.member_id)
+            if not member or member.role != Role.MEMBER.value:
+                logger.error("Member not found or not eligible")
+                raise NotFoundException()
+
+            updated_member = await uow.member.edit_one(
+                admin_request.member_id, {"role": Role.ADMIN.value}
+            )
+            await uow.commit()
+            return MemberBase(**updated_member.__dict__)
+
+    @staticmethod
+    async def get_admins(
+        uow: IUnitOfWork, company_id: int, skip: int = 0, limit: int = 10
+    ) -> MembersListResponse:
+        async with uow:
+            admins = await uow.member.find_all_by_company_and_role(
+                company_id=company_id, role=Role.ADMIN.value, skip=skip, limit=limit
+            )
+            admins_list = MembersListResponse(
+                members=[MemberBase(**admin.__dict__) for admin in admins],
+                total=len(admins),
+            )
+            return admins_list
