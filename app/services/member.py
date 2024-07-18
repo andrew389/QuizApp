@@ -188,7 +188,7 @@ class MemberService:
 
     @staticmethod
     async def _validate_member_for_remove(uow, member, user_id: int, member_id: int):
-        owner = await uow.member.find_one(id=member_id)
+        owner = await uow.member.find_one(id=user_id)
 
         if owner.role != Role.OWNER.value:
             raise UnAuthorizedException()
