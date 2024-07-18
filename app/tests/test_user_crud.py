@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
+from app.exceptions.auth import UnAuthorizedException
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.user import UserService
 from app.uow.unitofwork import IUnitOfWork
@@ -144,7 +145,7 @@ async def test_update_user():
     mock_uow.user.find_one.return_value = mock_user
     mock_uow.user.edit_one.return_value = updated_user
 
-    user_detail = await UserService.update_user(mock_uow, user_id, user_update)
+    user_detail = await UserService.update_user(mock_uow, user_id, 1, user_update)
 
     assert user_detail.id == user_id
     mock_uow.user.edit_one.assert_called_once()
@@ -174,7 +175,7 @@ async def test_deactivate_user():
     mock_uow.user.find_one.return_value = mock_user
     mock_uow.user.edit_one.return_value = mock_user
 
-    deactivated_user = await UserService.deactivate_user(mock_uow, user_id)
+    deactivated_user = await UserService.deactivate_user(mock_uow, user_id, 1)
 
     assert deactivated_user.is_active == False
     mock_uow.user.edit_one.assert_called_once_with(user_id, {"is_active": False})
@@ -231,8 +232,5 @@ async def test_failure_update_user():
     mock_uow.user.find_one.return_value = mock_user
     mock_uow.user.edit_one.return_value = updated_user
 
-    user_detail = await UserService.update_user(mock_uow, user_id, user_update)
-
-    assert user_detail.id != user_id
-    mock_uow.user.edit_one.assert_called_once()
-    mock_uow.commit.assert_called_once()
+    with pytest.raises(UnAuthorizedException):
+        await UserService.update_user(mock_uow, user_id, 2, user_update)
