@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Query
-from app.core.dependencies import UOWDep, UserServiceDep
+from fastapi import APIRouter, Query, Depends
+from app.core.dependencies import UOWDep, UserServiceDep, AuthServiceDep
 from app.exceptions.user import (
     DeletingUserException,
     UpdatingUserException,
@@ -7,6 +7,7 @@ from app.exceptions.user import (
     CreatingUserException,
     NotFoundUserException,
 )
+from app.models.user import User
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger
 
@@ -65,29 +66,35 @@ async def get_user_by_id(
 
 @router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
-    user_id: int,
     user_update: UserUpdate,
     uow: UOWDep,
+    user_id: int,
     user_service: UserServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        updated_user = await user_service.update_user(uow, user_id, user_update)
-        logger.info(f"Updated user with ID: {user_id}")
+        updated_user = await user_service.update_user(
+            uow, current_user.id, user_id, user_update
+        )
+        logger.info(f"Updated user with ID: {current_user.id}")
         return UserResponse(user=updated_user)
     except Exception as e:
-        logger.error(f"Error updating user with ID {user_id}: {e}")
+        logger.error(f"Error updating user with ID {current_user.id}: {e}")
         raise UpdatingUserException()
 
 
 @router.delete("/{user_id}", response_model=dict)
-async def delete_user(
+async def deactivate_user(
     user_id: int,
     uow: UOWDep,
     user_service: UserServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     try:
-        deleted_user_id = await user_service.delete_user(uow, user_id)
-        logger.info(f"Deleted user with ID: {deleted_user_id}")
+        deactivated_user_id = await user_service.deactivate_user(
+            uow, user_id, current_user.id
+        )
+        logger.info(f"Deleted user with ID: {deactivated_user_id}")
         return {"status_code": 200}
     except Exception as e:
         logger.error(f"Error deleting user with ID {user_id}: {e}")

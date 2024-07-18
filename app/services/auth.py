@@ -6,26 +6,31 @@ from jose.jwt import decode
 from jwt import PyJWKClient
 
 from app.core.config import settings
-from app.repositories.unitofwork import UnitOfWork, IUnitOfWork
+from app.schemas.user import UserDetail
+from app.uow.unitofwork import UnitOfWork, IUnitOfWork
 from app.services.user import UserService
 from app.utils.hasher import Hasher
 from app.exceptions.auth import ValidateCredentialsException, NotAuthenticatedException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.utils.user_create import create_user
+from app.utils.user import create_user
 
 
 class AuthService:
     @staticmethod
-    async def authenticate_user(uow: IUnitOfWork, username: str, password: str):
+    async def authenticate_user(
+        uow: IUnitOfWork, email: str, password: str
+    ) -> UserDetail:
         async with uow:
-            user = await UserService.get_user_by_username(uow, username)
-            if not user or not Hasher.verify_password(password, user.hashed_password):
-                return None
-            return user
+            user = await UserService.get_user_by_email(uow, email)
+            if user and Hasher.verify_password(password, user.password):
+                return user
+            else:
+                raise NotAuthenticatedException()
 
     @staticmethod
-    def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    def create_access_token(data: dict):
+        expires_delta = timedelta(minutes=settings.auth.access_token_expire_minutes)
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.now() + expires_delta
@@ -35,7 +40,7 @@ class AuthService:
         encoded_jwt = jwt.encode(
             to_encode, settings.auth.secret_key, algorithm=settings.auth.algorithm
         )
-        return encoded_jwt
+        return encoded_jwt, expire
 
     @staticmethod
     def verify_token_credentials(token: HTTPAuthorizationCredentials):
@@ -68,7 +73,8 @@ class AuthService:
         async with uow:
             user = await UserService.get_user_by_email(uow, email=email)
             if user is None:
-                user = await create_user(uow, email)
+                user = create_user(email)
+                await UserService.add_user(uow, user)
             return user
 
     @staticmethod

@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from app.core.logger import logger
+from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.user import NotFoundUserException
 from app.schemas.user import (
     UserCreate,
@@ -15,7 +14,7 @@ from app.repositories.unitofwork import IUnitOfWork
 
 class UserService:
     @staticmethod
-    async def add_user(uow: IUnitOfWork, user: UserCreate) -> UserDetail:
+    async def add_user(uow: IUnitOfWork, user: UserCreate) -> UserBase:
         async with uow:
             existing_user = await uow.user.find_one(email=user.email)
             if existing_user:
@@ -23,15 +22,13 @@ class UserService:
                 raise ValueError()
 
             user_dict = user.model_dump()
-            user_dict["hashed_password"] = Hasher.hash_password(
-                user_dict.pop("password")
-            )
-            user_dict["created_at"] = datetime.now()
-            user_dict["updated_at"] = datetime.now()
+
+            user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
+
             user_model = await uow.user.add_one(user_dict)
             await uow.commit()
 
-        return UserDetail(**user_model.__dict__)
+        return UserBase(**user_model.__dict__)
 
     @staticmethod
     async def get_users(
@@ -45,11 +42,11 @@ class UserService:
             return user_list
 
     @staticmethod
-    async def get_user_by_id(uow: IUnitOfWork, user_id: int) -> UserDetail:
+    async def get_user_by_id(uow: IUnitOfWork, user_id: int) -> UserBase:
         async with uow:
             user_model = await uow.user.find_one(id=user_id)
             if user_model:
-                return UserDetail(**user_model.__dict__)
+                return UserBase(**user_model.__dict__)
 
     @staticmethod
     async def get_user_by_username(uow: IUnitOfWork, username: str) -> UserDetail:
@@ -75,7 +72,7 @@ class UserService:
 
         user_data = user_update.model_dump()
         fields_to_check = user_data.keys()
-        default_values = ["string", "user@example.com"]
+        default_values = ["string"]
 
         for field_name in fields_to_check:
             field_value = user_data[field_name]
@@ -86,15 +83,17 @@ class UserService:
 
     @staticmethod
     async def update_user(
-        uow: IUnitOfWork, user_id: int, user_update: UserUpdate
+        uow: IUnitOfWork, current_user_id: int, user_id: int, user_update: UserUpdate
     ) -> UserDetail:
         async with uow:
+            if current_user_id != user_id:
+                raise UnAuthorizedException()
+
             user_update = await UserService.validate_user_update(
                 uow, user_id, user_update
             )
             user_dict = user_update.model_dump()
             user_dict["id"] = user_id
-            user_dict["updated_at"] = datetime.now()
 
             await uow.user.edit_one(user_id, user_dict)
             await uow.commit()
@@ -102,8 +101,18 @@ class UserService:
             return UserDetail(**updated_user.__dict__)
 
     @staticmethod
-    async def delete_user(uow: IUnitOfWork, user_id: int) -> int:
+    async def deactivate_user(
+        uow: IUnitOfWork, user_id: int, current_user_id: int
+    ) -> UserDetail:
         async with uow:
-            deleted_user_id = await uow.user.delete_one(user_id)
+            if current_user_id != user_id:
+                raise UnAuthorizedException()
+
+            user_model = await uow.user.find_one(id=user_id)
+            if not user_model:
+                raise NotFoundUserException()
+
+            user_model.is_active = False
+            await uow.user.edit_one(user_id, {"is_active": False})
             await uow.commit()
-            return deleted_user_id
+            return UserDetail(**user_model.__dict__)

@@ -1,9 +1,10 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
+from app.exceptions.auth import UnAuthorizedException
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.user import UserService
-from app.repositories.unitofwork import IUnitOfWork
+from app.uow.unitofwork import IUnitOfWork
 
 
 @pytest.mark.asyncio
@@ -14,7 +15,6 @@ async def test_add_user():
     mock_uow.user = mock_user_repo
 
     user_data = UserCreate(
-        username="testuser",
         email="test@test.com",
         password="password",
         firstname="John",
@@ -44,8 +44,8 @@ async def test_get_users():
     mock_users = [
         MagicMock(
             id=1,
-            username="testuser",
             email="test@example.com",
+            password="password",
             firstname="John",
             lastname="Doe",
             city="New York",
@@ -62,7 +62,6 @@ async def test_get_users():
     users_list = await UserService.get_users(mock_uow)
 
     assert len(users_list.users) == len(mock_users)
-    assert users_list.users[0].username == mock_users[0].username
     assert users_list.users[0].email == mock_users[0].email
     mock_uow.user.find_all.assert_called_once()
 
@@ -75,8 +74,8 @@ async def test_get_user_by_id():
     user_id = 1
     mock_user = MagicMock(
         id=user_id,
-        username="testuser",
         email="test@example.com",
+        password="password",
         firstname="John",
         lastname="Doe",
         city="New York",
@@ -92,7 +91,6 @@ async def test_get_user_by_id():
     user_detail = await UserService.get_user_by_id(mock_uow, user_id)
 
     assert user_detail.id == user_id
-    assert user_detail.username == mock_user.username
     assert user_detail.email == mock_user.email
     mock_uow.user.find_one.assert_called_once_with(id=user_id)
 
@@ -104,7 +102,6 @@ async def test_update_user():
 
     user_id = 1
     user_update = UserUpdate(
-        username="updateduser",
         email="updated@example.com",
         firstname="John",
         lastname="Doe",
@@ -118,8 +115,8 @@ async def test_update_user():
     )
     mock_user = MagicMock(
         id=user_id,
-        username="testuser",
         email="test@example.com",
+        password="password",
         firstname="John",
         lastname="Doe",
         city="New York",
@@ -132,8 +129,8 @@ async def test_update_user():
     )
     updated_user = MagicMock(
         id=user_id,
-        username="updateduser",
         email="updated@example.com",
+        password="password",
         firstname="John",
         lastname="Doe",
         city="New York",
@@ -148,7 +145,7 @@ async def test_update_user():
     mock_uow.user.find_one.return_value = mock_user
     mock_uow.user.edit_one.return_value = updated_user
 
-    user_detail = await UserService.update_user(mock_uow, user_id, user_update)
+    user_detail = await UserService.update_user(mock_uow, user_id, 1, user_update)
 
     assert user_detail.id == user_id
     mock_uow.user.edit_one.assert_called_once()
@@ -156,15 +153,84 @@ async def test_update_user():
 
 
 @pytest.mark.asyncio
-async def test_delete_user():
+async def test_deactivate_user():
     mock_uow = AsyncMock(IUnitOfWork)
     mock_uow.user = AsyncMock()
 
     user_id = 1
-    mock_uow.user.delete_one.return_value = user_id
+    mock_user = MagicMock(
+        id=user_id,
+        email="test@example.com",
+        password="password",
+        firstname="John",
+        lastname="Doe",
+        city="New York",
+        phone="1234567890",
+        avatar="default.jpg",
+        created_at="2024-07-09 09:40:59.493975",
+        updated_at="2024-07-09 09:40:59.493975",
+        is_active=False,
+        is_superuser=False,
+    )
+    mock_uow.user.find_one.return_value = mock_user
+    mock_uow.user.edit_one.return_value = mock_user
 
-    deleted_user_id = await UserService.delete_user(mock_uow, user_id)
+    deactivated_user = await UserService.deactivate_user(mock_uow, user_id, 1)
 
-    assert deleted_user_id == user_id
-    mock_uow.user.delete_one.assert_called_once_with(user_id)
+    assert deactivated_user.is_active == False
+    mock_uow.user.edit_one.assert_called_once_with(user_id, {"is_active": False})
     mock_uow.commit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_failure_update_user():
+    mock_uow = AsyncMock(IUnitOfWork)
+    mock_uow.user = AsyncMock()
+
+    user_id = 1
+    user_update = UserUpdate(
+        email="updated@example.com",
+        firstname="John",
+        lastname="Doe",
+        city="New York",
+        phone="1234567890",
+        avatar="default.jpg",
+        created_at="2024-07-09 09:40:59.493975",
+        updated_at="2024-07-09 09:40:59.493975",
+        is_active=True,
+        is_superuser=False,
+    )
+    mock_user = MagicMock(
+        id=12,
+        email="test@example.com",
+        password="password",
+        firstname="John",
+        lastname="Doe",
+        city="New York",
+        phone="1234567890",
+        avatar="default.jpg",
+        created_at="2024-07-09 09:40:59.493975",
+        updated_at="2024-07-09 09:40:59.493975",
+        is_active=True,
+        is_superuser=False,
+    )
+    updated_user = MagicMock(
+        id=13,
+        email="updated@example.com",
+        password="password",
+        firstname="John",
+        lastname="Doe",
+        city="New York",
+        phone="1234567890",
+        avatar="default.jpg",
+        created_at="2024-07-09 09:40:59.493975",
+        updated_at="2024-07-09 09:40:59.493975",
+        is_active=True,
+        is_superuser=False,
+    )
+
+    mock_uow.user.find_one.return_value = mock_user
+    mock_uow.user.edit_one.return_value = updated_user
+
+    with pytest.raises(UnAuthorizedException):
+        await UserService.update_user(mock_uow, user_id, 2, user_update)
