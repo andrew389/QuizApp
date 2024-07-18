@@ -1,6 +1,5 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, Query, Depends
 from app.core.dependencies import UOWDep, UserServiceDep, AuthServiceDep
-from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.user import (
     DeletingUserException,
     UpdatingUserException,
