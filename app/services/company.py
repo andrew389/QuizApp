@@ -8,7 +8,9 @@ from app.schemas.company import (
     CompaniesListResponse,
     CompanyBase,
 )
+from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.role import Role
 
 
 class CompanyService:
@@ -17,9 +19,13 @@ class CompanyService:
         uow: IUnitOfWork, company: CompanyCreate, owner_id: int
     ) -> CompanyDetail:
         async with uow:
+            await CompanyService._check_existing_member(uow, owner_id)
+
             company_dict = company.model_dump()
             company_dict["owner_id"] = owner_id
             company_model = await uow.company.add_one(company_dict)
+
+            await CompanyService._add_owner_as_member(uow, owner_id, company_model.id)
 
             await uow.commit()
             return CompanyDetail(**company_model.__dict__)
@@ -114,3 +120,17 @@ class CompanyService:
         if company.owner_id != user_id:
             raise UnAuthorizedException()
         return company
+
+    @staticmethod
+    async def _check_existing_member(uow: IUnitOfWork, owner_id: int):
+        existing_member = await uow.member.find_one(user_id=owner_id)
+        if existing_member:
+            logger.error("User is already a member of another company")
+            raise UnAuthorizedException()
+
+    @staticmethod
+    async def _add_owner_as_member(uow: IUnitOfWork, owner_id: int, company_id: int):
+        member_data = MemberCreate(
+            user_id=owner_id, company_id=company_id, role=Role.OWNER.value
+        )
+        await uow.member.add_one(member_data.model_dump(exclude={"id"}))
