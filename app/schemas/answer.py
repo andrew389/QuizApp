@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -19,4 +19,9 @@ class AnswerCreate(BaseModel):
 
 class AnswerUpdate(BaseModel):
     text: str
-    is_correct: bool = False
+    is_correct: bool
+
+
+class AnswersListResponse(BaseModel):
+    answers: List[AnswerBase] = []
+    total: int

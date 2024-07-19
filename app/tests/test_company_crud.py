@@ -18,7 +18,9 @@ from app.uow.unitofwork import IUnitOfWork
 async def test_add_company():
     mock_uow = AsyncMock(IUnitOfWork)
     mock_company_repo = AsyncMock()
+    mock_member_repo = AsyncMock()
     mock_uow.company = mock_company_repo
+    mock_uow.member = mock_member_repo
 
     company_data = CompanyCreate(
         name="Test Company",
@@ -29,6 +31,7 @@ async def test_add_company():
         updated_at=datetime.now(),
     )
     mock_company_repo.find_one.return_value = None
+    mock_member_repo.find_one.return_value = None
 
     added_company = CompanyDetail(
         id=1,
@@ -40,11 +43,9 @@ async def test_add_company():
         updated_at=datetime.now(),
     )
     mock_company_repo.add_one.return_value = added_company
-
     company_detail = await CompanyService.add_company(
         mock_uow, company_data, owner_id=1
     )
-
     assert company_detail == added_company
 
 

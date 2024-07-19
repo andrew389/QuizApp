@@ -27,10 +27,21 @@ class QuestionCreate(BaseModel):
 
 class QuestionUpdate(BaseModel):
     title: str
-    answers: List[int] = []
 
 
 class QuestionResponse(BaseModel):
     id: int
     title: str
     answers: List[AnswerBase] = []
+
+
+class QuestionResponseForList(BaseModel):
+    id: int
+    title: str
+    quiz_id: Optional[int] = None
+    company_id: int
+
+
+class QuestionsListResponse(BaseModel):
+    questions: List[QuestionResponseForList] = []
+    total: int

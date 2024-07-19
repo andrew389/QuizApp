@@ -264,6 +264,8 @@ class MemberService:
     ) -> bool:
         async with uow:
             member = await uow.member.find_one(id=user_id, company_id=company_id)
+            if not member:
+                raise UnAuthorizedException()
             if member.role == Role.OWNER.value or member.role == Role.ADMIN.value:
                 return True
 
@@ -275,6 +277,8 @@ class MemberService:
     ) -> bool:
         async with uow:
             member = await uow.member.find_one(id=user_id, company_id=company_id)
+            if not member:
+                raise UnAuthorizedException()
             if (
                 member.role == Role.OWNER.value
                 or member.role == Role.ADMIN.value

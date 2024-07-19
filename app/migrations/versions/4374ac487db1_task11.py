@@ -1,8 +1,8 @@
 """task11
 
-Revision ID: a0155aa8a6c8
+Revision ID: 4374ac487db1
 Revises: c976417a875e
-Create Date: 2024-07-19 11:10:40.140949
+Create Date: 2024-07-19 19:24:04.229702
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "a0155aa8a6c8"
+revision: str = "4374ac487db1"
 down_revision: Union[str, None] = "c976417a875e"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column("title", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("frequency", sa.Integer(), nullable=True),
-        sa.Column("company_id", sa.Integer(), nullable=True),
+        sa.Column("company_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(

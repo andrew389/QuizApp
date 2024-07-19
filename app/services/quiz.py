@@ -1,7 +1,14 @@
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException
+from app.exceptions.base import NotFoundException, FetchingException
 from app.schemas.question import QuestionBase, QuestionResponse
-from app.schemas.quiz import QuizCreate, QuizResponse, QuizBase, QuizUpdate
+from app.schemas.quiz import (
+    QuizCreate,
+    QuizResponse,
+    QuizBase,
+    QuizUpdate,
+    QuizzesListResponse,
+    QuizResponseForList,
+)
 from app.services.member import MemberService
 from app.services.question import QuestionService
 from app.uow.unitofwork import UnitOfWork, IUnitOfWork
@@ -33,39 +40,10 @@ class QuizService:
             return QuizBase(**new_quiz.__dict__)
 
     @staticmethod
-    async def validate_quiz_update(
-        uow: IUnitOfWork, quiz_id: int, quiz_update: QuizUpdate
-    ) -> QuizUpdate:
-        current_quiz = await uow.quiz.find_one(id=quiz_id)
-        if not current_quiz:
-            raise NotFoundException()
-
-        quiz_data = quiz_update.model_dump()
-        fields_to_check = quiz_data.keys()
-        default_values = ["string"]
-
-        for field_name in fields_to_check:
-            field_value = quiz_data[field_name]
-            if field_value in [None, *default_values]:
-                setattr(quiz_update, field_name, getattr(current_quiz, field_name))
-            if field_name == "questions" and not field_value:
-                current_questions = await uow.question.find_all_by_quiz_id(
-                    quiz_id=quiz_id
-                )
-                setattr(
-                    quiz_update,
-                    "questions",
-                    [question.id for question in current_questions],
-                )
-
-        return quiz_update
-
-    @staticmethod
     async def update_quiz(
         uow: UnitOfWork, quiz_id: int, quiz: QuizUpdate, current_user_id: int
     ) -> QuizBase:
         async with uow:
-            quiz_update = await QuizService.validate_quiz_update(uow, quiz_id, quiz)
             quiz_to_update = await uow.quiz.find_one(id=quiz_id)
             if not quiz_to_update:
                 raise NotFoundException()
@@ -76,7 +54,7 @@ class QuizService:
             if not has_permission:
                 raise UnAuthorizedException()
 
-            updated_quiz = await uow.quiz.edit_one(quiz_id, quiz_update.dict())
+            updated_quiz = await uow.quiz.edit_one(quiz_id, quiz.dict())
             return QuizBase(**updated_quiz.__dict__)
 
     @staticmethod
@@ -84,6 +62,12 @@ class QuizService:
         uow: UnitOfWork, quiz_id: int, current_user_id: int
     ) -> QuizResponse:
         async with uow:
+
+            questions = await uow.question.find_all_by_quiz_id(quiz_id=quiz_id)
+
+            if len(questions) < 2:
+                raise FetchingException()
+
             quiz = await uow.quiz.find_one(id=quiz_id)
             if not quiz:
                 raise NotFoundException()
@@ -115,6 +99,30 @@ class QuizService:
             return QuizResponse(**quiz_data)
 
     @staticmethod
+    async def get_quizzes(
+        uow: UnitOfWork,
+        company_id: int,
+        current_user_id,
+        skip: int = 0,
+        limit: int = 10,
+    ) -> QuizzesListResponse:
+        async with uow:
+            has_permission = await MemberService.check_is_user_have_permission(
+                uow, current_user_id, company_id
+            )
+            if not has_permission:
+                raise UnAuthorizedException()
+
+            quizzes = await uow.quiz.find_all(skip=skip, limit=limit)
+
+            question_list = QuizzesListResponse(
+                quizzes=[QuizResponseForList(**quiz.__dict__) for quiz in quizzes],
+                total=len(quizzes),
+            )
+
+            return question_list
+
+    @staticmethod
     async def delete_quiz(
         uow: UnitOfWork, quiz_id: int, current_user_id: int
     ) -> QuizBase:
@@ -128,6 +136,13 @@ class QuizService:
             )
             if not has_permission:
                 raise UnAuthorizedException()
+
+            questions = await uow.question.find_all_by_quiz_id(quiz_id=quiz_id)
+
+            for question in questions:
+                await uow.question.edit_one(
+                    question.id, {"quiz_id": None, "company_id": None}
+                )
 
             deleted_quiz = await uow.quiz.delete_one(quiz_id)
             return QuizBase(**deleted_quiz.__dict__)

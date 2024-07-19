@@ -31,8 +31,6 @@ class QuizCreate(BaseModel):
 class QuizUpdate(BaseModel):
     title: str
     description: str
-    frequency: int = 0
-    questions: List[int] = []
 
 
 class QuizResponse(BaseModel):
@@ -40,3 +38,16 @@ class QuizResponse(BaseModel):
     description: str
     frequency: int
     questions: List[QuestionResponse] = []
+
+
+class QuizResponseForList(BaseModel):
+    id: int
+    title: str
+    description: str
+    frequency: int
+    company_id: int
+
+
+class QuizzesListResponse(BaseModel):
+    quizzes: List[QuizResponseForList] = []
+    total: int
