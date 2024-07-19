@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.redis_db import redis
-from app.routers import auth, check_connection, company, invitation, member, user
+from app.routers import auth, check_connection, company, invitation, member, user, quiz
 
 
 @asynccontextmanager
@@ -40,3 +40,4 @@ app.include_router(auth.router, prefix=settings.api_v1_prefix)
 app.include_router(company.router, prefix=settings.api_v1_prefix)
 app.include_router(invitation.router, prefix=settings.api_v1_prefix)
 app.include_router(member.router, prefix=settings.api_v1_prefix)
+app.include_router(quiz.router, prefix=settings.api_v1_prefix)

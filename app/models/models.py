@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, event
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -59,6 +59,15 @@ class Company(Base):
     )
     invitations = relationship(
         "Invitation", back_populates="company", cascade="all, delete-orphan"
+    )
+    quizzes = relationship(
+        "Quiz", back_populates="company", cascade="all, delete-orphan"
+    )
+    questions = relationship(
+        "Question", back_populates="company", cascade="all, delete-orphan"
+    )
+    answers = relationship(
+        "Answer", back_populates="company", cascade="all, delete-orphan"
     )
 
 
@@ -119,7 +128,7 @@ class Quiz(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     frequency = Column(Integer, default=0)
-    creator_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
     updated_at = Column(
         DateTime(timezone=True),
@@ -128,7 +137,7 @@ class Quiz(Base):
         onupdate=datetime.now,
     )
 
-    creator = relationship("User", back_populates="quizzes")
+    company = relationship("Company", back_populates="quizzes")
     questions = relationship(
         "Question", back_populates="quiz", cascade="all, delete-orphan"
     )
@@ -139,7 +148,8 @@ class Question(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-    quiz_id = Column(Integer, ForeignKey("quiz.id"), nullable=False)
+    quiz_id = Column(Integer, ForeignKey("quiz.id"), nullable=True)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
     updated_at = Column(
         DateTime(timezone=True),
@@ -149,7 +159,8 @@ class Question(Base):
     )
 
     quiz = relationship("Quiz", back_populates="questions")
-    answer = relationship(
+    company = relationship("Company", back_populates="questions")
+    answers = relationship(
         "Answer", back_populates="question", cascade="all, delete-orphan"
     )
 
@@ -159,8 +170,9 @@ class Answer(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String, nullable=False)
-    is_correct = Column(Boolean, nullable=False, default=False)
-    question_id = Column(Integer, ForeignKey("question.id"), nullable=False)
+    is_correct = Column(Boolean, nullable=True, default=False)
+    question_id = Column(Integer, ForeignKey("question.id"), nullable=True)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
     updated_at = Column(
         DateTime(timezone=True),
@@ -169,4 +181,5 @@ class Answer(Base):
         onupdate=datetime.now,
     )
 
-    question = relationship("Question", back_populates="answer")
+    question = relationship("Question", back_populates="answers")
+    company = relationship("Company", back_populates="answers")

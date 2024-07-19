@@ -8,7 +8,6 @@ from app.repositories.member import MemberRepository
 from app.repositories.question import QuestionRepository
 from app.repositories.quiz import QuizRepository
 from app.repositories.user import UserRepository
-from app.utils.role import Role
 
 
 class IUnitOfWork(ABC):

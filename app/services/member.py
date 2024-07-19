@@ -257,3 +257,29 @@ class MemberService:
                 total=len(admins),
             )
             return admins_list
+
+    @staticmethod
+    async def check_is_user_have_permission(
+        uow: IUnitOfWork, user_id: int, company_id: int
+    ) -> bool:
+        async with uow:
+            member = await uow.member.find_one(id=user_id, company_id=company_id)
+            if member.role == Role.OWNER.value or member.role == Role.ADMIN.value:
+                return True
+
+            return False
+
+    @staticmethod
+    async def check_is_user_member_or_higher(
+        uow: IUnitOfWork, user_id: int, company_id: int
+    ) -> bool:
+        async with uow:
+            member = await uow.member.find_one(id=user_id, company_id=company_id)
+            if (
+                member.role == Role.OWNER.value
+                or member.role == Role.ADMIN.value
+                or member.role == Role.MEMBER.value
+            ):
+                return True
+
+            return False
