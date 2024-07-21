@@ -16,9 +16,7 @@ class InvitationBase(BaseModel):
 class SendInvitation(BaseModel):
     title: str
     description: str
-    sender_id: Optional[int] = None
     receiver_id: int
-    company_id: int
 
 
 class InvitationResponse(BaseModel):
