@@ -11,7 +11,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.models.user import Base
+from app.models.models import Base
 from app.core.config import settings
 
 # this is the Alembic Config object, which provides

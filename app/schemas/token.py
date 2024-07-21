@@ -22,5 +22,5 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    token: str
     email: str
+    token: str
