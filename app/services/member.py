@@ -248,8 +248,8 @@ class MemberService:
         async with uow:
             await MemberService._validate_owner(uow, owner_id, company_id)
             member = await uow.member.find_one(id=member_id)
-            if not member or member.role != Role.MEMBER.value:
-                logger.error("Member not found or not eligible")
+            if not member or member.role != Role.ADMIN.value:
+                logger.error("Admin not found or not eligible")
                 raise NotFoundException()
 
             updated_member = await uow.member.edit_one(
