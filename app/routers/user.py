@@ -105,21 +105,3 @@ async def deactivate_user(
     except Exception as e:
         logger.error(f"Error deleting user with ID {user_id}: {e}")
         raise DeletingException()
-
-
-@router.delete("/{user_id}", response_model=dict)
-async def deactivate_user(
-    user_id: int,
-    uow: UOWDep,
-    user_service: UserServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
-):
-    try:
-        deactivated_user_id = await user_service.deactivate_user(
-            uow, user_id, current_user.id
-        )
-        logger.info(f"Deleted user with ID: {deactivated_user_id}")
-        return {"status_code": 200}
-    except Exception as e:
-        logger.error(f"Error deleting user with ID {user_id}: {e}")
-        raise DeletingException()
