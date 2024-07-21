@@ -242,6 +242,23 @@ class MemberService:
             return MemberBase(**updated_member.__dict__)
 
     @staticmethod
+    async def remove_admin(
+        uow: IUnitOfWork, owner_id: int, company_id: int, member_id: int
+    ) -> MemberBase:
+        async with uow:
+            await MemberService._validate_owner(uow, owner_id, company_id)
+            member = await uow.member.find_one(id=member_id)
+            if not member or member.role != Role.MEMBER.value:
+                logger.error("Member not found or not eligible")
+                raise NotFoundException()
+
+            updated_member = await uow.member.edit_one(
+                member_id, {"role": Role.MEMBER.value}
+            )
+            await uow.commit()
+            return MemberBase(**updated_member.__dict__)
+
+    @staticmethod
     async def get_admins(
         uow: IUnitOfWork, company_id: int, skip: int = 0, limit: int = 10
     ) -> MembersListResponse:
