@@ -9,7 +9,7 @@ from app.core.dependencies import (
 )
 from app.core.logger import logger
 from app.exceptions.base import FetchingException
-from app.models.models import User
+from app.models.user import User
 from app.schemas.answer import (
     AnswerBase,
     AnswerCreate,

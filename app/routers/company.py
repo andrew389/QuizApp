@@ -14,7 +14,7 @@ from app.exceptions.base import (
     FetchingException,
     UpdatingException,
 )
-from app.models.models import User
+from app.models.user import User
 from app.schemas.company import (
     CompaniesListResponse,
     CompanyCreate,

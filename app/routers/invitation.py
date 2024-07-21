@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status
 from app.core.dependencies import AuthServiceDep, InvitationServiceDep, UOWDep
 from app.core.logger import logger
 from app.exceptions.base import CreatingException, DeletingException, NotFoundException
-from app.models.models import User
+from app.models.user import User
 from app.schemas.invitation import InvitationBase, InvitationResponse, SendInvitation
 
 router = APIRouter(prefix="/invitation", tags=["Invitation"])

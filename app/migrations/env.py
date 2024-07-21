@@ -10,7 +10,15 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
-from app.models.models import Base
+from app.db.pg_db import Base
+
+from app.models.user import User
+from app.models.company import Company
+from app.models.member import Member
+from app.models.invitation import Invitation
+from app.models.question import Question
+from app.models.answer import Answer
+from app.models.quiz import Quiz
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

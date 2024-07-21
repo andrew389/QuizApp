@@ -14,7 +14,7 @@ from app.exceptions.base import (
     NotFoundException,
     UpdatingException,
 )
-from app.models.models import User
+from app.models.user import User
 from app.schemas.invitation import InvitationsListResponse
 from app.schemas.user import UserCreate, UserResponse, UsersListResponse, UserUpdate
 
@@ -126,7 +126,7 @@ async def deactivate_user(
         raise DeletingException()
 
 
-@router.get("/invitations/new", response_model=InvitationsListResponse)
+@router.get("/invites", response_model=InvitationsListResponse)
 async def get_new_invitations(
     uow: UOWDep,
     invitation_service: InvitationServiceDep,
@@ -144,7 +144,7 @@ async def get_new_invitations(
         raise FetchingException()
 
 
-@router.get("/invitations/sent", response_model=InvitationsListResponse)
+@router.get("/requests", response_model=InvitationsListResponse)
 async def get_sent_invitations(
     uow: UOWDep,
     invitation_service: InvitationServiceDep,

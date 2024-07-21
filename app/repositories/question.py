@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from app.models.models import Question
+from app.models.question import Question
 from app.uow.repository import SQLAlchemyRepository
 
 
