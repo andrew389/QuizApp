@@ -7,7 +7,7 @@ from app.exceptions.base import (
     NotFoundException,
     DeletingException,
 )
-from app.models.models import User
+from app.models.user import User
 from app.schemas.invitation import (
     InvitationBase,
     SendInvitation,

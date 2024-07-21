@@ -1,15 +1,20 @@
 from sqlalchemy import select
 
-from app.models.models import Invitation
+from app.models.invitation import Invitation
 from app.uow.repository import SQLAlchemyRepository
 
 
 class InvitationRepository(SQLAlchemyRepository):
     model = Invitation
 
-    async def find_all_by_sender(self, sender_id: int, skip: int = 0, limit: int = 10):
+    async def find_all_by_sender_company(
+        self, company_id: int, skip: int = 0, limit: int = 10
+    ):
         stmt = (
-            select(self.model).filter_by(sender_id=sender_id).offset(skip).limit(limit)
+            select(self.model)
+            .filter_by(company_id=company_id)
+            .offset(skip)
+            .limit(limit)
         )
         res = await self.session.execute(stmt)
         return res.scalars().all()

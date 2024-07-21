@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from app.models.models import Member
+from app.models.member import Member
 from app.uow.repository import SQLAlchemyRepository
 
 

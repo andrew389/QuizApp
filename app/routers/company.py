@@ -13,8 +13,7 @@ from app.exceptions.base import (
     CreatingException,
 )
 
-from app.exceptions.auth import UnAuthorizedException
-from app.models.models import User
+from app.models.user import User
 from app.schemas.company import (
     CompanyCreate,
     CompanyDetail,
