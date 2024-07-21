@@ -17,18 +17,24 @@ class InvitationService:
 
     @staticmethod
     async def send_invitation(
-        uow: IUnitOfWork, invitation_data: SendInvitation, sender_id: int
+        uow: IUnitOfWork,
+        invitation_data: SendInvitation,
+        sender_id: int,
+        company_id: int,
     ) -> InvitationBase:
         async with uow:
-            owner = await InvitationService._get_owner(
-                uow, sender_id, invitation_data.company_id
-            )
+            owner = await InvitationService._get_owner(uow, sender_id, company_id)
             await InvitationService._check_existing_member(
                 uow, invitation_data.receiver_id, invitation_data.company_id
             )
 
             invitation_dict = invitation_data.model_dump()
-            invitation_dict["sender_id"] = sender_id
+            invitation_dict.update(
+                {
+                    "sender_id": sender_id,
+                    "company_id": invitation_data.company_id,
+                }
+            )
             invitation = await uow.invitation.add_one(invitation_dict)
             await uow.commit()
             return InvitationBase(**invitation.__dict__)

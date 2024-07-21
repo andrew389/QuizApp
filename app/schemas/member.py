@@ -23,7 +23,6 @@ class MemberDelete(BaseModel):
 
 
 class MemberRequest(BaseModel):
-    company_id: int
     title: str
     description: str
 

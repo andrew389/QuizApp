@@ -58,10 +58,10 @@ async def test_cancel_request_to_join():
     setattr(mock_uow, "invitation", AsyncMock())
     mock_uow.invitation.find_one.return_value = AsyncMock(sender_id=1, status="pending")
 
-    invitation_id = 1
+    request_id = 1
 
     response = await MemberService.cancel_request_to_join(
-        mock_uow, invitation_id=invitation_id, sender_id=1
+        mock_uow, request_id=request_id, sender_id=1
     )
 
     assert isinstance(response, int) == False
@@ -137,7 +137,8 @@ async def test_appoint_admin():
     setattr(mock_uow, "member", AsyncMock())
 
     owner_id = 1
-    admin_request = AdminRequest(member_id=2, company_id=1)
+    member_id = 2
+    company_id = 1
     member_data = AsyncMock(id=2, user_id=2, company_id=1, role=Role.MEMBER.value)
     updated_member_data = AsyncMock(
         id=2, user_id=2, company_id=1, role=Role.ADMIN.value
@@ -146,7 +147,9 @@ async def test_appoint_admin():
     mock_uow.member.find_one.return_value = member_data
     mock_uow.member.edit_one.return_value = updated_member_data
 
-    response = await MemberService.appoint_admin(mock_uow, owner_id, admin_request)
+    response = await MemberService.appoint_admin(
+        mock_uow, owner_id, company_id=company_id, member_id=member_id
+    )
 
     assert isinstance(response, MemberBase)
     assert response.role == Role.ADMIN.value

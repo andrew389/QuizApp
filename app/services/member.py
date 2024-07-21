@@ -7,7 +7,6 @@ from app.schemas.member import (
     MembersListResponse,
     MemberBase,
     MemberRequest,
-    AdminRequest,
 )
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.role import Role
@@ -37,15 +36,13 @@ class MemberService:
 
     @staticmethod
     async def request_to_join_company(
-        uow: IUnitOfWork, user_id: int, request: MemberRequest
+        uow: IUnitOfWork, user_id: int, request: MemberRequest, company_id: int
     ) -> InvitationBase:
         async with uow:
-            if await MemberService._is_existing_member(
-                uow, user_id, request.company_id
-            ):
+            if await MemberService._is_existing_member(uow, user_id, company_id):
                 raise UnAuthorizedException()
 
-            owner = await uow.company.find_one(id=request.company_id)
+            owner = await uow.company.find_one(id=company_id)
             invitation = await MemberService._create_invitation(
                 uow, request, user_id, owner.owner_id
             )
@@ -82,14 +79,14 @@ class MemberService:
 
     @staticmethod
     async def cancel_request_to_join(
-        uow: IUnitOfWork, invitation_id: int, sender_id: int
+        uow: IUnitOfWork, request_id: int, sender_id: int
     ) -> int:
         async with uow:
-            invitation = await uow.invitation.find_one(id=invitation_id)
+            invitation = await uow.invitation.find_one(id=request_id)
             MemberService._validate_invitation_for_cancel(invitation, sender_id)
-            cancelled_invitation = await uow.invitation.delete_one(invitation_id)
+            cancelled_request = await uow.invitation.delete_one(request_id)
             await uow.commit()
-            return cancelled_invitation.id
+            return cancelled_request.id
 
     @staticmethod
     def _validate_invitation_for_cancel(invitation, sender_id):
@@ -229,17 +226,17 @@ class MemberService:
 
     @staticmethod
     async def appoint_admin(
-        uow: IUnitOfWork, owner_id: int, admin_request: AdminRequest
+        uow: IUnitOfWork, owner_id: int, company_id: int, member_id: int
     ) -> MemberBase:
         async with uow:
-            await MemberService._validate_owner(uow, owner_id, admin_request.company_id)
-            member = await uow.member.find_one(id=admin_request.member_id)
+            await MemberService._validate_owner(uow, owner_id, company_id)
+            member = await uow.member.find_one(id=member_id)
             if not member or member.role != Role.MEMBER.value:
                 logger.error("Member not found or not eligible")
                 raise NotFoundException()
 
             updated_member = await uow.member.edit_one(
-                admin_request.member_id, {"role": Role.ADMIN.value}
+                member_id, {"role": Role.ADMIN.value}
             )
             await uow.commit()
             return MemberBase(**updated_member.__dict__)

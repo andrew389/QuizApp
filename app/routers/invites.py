@@ -3,38 +3,20 @@ from fastapi import APIRouter, Depends, status
 from app.core.dependencies import UOWDep, AuthServiceDep, InvitationServiceDep
 from app.core.logger import logger
 from app.exceptions.base import (
-    CreatingException,
     NotFoundException,
     DeletingException,
 )
 from app.models.user import User
 from app.schemas.invitation import (
-    InvitationBase,
-    SendInvitation,
     InvitationResponse,
 )
 
-router = APIRouter(prefix="/invitation", tags=["Invitation"])
+router = APIRouter(prefix="/invites", tags=["Invites"])
 
 
-@router.post("/owner/send", response_model=InvitationBase)
-async def send_invitation_to_user(
-    uow: UOWDep,
-    invitation_data: SendInvitation,
-    invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
-):
-    try:
-        invitation = await invitation_service.send_invitation(
-            uow, invitation_data, current_user.id
-        )
-        return invitation
-    except Exception as e:
-        logger.error(f"{e}")
-        raise CreatingException()
-
-
-@router.post("/owner/cancel", response_model=dict, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{invitation_id}/cancel", response_model=dict, status_code=status.HTTP_200_OK
+)
 async def cancel_invitation_to_user(
     invitation_id: int,
     uow: UOWDep,
@@ -51,7 +33,7 @@ async def cancel_invitation_to_user(
         raise DeletingException()
 
 
-@router.post("/user/accept/{invitation_id}", response_model=InvitationResponse)
+@router.post("/{invitation_id}/accept", response_model=InvitationResponse)
 async def accept_invitation_for_user(
     invitation_id: int,
     uow: UOWDep,
@@ -68,7 +50,7 @@ async def accept_invitation_for_user(
         raise Exception()
 
 
-@router.post("/user/decline/{invitation_id}", response_model=InvitationResponse)
+@router.post("/{invitation_id}/decline", response_model=InvitationResponse)
 async def decline_invitation_for_user(
     invitation_id: int,
     uow: UOWDep,
