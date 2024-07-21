@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.redis_db import redis
-from app.routers import check_connection, user, auth, company
+from app.routers import check_connection, user, auth, company, invitation, member
 from app.core.config import settings
 
 from contextlib import asynccontextmanager
@@ -38,3 +38,5 @@ app.include_router(check_connection.router, prefix=settings.api_v1_prefix)
 app.include_router(user.router, prefix=settings.api_v1_prefix)
 app.include_router(auth.router, prefix=settings.api_v1_prefix)
 app.include_router(company.router, prefix=settings.api_v1_prefix)
+app.include_router(invitation.router, prefix=settings.api_v1_prefix)
+app.include_router(member.router, prefix=settings.api_v1_prefix)
