@@ -1,27 +1,31 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query, Depends, status
 
 from app.core.dependencies import (
-    AuthServiceDep,
-    CompanyServiceDep,
-    MemberServiceDep,
     UOWDep,
+    CompanyServiceDep,
+    AuthServiceDep,
+    MemberServiceDep,
+    InvitationServiceDep,
+    QuizServiceDep,
 )
-from app.core.logger import logger
-from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import (
-    CreatingException,
+    UpdatingException,
     DeletingException,
     FetchingException,
-    UpdatingException,
+    CreatingException,
 )
+
 from app.models.user import User
 from app.schemas.company import (
-    CompaniesListResponse,
     CompanyCreate,
     CompanyDetail,
     CompanyUpdate,
+    CompaniesListResponse,
 )
-from app.schemas.member import MemberBase, MembersListResponse
+from app.core.logger import logger
+from app.schemas.invitation import InvitationBase, SendInvitation
+from app.schemas.member import MemberBase, MembersListResponse, MemberRequest
+from app.schemas.quiz import QuizzesListResponse
 
 router = APIRouter(prefix="/company", tags=["Company"])
 
@@ -116,6 +120,19 @@ async def delete_company(
         raise DeletingException()
 
 
+@router.post("/{company_id}/admin/{member_id}", response_model=MemberBase)
+async def appoint_admin(
+    company_id: int,
+    member_id: int,
+    uow: UOWDep,
+    member_service: MemberServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    return await member_service.appoint_admin(
+        uow, current_user.id, company_id, member_id
+    )
+
+
 @router.put("/{company_id}/visibility", response_model=CompanyDetail)
 async def change_company_visibility(
     company_id: int,
@@ -135,7 +152,43 @@ async def change_company_visibility(
         raise UpdatingException()
 
 
-@router.get("/members/", response_model=MembersListResponse)
+@router.post("/{company_id}/join", response_model=InvitationBase)
+async def request_to_join_company_to_owner(
+    company_id: int,
+    request: MemberRequest,
+    uow: UOWDep,
+    member_service: MemberServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    try:
+        invitation = await member_service.request_to_join_company(
+            uow, current_user.id, request, company_id
+        )
+        return invitation
+    except Exception as e:
+        logger.error(f"Error requesting to join company: {e}")
+        raise CreatingException()
+
+
+@router.post("/{company_id}/invite", response_model=InvitationBase)
+async def send_invitation_to_user(
+    company_id: int,
+    uow: UOWDep,
+    invitation_data: SendInvitation,
+    invitation_service: InvitationServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    try:
+        invitation = await invitation_service.send_invitation(
+            uow, invitation_data, current_user.id, company_id
+        )
+        return invitation
+    except Exception as e:
+        logger.error(f"{e}")
+        raise CreatingException()
+
+
+@router.get("/{company_id}/members", response_model=MembersListResponse)
 async def get_members(
     company_id: int,
     uow: UOWDep,
@@ -153,7 +206,30 @@ async def get_members(
         raise FetchingException()
 
 
-@router.get("/admins", response_model=MembersListResponse)
+@router.get("/{company_id}/quizzes", response_model=QuizzesListResponse)
+async def get_quizzes(
+    company_id: int,
+    uow: UOWDep,
+    quiz_service: QuizServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1),
+):
+    try:
+        quizzes_list = await quiz_service.get_quizzes(
+            uow,
+            company_id=company_id,
+            current_user_id=current_user.id,
+            skip=skip,
+            limit=limit,
+        )
+        return quizzes_list
+    except Exception as e:
+        logger.error(f"Error fetching quizzes: {e}")
+        raise FetchingException()
+
+
+@router.get("/{company_id}/admins", response_model=MembersListResponse)
 async def get_admins(
     uow: UOWDep,
     member_service: MemberServiceDep,
@@ -164,7 +240,7 @@ async def get_admins(
     return await member_service.view_admins(uow, company_id, skip, limit)
 
 
-@router.post("/members/remove", response_model=MemberBase)
+@router.post("/{member_id}/remove", response_model=MemberBase)
 async def remove_member(
     member_id: int,
     uow: UOWDep,
@@ -179,7 +255,7 @@ async def remove_member(
         raise DeletingException()
 
 
-@router.post("/leave", response_model=MemberBase)
+@router.post("/{company_id}/leave", response_model=MemberBase)
 async def leave_company(
     company_id: int,
     uow: UOWDep,

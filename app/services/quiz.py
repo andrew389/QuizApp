@@ -11,7 +11,7 @@ from app.schemas.quiz import (
 )
 from app.services.member import MemberService
 from app.services.question import QuestionService
-from app.uow.unitofwork import UnitOfWork, IUnitOfWork
+from app.uow.unitofwork import UnitOfWork
 
 
 class QuizService:
