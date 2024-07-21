@@ -133,6 +133,19 @@ async def appoint_admin(
     )
 
 
+@router.put("/{company_id}/admin/{member_id}", response_model=MemberBase)
+async def remove_admin(
+    company_id: int,
+    member_id: int,
+    uow: UOWDep,
+    member_service: MemberServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    return await member_service.remove_admin(
+        uow, current_user.id, company_id, member_id
+    )
+
+
 @router.put("/{company_id}/visibility", response_model=CompanyDetail)
 async def change_company_visibility(
     company_id: int,
