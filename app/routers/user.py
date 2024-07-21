@@ -12,7 +12,7 @@ from app.exceptions.base import (
     CreatingException,
     NotFoundException,
 )
-from app.models.models import User
+from app.models.user import User
 from app.schemas.invitation import InvitationsListResponse
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger

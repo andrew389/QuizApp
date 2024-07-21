@@ -7,7 +7,7 @@ from app.exceptions.base import (
     DeletingException,
     UpdatingException,
 )
-from app.models.models import User
+from app.models.user import User
 from app.schemas.invitation import InvitationBase, InvitationResponse
 from app.schemas.member import (
     MemberRequest,
