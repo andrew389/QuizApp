@@ -5,15 +5,22 @@ import os
 import aiofiles
 from fastapi.responses import StreamingResponse
 from app.db.redis_db import redis
-from app.exceptions.auth import UnAuthorizedException
 from app.services.member_management import MemberManagement
 from app.uow.unitofwork import UnitOfWork
 
 
 class DataExportService:
-
     @staticmethod
     async def _fetch_data(pattern: str) -> list:
+        """
+        Fetches data from Redis based on the given pattern.
+
+        Args:
+            pattern (str): The pattern to match Redis keys.
+
+        Returns:
+            list: A list of data retrieved from Redis.
+        """
         keys = await redis.redis.keys(pattern)
         all_data = []
         for key in keys:
@@ -28,6 +35,17 @@ class DataExportService:
     async def _export_data(
         all_data: list, file_name: str, is_csv: bool
     ) -> StreamingResponse:
+        """
+        Exports the provided data to either a CSV or JSON file and returns a StreamingResponse.
+
+        Args:
+            all_data (list): The data to be exported.
+            file_name (str): The name of the file to which the data will be exported.
+            is_csv (bool): Flag indicating if the data should be exported as CSV or JSON.
+
+        Returns:
+            StreamingResponse: A StreamingResponse containing the exported data.
+        """
         file_path = os.path.join("exported_data", file_name)
 
         if is_csv:
@@ -39,7 +57,16 @@ class DataExportService:
     async def read_data_by_user_id(
         is_csv: bool, current_user_id: int
     ) -> StreamingResponse:
+        """
+        Reads data for a specific user and returns it as a CSV or JSON file.
 
+        Args:
+            is_csv (bool): Flag indicating if the data should be exported as CSV or JSON.
+            current_user_id (int): The ID of the user whose data is being exported.
+
+        Returns:
+            StreamingResponse: A StreamingResponse containing the exported data.
+        """
         pattern = f"answered_quiz_{current_user_id}_*_*"
         all_data = await DataExportService._fetch_data(pattern)
         return await DataExportService._export_data(
@@ -60,6 +87,19 @@ class DataExportService:
         user_id: int,
         company_id: int,
     ) -> StreamingResponse:
+        """
+        Reads data for a specific user and company and returns it as a CSV or JSON file.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for permission checking.
+            is_csv (bool): Flag indicating if the data should be exported as CSV or JSON.
+            current_user_id (int): The ID of the current user.
+            user_id (int): The ID of the user whose data is being exported.
+            company_id (int): The ID of the company whose data is being exported.
+
+        Returns:
+            StreamingResponse: A StreamingResponse containing the exported data.
+        """
         await MemberManagement.check_is_user_have_permission(
             uow, current_user_id, company_id
         )
@@ -80,6 +120,18 @@ class DataExportService:
     async def read_data_by_company_id(
         uow: UnitOfWork, is_csv: bool, current_user_id: int, company_id: int
     ) -> StreamingResponse:
+        """
+        Reads data for a specific company and returns it as a CSV or JSON file.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for permission checking.
+            is_csv (bool): Flag indicating if the data should be exported as CSV or JSON.
+            current_user_id (int): The ID of the current user.
+            company_id (int): The ID of the company whose data is being exported.
+
+        Returns:
+            StreamingResponse: A StreamingResponse containing the exported data.
+        """
         await MemberManagement.check_is_user_have_permission(
             uow, current_user_id, company_id
         )
@@ -104,6 +156,19 @@ class DataExportService:
         company_id: int,
         quiz_id: int,
     ) -> StreamingResponse:
+        """
+        Reads data for a specific company and quiz and returns it as a CSV or JSON file.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for permission checking.
+            is_csv (bool): Flag indicating if the data should be exported as CSV or JSON.
+            current_user_id (int): The ID of the current user.
+            company_id (int): The ID of the company whose data is being exported.
+            quiz_id (int): The ID of the quiz whose data is being exported.
+
+        Returns:
+            StreamingResponse: A StreamingResponse containing the exported data.
+        """
         await MemberManagement.check_is_user_have_permission(
             uow, current_user_id, company_id
         )
@@ -122,6 +187,16 @@ class DataExportService:
 
     @staticmethod
     async def export_data_as_json(all_data: list, file_name: str) -> StreamingResponse:
+        """
+        Exports data as a JSON file and returns a StreamingResponse.
+
+        Args:
+            all_data (list): The data to be exported.
+            file_name (str): The name of the file to which the data will be exported.
+
+        Returns:
+            StreamingResponse: A StreamingResponse containing the exported data.
+        """
         json_data = json.dumps(all_data, indent=4)
         async with aiofiles.open(file_name, mode="w") as file:
             await file.write(json_data)
@@ -139,6 +214,16 @@ class DataExportService:
 
     @staticmethod
     async def export_data_as_csv(all_data: list, file_name: str) -> StreamingResponse:
+        """
+        Exports data as a CSV file and returns a StreamingResponse.
+
+        Args:
+            all_data (list): The data to be exported.
+            file_name (str): The name of the file to which the data will be exported.
+
+        Returns:
+            StreamingResponse: A StreamingResponse containing the exported data.
+        """
         headers = list(all_data[0].keys()) if all_data else []
 
         async with aiofiles.open(file_name, mode="w", newline="") as file:

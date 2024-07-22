@@ -112,4 +112,11 @@ async def get_quiz_results_for_last_48h(
     current_user: User = Depends(AuthServiceDep.get_current_user),
     is_csv: bool = Query(),
 ):
-    return await data_export_service.read_data_by_user_id(is_csv, current_user.id)
+    """
+    Get quiz results for the current user for the last 48 hours.
+    """
+    try:
+        return await data_export_service.read_data_by_user_id(is_csv, current_user.id)
+    except Exception as e:
+        logger.error(f"Error fetching results for user: {e}")
+        raise FetchingException()

@@ -337,9 +337,16 @@ async def get_quiz_results_by_user_id_company_id(
     uow: UOWDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
-    return await data_export_service.read_data_by_user_id_and_company_id(
-        uow, is_csv, current_user.id, user_id, company_id
-    )
+    """
+    Get quiz results for a specific user and company.
+    """
+    try:
+        return await data_export_service.read_data_by_user_id_and_company_id(
+            uow, is_csv, current_user.id, user_id, company_id
+        )
+    except Exception as e:
+        logger.error(f"Error fetching results for company: {e}")
+        raise FetchingException()
 
 
 @router.get("/{company_id/results/{quiz_id}")
@@ -351,9 +358,16 @@ async def get_results_by_company_id_quiz_id(
     uow: UOWDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
-    return await data_export_service.read_data_by_company_id_and_quiz_id(
-        uow, is_csv, current_user.id, company_id, quiz_id
-    )
+    """
+    Get quiz results for a specific company and quiz.
+    """
+    try:
+        return await data_export_service.read_data_by_company_id_and_quiz_id(
+            uow, is_csv, current_user.id, company_id, quiz_id
+        )
+    except Exception as e:
+        logger.error(f"Error fetching results for company: {e}")
+        raise FetchingException()
 
 
 @router.get("/{company_id}/results")
@@ -364,9 +378,16 @@ async def export_data_to_json(
     uow: UOWDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
-    return await data_export_service.read_data_by_company_id(
-        uow, is_csv, current_user.id, company_id
-    )
+    """
+    Export quiz data for a specific company.
+    """
+    try:
+        return await data_export_service.read_data_by_company_id(
+            uow, is_csv, current_user.id, company_id
+        )
+    except Exception as e:
+        logger.error(f"Error fetching results for company: {e}")
+        raise FetchingException()
 
 
 @router.get("/{company_id}/quizzes/score", status_code=200, response_model=dict)
