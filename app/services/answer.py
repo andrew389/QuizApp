@@ -97,7 +97,7 @@ class AnswerService:
             if not answer:
                 raise NotFoundException()
 
-            has_permission = await MemberManagement.check_is_user_member_or_higher(
+            has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, answer.company_id
             )
             if not has_permission:

@@ -141,7 +141,7 @@ class QuestionService:
                 )
                 raise FetchingException()
 
-            has_permission = await MemberManagement.check_is_user_member_or_higher(
+            has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, question.company_id
             )
             if not has_permission:

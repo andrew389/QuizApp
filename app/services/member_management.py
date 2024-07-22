@@ -261,7 +261,7 @@ class MemberManagement:
             UnAuthorizedException: If the user does not have permission.
         """
         async with uow:
-            member = await uow.member.find_one(id=user_id, company_id=company_id)
+            member = await uow.member.find_one(user_id=user_id, company_id=company_id)
             if not member:
                 logger.error(f"User {user_id} not found in company {company_id}")
                 raise UnAuthorizedException()
@@ -289,7 +289,7 @@ class MemberManagement:
             UnAuthorizedException: If the user is not a member or higher.
         """
         async with uow:
-            member = await uow.member.find_one(id=user_id, company_id=company_id)
+            member = await uow.member.find_one(user_id=user_id, company_id=company_id)
             if not member:
                 logger.error(f"User {user_id} is not a member of company {company_id}")
                 raise UnAuthorizedException()
