@@ -45,6 +45,9 @@ async def create_question(
     question_service: QuestionServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Create a new question.
+    """
     try:
         return await question_service.create_question(uow, question, current_user.id)
     except Exception as e:
@@ -60,6 +63,9 @@ async def update_question(
     question_service: QuestionServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Update an existing question.
+    """
     try:
         return await question_service.update_question(
             uow, question_id, question, current_user.id
@@ -76,6 +82,9 @@ async def get_question_by_id(
     question_service: QuestionServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Retrieve a question by its ID.
+    """
     try:
         return await question_service.get_question_by_id(
             uow, question_id, current_user.id
@@ -92,6 +101,9 @@ async def delete_question(
     question_service: QuestionServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Delete a question by its ID.
+    """
     try:
         return await question_service.delete_question(uow, question_id, current_user.id)
     except Exception as e:
@@ -108,6 +120,9 @@ async def get_questions(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
+    """
+    Get a list of questions for a company.
+    """
     try:
         questions_list = await question_service.get_questions(
             uow,

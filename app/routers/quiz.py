@@ -29,6 +29,9 @@ async def create_quiz(
     quiz_service: QuizServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Create a new quiz.
+    """
     try:
         return await quiz_service.create_quiz(uow, quiz, current_user.id)
     except Exception as e:
@@ -44,6 +47,9 @@ async def update_quiz(
     quiz_service: QuizServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Update an existing quiz.
+    """
     try:
         return await quiz_service.update_quiz(uow, quiz_id, quiz, current_user.id)
     except Exception as e:
@@ -58,6 +64,9 @@ async def get_quiz_by_id(
     quiz_service: QuizServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Retrieve a quiz by its ID.
+    """
     try:
         return await quiz_service.get_quiz_by_id(uow, quiz_id, current_user.id)
     except Exception as e:
@@ -72,6 +81,9 @@ async def delete_quiz(
     quiz_service: QuizServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Delete a quiz by its ID.
+    """
     try:
         return await quiz_service.delete_quiz(uow, quiz_id, current_user.id)
     except Exception as e:

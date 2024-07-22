@@ -37,3 +37,8 @@ class AdminRequest(BaseModel):
 class MembersListResponse(BaseModel):
     members: List[MemberBase]
     total: int
+
+
+class AdminsListResponse(BaseModel):
+    admins: List[MemberBase]
+    total: int

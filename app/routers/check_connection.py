@@ -12,12 +12,27 @@ router = APIRouter(tags=["Health Check"])
 
 @router.get("/")
 async def health_check():
+    """
+    Checks the health of the application.
+
+    Returns:
+        dict: Status code, detail, and result message.
+    """
     logger.debug("Health check endpoint accessed.")
     return {"status_code": 200, "detail": "ok", "result": "working"}
 
 
 @router.get("/redis")
 async def ping_redis():
+    """
+    Checks the connection to the Redis server.
+
+    Returns:
+        dict: Status of Redis connection.
+
+    Raises:
+        BadConnectRedis: If there is a connection error with Redis.
+    """
     try:
         await redis.ping()
         return {"status": "PONG"}
@@ -28,6 +43,18 @@ async def ping_redis():
 
 @router.get("/db")
 async def ping_db(session: AsyncSession = Depends(get_async_session)):
+    """
+    Checks the connection to the PostgreSQL database.
+
+    Args:
+        session (AsyncSession): The SQLAlchemy async session.
+
+    Returns:
+        dict: Status code, detail, and result message.
+
+    Raises:
+        BadConnectPostgres: If there is a connection error with PostgreSQL.
+    """
     try:
         await session.execute(select(1))
         await session.commit()

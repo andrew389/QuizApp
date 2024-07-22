@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Query, Depends, status
+from fastapi import APIRouter, Query, Depends
 from app.core.dependencies import (
     UOWDep,
     UserServiceDep,
     AuthServiceDep,
-    InvitationServiceDep,
 )
 from app.exceptions.base import (
     DeletingException,
@@ -13,7 +12,6 @@ from app.exceptions.base import (
     NotFoundException,
 )
 from app.models.user import User
-from app.schemas.invitation import InvitationBase, SendInvitation
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger
 
@@ -26,6 +24,9 @@ async def add_user(
     uow: UOWDep,
     user_service: UserServiceDep,
 ):
+    """
+    Create a new user.
+    """
     try:
         logger.info(f"Received user data: {user}")
         new_user = await user_service.add_user(uow, user)
@@ -44,6 +45,9 @@ async def get_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
+    """
+    Retrieve a list of users.
+    """
     try:
         users = await user_service.get_users(uow, skip=skip, limit=limit)
         return users
@@ -58,6 +62,9 @@ async def get_user_by_id(
     uow: UOWDep,
     user_service: UserServiceDep,
 ):
+    """
+    Retrieve a user by their ID.
+    """
     try:
         user = await user_service.get_user_by_id(uow, user_id)
         if not user:
@@ -78,6 +85,9 @@ async def update_user(
     user_service: UserServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Update an existing user.
+    """
     try:
         updated_user = await user_service.update_user(
             uow, current_user.id, user_id, user_update
@@ -96,6 +106,9 @@ async def deactivate_user(
     user_service: UserServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Deactivate a user by their ID.
+    """
     try:
         deactivated_user_id = await user_service.deactivate_user(
             uow, user_id, current_user.id

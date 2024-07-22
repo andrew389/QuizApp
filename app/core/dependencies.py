@@ -6,7 +6,9 @@ from app.services.answer import AnswerService
 from app.services.auth import AuthService
 from app.services.company import CompanyService
 from app.services.invitation import InvitationService
-from app.services.member import MemberService
+from app.services.member_management import MemberManagement
+from app.services.member_queries import MemberQueries
+from app.services.member_requests import MemberRequests
 from app.services.question import QuestionService
 from app.services.quiz import QuizService
 from app.services.user import UserService
@@ -21,7 +23,9 @@ AuthServiceDep = Annotated[AuthService, Depends()]
 CompanyServiceDep = Annotated[CompanyService, Depends()]
 
 InvitationServiceDep = Annotated[InvitationService, Depends()]
-MemberServiceDep = Annotated[MemberService, Depends()]
+MemberManagementDep = Annotated[MemberManagement, Depends()]
+MemberQueriesDep = Annotated[MemberQueries, Depends()]
+MemberRequestsDep = Annotated[MemberRequests, Depends()]
 
 QuizServiceDep = Annotated[QuizService, Depends()]
 QuestionServiceDep = Annotated[QuestionService, Depends()]
