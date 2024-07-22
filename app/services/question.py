@@ -1,7 +1,7 @@
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException, FetchingException
-from app.schemas.answer import AnswerBase
+from app.schemas.answer import AnswerBase, AnswerResponse
 from app.schemas.question import (
     QuestionCreate,
     QuestionUpdate,
@@ -153,7 +153,7 @@ class QuestionService:
             question_data = {
                 "id": question_id,
                 "title": question.title,
-                "answers": [AnswerBase(**answer.__dict__) for answer in answers],
+                "answers": [AnswerResponse(**answer.__dict__) for answer in answers],
             }
 
             return QuestionResponse(**question_data)

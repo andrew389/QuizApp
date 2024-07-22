@@ -189,7 +189,7 @@ class QuizService:
         from app.services.member_management import MemberManagement
 
         async with uow:
-            has_permission = await MemberManagement.check_is_user_have_permission(
+            has_permission = await MemberManagement.check_is_user_member_or_higher(
                 uow, current_user_id, company_id
             )
             if not has_permission:

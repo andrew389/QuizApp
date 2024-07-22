@@ -38,3 +38,4 @@ class Company(Base):
     answers = relationship(
         "Answer", back_populates="company", cascade="all, delete-orphan"
     )
+    answered_questions = relationship("AnsweredQuestion", back_populates="company")

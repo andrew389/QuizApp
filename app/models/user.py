@@ -35,3 +35,4 @@ class User(Base):
     received_invitations = relationship(
         "Invitation", foreign_keys="Invitation.receiver_id", back_populates="receiver"
     )
+    answered_questions = relationship("AnsweredQuestion", back_populates="user")

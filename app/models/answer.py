@@ -24,3 +24,4 @@ class Answer(Base):
 
     question = relationship("Question", back_populates="answers")
     company = relationship("Company", back_populates="answers")
+    answered_questions = relationship("AnsweredQuestion", back_populates="answer")

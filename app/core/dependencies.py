@@ -3,6 +3,7 @@ from typing import Annotated, Type
 from fastapi import Depends
 
 from app.services.answer import AnswerService
+from app.services.answered_question import AnsweredQuestionService
 from app.services.auth import AuthService
 from app.services.company import CompanyService
 from app.services.invitation import InvitationService
@@ -30,3 +31,4 @@ MemberRequestsDep = Annotated[MemberRequests, Depends()]
 QuizServiceDep = Annotated[QuizService, Depends()]
 QuestionServiceDep = Annotated[QuestionService, Depends()]
 AnswerServiceDep = Annotated[AnswerService, Depends()]
+AnsweredQuestionServiceDep = Annotated[AnsweredQuestionService, Depends()]

@@ -26,3 +26,4 @@ class Quiz(Base):
     questions = relationship(
         "Question", back_populates="quiz", cascade="all, delete-orphan"
     )
+    answered_questions = relationship("AnsweredQuestion", back_populates="quiz")
