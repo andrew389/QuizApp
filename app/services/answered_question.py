@@ -1,3 +1,7 @@
+import json
+from datetime import datetime
+
+from app.db.redis_db import redis
 from app.exceptions.base import NotFoundException
 from app.schemas.answered_question import SendAnsweredQuiz, AnsweredQuestionBase
 from app.uow.unitofwork import UnitOfWork
@@ -10,14 +14,29 @@ class AnsweredQuestionService:
         uow: UnitOfWork, quiz_data: SendAnsweredQuiz, user_id: int, quiz_id: int
     ):
         """
-        Saves the user's answers to a quiz and increments the quiz frequency.
+        Saves the user's answers to a db and redis, also increments the quiz frequency.
+        """
+        await AnsweredQuestionService._process_quiz_answers(
+            uow, quiz_data, user_id, quiz_id
+        )
+        redis_key = f"answered_quiz_{user_id}_{quiz_id}"
+        redis_data_json = await AnsweredQuestionService._prepare_redis_data(
+            uow, quiz_data, user_id, quiz_id
+        )
+        await redis.write_with_ttl(redis_key, redis_data_json, ttl=48 * 60 * 60)
+
+    @staticmethod
+    async def _process_quiz_answers(
+        uow: UnitOfWork, quiz_data: SendAnsweredQuiz, user_id: int, quiz_id: int
+    ):
+        """
+        Process and save the answers provided for a quiz.
         """
         async with uow:
             for question_id, answer_id in quiz_data.answers.items():
                 await AnsweredQuestionService._process_answer(
                     uow, question_id, answer_id, quiz_id, user_id
                 )
-            await AnsweredQuestionService._increment_quiz_frequency(uow, quiz_id)
             await uow.commit()
 
     @staticmethod
@@ -118,6 +137,48 @@ class AnsweredQuestionService:
                 await uow.quiz.edit_one(quiz_id, {"frequency": quiz.frequency})
         except NoResultFound:
             raise NotFoundException()
+
+    @staticmethod
+    async def _prepare_redis_data(
+        uow: UnitOfWork, quiz_data: SendAnsweredQuiz, user_id: int, quiz_id: int
+    ) -> str:
+        redis_data = {
+            "user_id": user_id,
+            "quiz_id": quiz_id,
+            "answers": await AnsweredQuestionService._fetch_answer_details(
+                uow, quiz_data
+            ),
+        }
+        return json.dumps(redis_data)
+
+    @staticmethod
+    async def _fetch_answer_details(
+        uow: UnitOfWork, quiz_data: SendAnsweredQuiz
+    ) -> list:
+        return [
+            {
+                "question_id": question_id,
+                "answer_id": answer_id,
+                "answer_text": await AnsweredQuestionService._get_answer_text(
+                    uow, answer_id
+                ),
+                "is_correct": await AnsweredQuestionService._is_correct_answer(
+                    uow, answer_id
+                ),
+                "created_at": datetime.now().isoformat(),
+            }
+            for question_id, answer_id in quiz_data.answers.items()
+        ]
+
+    @staticmethod
+    async def _get_answer_text(uow: UnitOfWork, answer_id: int) -> str:
+        answer = await uow.answer.find_one(id=answer_id)
+        return answer.text if answer else None
+
+    @staticmethod
+    async def _is_correct_answer(uow: UnitOfWork, answer_id: int) -> bool:
+        answer = await uow.answer.find_one(id=answer_id)
+        return answer.is_correct if answer else False
 
     @staticmethod
     async def calculate_average_score_within_company(

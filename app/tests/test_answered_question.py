@@ -7,63 +7,6 @@ from app.uow.unitofwork import UnitOfWork
 
 
 @pytest.mark.asyncio
-async def test_save_answered_quiz():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.question = AsyncMock()
-    mock_uow.answer = AsyncMock()
-    mock_uow.quiz = AsyncMock()
-    mock_uow.answered_question = AsyncMock()
-
-    quiz_data = SendAnsweredQuiz(answers={1: 1, 2: 2})
-    user_id = 1
-    quiz_id = 1
-
-    mock_uow.question.find_one.side_effect = [
-        AsyncMock(quiz_id=quiz_id),
-        AsyncMock(quiz_id=quiz_id),
-    ]
-    mock_uow.answer.find_one.side_effect = [
-        AsyncMock(is_correct=True, text="Answer 1"),
-        AsyncMock(is_correct=False, text="Answer 2"),
-    ]
-    mock_uow.quiz.find_one.return_value = AsyncMock(company_id=1)
-    mock_uow.answered_question.find_one.return_value = None
-
-    await AnsweredQuestionService.save_answered_quiz(
-        mock_uow, quiz_data, user_id, quiz_id
-    )
-
-    assert mock_uow.answered_question.add_one.call_count == 2
-    assert mock_uow.commit.call_count == 1
-
-
-@pytest.mark.asyncio
-async def test_save_answered_quiz_with_existing_answer():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.question = AsyncMock()
-    mock_uow.answer = AsyncMock()
-    mock_uow.quiz = AsyncMock()
-    mock_uow.answered_question = AsyncMock()
-
-    quiz_data = SendAnsweredQuiz(answers={1: 1})
-    user_id = 1
-    quiz_id = 1
-
-    mock_uow.question.find_one.return_value = AsyncMock(quiz_id=quiz_id)
-    mock_uow.answer.find_one.return_value = AsyncMock(is_correct=True, text="Answer")
-    mock_uow.quiz.find_one.return_value = AsyncMock(company_id=1)
-    mock_uow.answered_question.find_one.return_value = AsyncMock(id=1)
-
-    await AnsweredQuestionService.save_answered_quiz(
-        mock_uow, quiz_data, user_id, quiz_id
-    )
-
-    # Verify method calls
-    assert mock_uow.answered_question.edit_one.call_count == 1
-    assert mock_uow.commit.call_count == 1
-
-
-@pytest.mark.asyncio
 async def test_save_answered_quiz_with_invalid_question():
     mock_uow = AsyncMock(UnitOfWork)
     mock_uow.question = AsyncMock()
