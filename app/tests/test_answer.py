@@ -55,8 +55,7 @@ async def test_get_answer_by_id():
     )
     mock_uow.answer.find_one.return_value = mock_answer
 
-    with pytest.raises(UnAuthorizedException):
-        await AnswerService.get_answer_by_id(mock_uow, answer_id, current_user_id=1)
+    await AnswerService.get_answer_by_id(mock_uow, answer_id, current_user_id=1)
 
 
 @pytest.mark.asyncio

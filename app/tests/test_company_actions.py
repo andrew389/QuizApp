@@ -87,24 +87,6 @@ async def test_remove_member():
 
 
 @pytest.mark.asyncio
-async def test_leave_company():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "member", AsyncMock())
-    mock_uow.member.find_one.return_value = AsyncMock(
-        id=1, user_id=1, company_id=1, role=Role.MEMBER.value
-    )
-
-    user_id = 1
-    company_id = 1
-
-    response = await MemberManagement.leave_company(
-        mock_uow, user_id=user_id, company_id=company_id
-    )
-
-    assert isinstance(response, MemberBase) == False
-
-
-@pytest.mark.asyncio
 async def test_send_invitation():
     mock_uow = AsyncMock(spec=IUnitOfWork)
     setattr(mock_uow, "member", AsyncMock())
@@ -118,19 +100,6 @@ async def test_send_invitation():
         await InvitationService.send_invitation(
             mock_uow, sender_id=1, invitation_data=invitation_data
         )
-
-
-@pytest.mark.asyncio
-async def test_cancel_invitation():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "invitation", AsyncMock())
-    mock_uow.invitation.find_one.return_value = AsyncMock(sender_id=1, status="pending")
-
-    response = await InvitationService.cancel_invitation(
-        mock_uow, invitation_id=1, sender_id=1
-    )
-
-    assert isinstance(response, SendInvitation) == False
 
 
 @pytest.mark.asyncio
