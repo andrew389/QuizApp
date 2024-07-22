@@ -1,57 +1,160 @@
 import json
 import csv
-from typing import List, Optional
-from io import StringIO
-from fastapi.responses import StreamingResponse
+import os
 
-from app.core.logger import logger
+import aiofiles
+from fastapi.responses import StreamingResponse
 from app.db.redis_db import redis
+from app.exceptions.auth import UnAuthorizedException
+from app.services.member_management import MemberManagement
+from app.uow.unitofwork import UnitOfWork
 
 
 class DataExportService:
+
     @staticmethod
-    async def get_data(
-        user_id: Optional[int] = None,
-        company_id: Optional[int] = None,
-        quiz_id: Optional[int] = None,
-    ) -> List[str]:
-        return await redis.read_by_filters(
-            user_id=user_id, company_id=company_id, quiz_id=quiz_id
+    async def _fetch_data(pattern: str) -> list:
+        keys = await redis.redis.keys(pattern)
+        all_data = []
+        for key in keys:
+            key_str = str(key)[len("<Future finished result='") : -2].strip()
+            data_json = await redis.redis.get(key_str)
+            if data_json:
+                data = json.loads(data_json)
+                all_data.append(data)
+        return all_data
+
+    @staticmethod
+    async def _export_data(
+        all_data: list, file_name: str, is_csv: bool
+    ) -> StreamingResponse:
+        file_path = os.path.join("exported_data", file_name)
+
+        if is_csv:
+            return await DataExportService.export_data_as_csv(all_data, file_path)
+        else:
+            return await DataExportService.export_data_as_json(all_data, file_path)
+
+    @staticmethod
+    async def read_data_by_user_id(
+        is_csv: bool, current_user_id: int
+    ) -> StreamingResponse:
+
+        pattern = f"answered_quiz_{current_user_id}_*_*"
+        all_data = await DataExportService._fetch_data(pattern)
+        return await DataExportService._export_data(
+            all_data,
+            (
+                f"exported_data_by_user_{current_user_id}.csv"
+                if is_csv
+                else f"exported_data_by_user_{current_user_id}.json"
+            ),
+            is_csv,
         )
 
     @staticmethod
-    async def export_to_json(
-        user_id: Optional[int] = None,
-        company_id: Optional[int] = None,
-        quiz_id: Optional[int] = None,
+    async def read_data_by_user_id_and_company_id(
+        uow: UnitOfWork,
+        is_csv: bool,
+        current_user_id: int,
+        user_id: int,
+        company_id: int,
     ) -> StreamingResponse:
-        data = await DataExportService.get_data(user_id, company_id, quiz_id)
-        logger.info(f"{data}")
-        json_data = json.dumps(data)
+        await MemberManagement.check_is_user_have_permission(
+            uow, current_user_id, company_id
+        )
+
+        pattern = f"answered_quiz_{user_id}_{company_id}_*"
+        all_data = await DataExportService._fetch_data(pattern)
+        return await DataExportService._export_data(
+            all_data,
+            (
+                f"exported_data_by_user_{user_id}_company_{company_id}.csv"
+                if is_csv
+                else f"exported_data_by_user_{user_id}_company_{company_id}.json"
+            ),
+            is_csv,
+        )
+
+    @staticmethod
+    async def read_data_by_company_id(
+        uow: UnitOfWork, is_csv: bool, current_user_id: int, company_id: int
+    ) -> StreamingResponse:
+        await MemberManagement.check_is_user_have_permission(
+            uow, current_user_id, company_id
+        )
+
+        pattern = f"answered_quiz_*_{company_id}_*"
+        all_data = await DataExportService._fetch_data(pattern)
+        return await DataExportService._export_data(
+            all_data,
+            (
+                f"exported_data_by_company_{company_id}.csv"
+                if is_csv
+                else f"exported_data_by_company_{company_id}.json"
+            ),
+            is_csv,
+        )
+
+    @staticmethod
+    async def read_data_by_company_id_and_quiz_id(
+        uow: UnitOfWork,
+        is_csv: bool,
+        current_user_id: int,
+        company_id: int,
+        quiz_id: int,
+    ) -> StreamingResponse:
+        await MemberManagement.check_is_user_have_permission(
+            uow, current_user_id, company_id
+        )
+
+        pattern = f"answered_quiz_*_{company_id}_{quiz_id}"
+        all_data = await DataExportService._fetch_data(pattern)
+        return await DataExportService._export_data(
+            all_data,
+            (
+                f"exported_data_company_{company_id}_quiz_{quiz_id}.csv"
+                if is_csv
+                else f"exported_data_company_{company_id}_quiz_{quiz_id}.json"
+            ),
+            is_csv,
+        )
+
+    @staticmethod
+    async def export_data_as_json(all_data: list, file_name: str) -> StreamingResponse:
+        json_data = json.dumps(all_data, indent=4)
+        async with aiofiles.open(file_name, mode="w") as file:
+            await file.write(json_data)
+
+        async def file_iterator():
+            async with aiofiles.open(file_name, mode="rb") as file:
+                while chunk := await file.read(1024):
+                    yield chunk
 
         return StreamingResponse(
-            content=StringIO(json_data),
+            file_iterator(),
             media_type="application/json",
-            headers={"Content-Disposition": "attachment; filename=data.json"},
+            headers={"Content-Disposition": f"attachment; filename={file_name}"},
         )
 
     @staticmethod
-    async def export_to_csv(
-        user_id: Optional[int] = None,
-        company_id: Optional[int] = None,
-        quiz_id: Optional[int] = None,
-    ) -> StreamingResponse:
-        data = await DataExportService.get_data(user_id, company_id, quiz_id)
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(["value"])  # Header
-        for item in data:
-            writer.writerow([item])
+    async def export_data_as_csv(all_data: list, file_name: str) -> StreamingResponse:
+        headers = list(all_data[0].keys()) if all_data else []
 
-        output.seek(0)  # Move to the beginning of the file
+        async with aiofiles.open(file_name, mode="w", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=headers)
+            await file.write("\ufeff")  # Write BOM for UTF-8
+            writer.writeheader()
+            for row in all_data:
+                writer.writerow(row)
+
+        async def file_iterator():
+            async with aiofiles.open(file_name, mode="rb") as file:
+                while chunk := await file.read(1024):
+                    yield chunk
 
         return StreamingResponse(
-            content=output,
+            file_iterator(),
             media_type="text/csv",
-            headers={"Content-Disposition": "attachment; filename=data.csv"},
+            headers={"Content-Disposition": f"attachment; filename={file_name}"},
         )

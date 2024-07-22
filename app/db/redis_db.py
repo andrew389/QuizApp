@@ -1,3 +1,4 @@
+import json
 from typing import Optional, List
 
 import asyncio_redis
@@ -76,41 +77,6 @@ class AsyncRedisConnection:
             return await self.redis.get(key)
         else:
             raise ConnectionError("Redis connection is not established.")
-
-    async def read_by_filters(
-        self,
-        user_id: Optional[int] = None,
-        company_id: Optional[int] = None,
-        quiz_id: Optional[int] = None,
-    ) -> List[str]:
-        if not self.redis:
-            raise ConnectionError("Redis connection is not established.")
-
-        keys = []
-        if user_id:
-            if company_id:
-                if quiz_id:
-                    keys.append(
-                        f"user_id:{user_id}:company_id:{company_id}:quiz_id:{quiz_id}"
-                    )
-                else:
-                    keys.append(f"user_id:{user_id}:company_id:{company_id}")
-            else:
-                keys.append(f"user_id:{user_id}")
-        elif company_id:
-            if quiz_id:
-                keys.append(f"company_id:{company_id}:quiz_id:{quiz_id}")
-            else:
-                keys.append(f"company_id:{company_id}")
-        elif quiz_id:
-            keys.append(f"quiz_id:{quiz_id}")
-
-        data = []
-        for key in keys:
-            value = await self.redis.get(key)
-            if value:
-                data.append(value)
-        return data
 
     async def ping(self):
         """

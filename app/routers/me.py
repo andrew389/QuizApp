@@ -106,21 +106,10 @@ async def get_avg_score_across_system(
         raise CalculatingException()
 
 
-@router.get("/export/json")
-async def export_data_to_json(
+@router.get("/results")
+async def get_quiz_results_for_last_48h(
     data_export_service: DataExportServiceDep,
-    user_id: Optional[int] = Query(None),
-    company_id: Optional[int] = Query(None),
-    quiz_id: Optional[int] = Query(None),
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    is_csv: bool = Query(),
 ):
-    return await data_export_service.export_to_json(user_id, company_id, quiz_id)
-
-
-@router.get("/export/csv")
-async def export_data_to_csv(
-    data_export_service: DataExportServiceDep,
-    user_id: Optional[int] = Query(None),
-    company_id: Optional[int] = Query(None),
-    quiz_id: Optional[int] = Query(None),
-):
-    return await data_export_service.export_to_csv(user_id, company_id, quiz_id)
+    return await data_export_service.read_data_by_user_id(is_csv, current_user.id)

@@ -10,6 +10,7 @@ from app.core.dependencies import (
     MemberRequestsDep,
     MemberQueriesDep,
     AnsweredQuestionServiceDep,
+    DataExportServiceDep,
 )
 from app.exceptions.base import (
     UpdatingException,
@@ -325,6 +326,47 @@ async def submit_quiz_answers(
         uow, quiz_data, user_id=current_user.id, quiz_id=quiz_id
     )
     return {"msg": "Answers saved successfully"}
+
+
+@router.get("/{company_id}/results/{user_id}")
+async def get_quiz_results_by_user_id_company_id(
+    user_id: int,
+    company_id: int,
+    is_csv: bool,
+    data_export_service: DataExportServiceDep,
+    uow: UOWDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    return await data_export_service.read_data_by_user_id_and_company_id(
+        uow, is_csv, current_user.id, user_id, company_id
+    )
+
+
+@router.get("/{company_id/results/{quiz_id}")
+async def get_results_by_company_id_quiz_id(
+    company_id: int,
+    quiz_id: int,
+    is_csv: bool,
+    data_export_service: DataExportServiceDep,
+    uow: UOWDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    return await data_export_service.read_data_by_company_id_and_quiz_id(
+        uow, is_csv, current_user.id, company_id, quiz_id
+    )
+
+
+@router.get("/{company_id}/results")
+async def export_data_to_json(
+    company_id: int,
+    is_csv: bool,
+    data_export_service: DataExportServiceDep,
+    uow: UOWDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    return await data_export_service.read_data_by_company_id(
+        uow, is_csv, current_user.id, company_id
+    )
 
 
 @router.get("/{company_id}/quizzes/score", status_code=200, response_model=dict)
