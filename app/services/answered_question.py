@@ -19,9 +19,12 @@ class AnsweredQuestionService:
         await AnsweredQuestionService._process_quiz_answers(
             uow, quiz_data, user_id, quiz_id
         )
+
+        quiz = uow.quiz.find_one(id=quiz_id)
+
         redis_key = f"answered_quiz_{user_id}_{quiz_id}"
         redis_data_json = await AnsweredQuestionService._prepare_redis_data(
-            uow, quiz_data, user_id, quiz_id
+            uow, quiz_data, user_id, quiz_id, quiz.company_id
         )
         await redis.write_with_ttl(redis_key, redis_data_json, ttl=48 * 60 * 60)
 
@@ -140,11 +143,16 @@ class AnsweredQuestionService:
 
     @staticmethod
     async def _prepare_redis_data(
-        uow: UnitOfWork, quiz_data: SendAnsweredQuiz, user_id: int, quiz_id: int
+        uow: UnitOfWork,
+        quiz_data: SendAnsweredQuiz,
+        user_id: int,
+        quiz_id: int,
+        company_id: int,
     ) -> str:
         redis_data = {
             "user_id": user_id,
             "quiz_id": quiz_id,
+            "company_id": company_id,
             "answers": await AnsweredQuestionService._fetch_answer_details(
                 uow, quiz_data
             ),

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, status, Query
 
 from app.core.dependencies import (
@@ -5,6 +7,7 @@ from app.core.dependencies import (
     AuthServiceDep,
     InvitationServiceDep,
     AnsweredQuestionServiceDep,
+    DataExportServiceDep,
 )
 from app.core.logger import logger
 from app.exceptions.base import FetchingException, CalculatingException
@@ -101,3 +104,23 @@ async def get_avg_score_across_system(
         return {"average_score": avg_score}
     except Exception:
         raise CalculatingException()
+
+
+@router.get("/export/json")
+async def export_data_to_json(
+    data_export_service: DataExportServiceDep,
+    user_id: Optional[int] = Query(None),
+    company_id: Optional[int] = Query(None),
+    quiz_id: Optional[int] = Query(None),
+):
+    return await data_export_service.export_to_json(user_id, company_id, quiz_id)
+
+
+@router.get("/export/csv")
+async def export_data_to_csv(
+    data_export_service: DataExportServiceDep,
+    user_id: Optional[int] = Query(None),
+    company_id: Optional[int] = Query(None),
+    quiz_id: Optional[int] = Query(None),
+):
+    return await data_export_service.export_to_csv(user_id, company_id, quiz_id)
