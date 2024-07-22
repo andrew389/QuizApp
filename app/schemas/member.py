@@ -27,11 +27,11 @@ class MemberRequest(BaseModel):
     description: str
 
 
-class AdminRequest(BaseModel):
-    company_id: int
-    member_id: int
-
-
 class MembersListResponse(BaseModel):
     members: List[MemberBase]
+    total: int
+
+
+class AdminsListResponse(BaseModel):
+    admins: List[MemberBase]
     total: int

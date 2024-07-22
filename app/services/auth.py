@@ -2,7 +2,6 @@ from datetime import timedelta, datetime
 
 from fastapi import Depends
 from jose import jwt, JWTError
-from jose.jwt import decode
 from jwt import PyJWKClient
 
 from app.core.config import settings
@@ -21,21 +20,23 @@ class AuthService:
     async def authenticate_user(
         uow: IUnitOfWork, email: str, password: str
     ) -> UserDetail:
+        """
+        Authenticate user by email and password.
+        """
         async with uow:
             user = await UserService.get_user_by_email(uow, email)
             if user and Hasher.verify_password(password, user.password):
                 return user
-            else:
-                raise NotAuthenticatedException()
+            raise NotAuthenticatedException()
 
     @staticmethod
     def create_access_token(data: dict):
+        """
+        Create an access token.
+        """
         expires_delta = timedelta(minutes=settings.auth.access_token_expire_minutes)
+        expire = datetime.now() + expires_delta
         to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.now() + expires_delta
-        else:
-            expire = datetime.now() + timedelta(minutes=15)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
             to_encode, settings.auth.secret_key, algorithm=settings.auth.algorithm
@@ -44,17 +45,24 @@ class AuthService:
 
     @staticmethod
     def verify_token_credentials(token: HTTPAuthorizationCredentials):
+        """
+        Verify token credentials.
+        """
         if not token:
             raise NotAuthenticatedException()
 
     @staticmethod
     def get_payload_from_token(token: HTTPAuthorizationCredentials):
+        """
+        Extract payload from token.
+        """
         try:
             verify_token = VerifyToken(token.credentials)
-            if len(str(token.credentials)) > 168:
-                payload = verify_token.verify_auth0()
-            else:
-                payload = verify_token.verify_jwt()
+            payload = (
+                verify_token.verify_auth0()
+                if len(token.credentials) > 168
+                else verify_token.verify_jwt()
+            )
             if "status" in payload and payload["status"] == "error":
                 raise ValidateCredentialsException()
             return payload
@@ -63,6 +71,9 @@ class AuthService:
 
     @staticmethod
     def get_email_from_payload(payload: dict):
+        """
+        Get email from token payload.
+        """
         email = payload.get("email")
         if email is None:
             raise ValidateCredentialsException()
@@ -70,6 +81,9 @@ class AuthService:
 
     @staticmethod
     async def get_user_by_email_or_create(uow: IUnitOfWork, email: str):
+        """
+        Get user by email or create a new one.
+        """
         async with uow:
             user = await UserService.get_user_by_email(uow, email=email)
             if user is None:
@@ -82,6 +96,9 @@ class AuthService:
         token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
         uow: UnitOfWork = Depends(UnitOfWork),
     ):
+        """
+        Get current user from token.
+        """
         AuthService.verify_token_credentials(token)
         payload = AuthService.get_payload_from_token(token)
         email = AuthService.get_email_from_payload(payload)
@@ -96,8 +113,11 @@ class VerifyToken:
         self.signing_key = settings.auth.signing_key
 
     def verify_auth0(self):
+        """
+        Verify Auth0 token.
+        """
         try:
-            payload = decode(
+            payload = jwt.decode(
                 self.token,
                 self.signing_key,
                 algorithms=[settings.auth.algorithm],
@@ -110,6 +130,9 @@ class VerifyToken:
         return payload
 
     def verify_jwt(self):
+        """
+        Verify JWT token.
+        """
         try:
             payload = jwt.decode(
                 self.token,

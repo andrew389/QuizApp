@@ -5,8 +5,10 @@ from datetime import datetime
 from app.exceptions.auth import UnAuthorizedException
 from app.schemas.invitation import SendInvitation
 from app.services.invitation import InvitationService
-from app.services.member import MemberService
-from app.schemas.member import MembersListResponse, MemberBase, AdminRequest
+from app.services.member_requests import MemberRequests
+from app.services.member_queries import MemberQueries
+from app.services.member_management import MemberManagement
+from app.schemas.member import MembersListResponse, MemberBase, AdminsListResponse
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.role import Role
 
@@ -26,7 +28,7 @@ async def test_get_members():
         )
     ]
 
-    response = await MemberService.get_members(mock_uow, company_id=1, skip=0, limit=10)
+    response = await MemberQueries.get_members(mock_uow, company_id=1, skip=0, limit=10)
 
     assert isinstance(response, MembersListResponse)
     assert len(response.members) == 1
@@ -46,7 +48,7 @@ async def test_get_member_by_id():
         updated_at=datetime.now(),
     )
 
-    response = await MemberService.get_member_by_id(mock_uow, member_id=1)
+    response = await MemberQueries.get_member_by_id(mock_uow, member_id=1)
 
     assert isinstance(response, MemberBase)
     assert response.id == 1
@@ -60,7 +62,7 @@ async def test_cancel_request_to_join():
 
     request_id = 1
 
-    response = await MemberService.cancel_request_to_join(
+    response = await MemberRequests.cancel_request_to_join(
         mock_uow, request_id=request_id, sender_id=1
     )
 
@@ -79,7 +81,7 @@ async def test_remove_member():
     member_id = 1
 
     with pytest.raises(UnAuthorizedException):
-        await MemberService.remove_member(
+        await MemberManagement.remove_member(
             mock_uow, user_id=user_id, member_id=member_id
         )
 
@@ -95,7 +97,7 @@ async def test_leave_company():
     user_id = 1
     company_id = 1
 
-    response = await MemberService.leave_company(
+    response = await MemberManagement.leave_company(
         mock_uow, user_id=user_id, company_id=company_id
     )
 
@@ -147,7 +149,7 @@ async def test_appoint_admin():
     mock_uow.member.find_one.return_value = member_data
     mock_uow.member.edit_one.return_value = updated_member_data
 
-    response = await MemberService.appoint_admin(
+    response = await MemberManagement.appoint_admin(
         mock_uow, owner_id, company_id=company_id, member_id=member_id
     )
 
@@ -169,10 +171,10 @@ async def test_get_admins():
 
     mock_uow.member.find_all_by_company_and_role.return_value = admins_data
 
-    response = await MemberService.get_admins(
+    response = await MemberManagement.get_admins(
         mock_uow, company_id=company_id, skip=0, limit=10
     )
 
-    assert isinstance(response, MembersListResponse)
-    assert len(response.members) == 2
+    assert isinstance(response, AdminsListResponse)
+    assert len(response.admins) == 2
     assert response.total == 2

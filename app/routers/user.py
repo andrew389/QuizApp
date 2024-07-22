@@ -26,10 +26,12 @@ async def add_user(
     uow: UOWDep,
     user_service: UserServiceDep,
 ):
+    """
+    Create a new user.
+    """
     try:
         logger.info(f"Received user data: {user}")
         new_user = await user_service.add_user(uow, user)
-
         logger.info(f"User created with ID: {new_user.id}")
         return UserResponse(user=new_user)
     except Exception as e:
@@ -44,6 +46,9 @@ async def get_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
+    """
+    Retrieve a list of users.
+    """
     try:
         users = await user_service.get_users(uow, skip=skip, limit=limit)
         return users
@@ -58,6 +63,9 @@ async def get_user_by_id(
     uow: UOWDep,
     user_service: UserServiceDep,
 ):
+    """
+    Retrieve user by ID.
+    """
     try:
         user = await user_service.get_user_by_id(uow, user_id)
         if not user:
@@ -78,6 +86,9 @@ async def update_user(
     user_service: UserServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Update user details.
+    """
     try:
         updated_user = await user_service.update_user(
             uow, current_user.id, user_id, user_update
@@ -96,6 +107,9 @@ async def deactivate_user(
     user_service: UserServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
+    """
+    Deactivate a user.
+    """
     try:
         deactivated_user_id = await user_service.deactivate_user(
             uow, user_id, current_user.id

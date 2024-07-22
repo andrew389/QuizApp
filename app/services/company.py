@@ -18,6 +18,9 @@ class CompanyService:
     async def add_company(
         uow: IUnitOfWork, company: CompanyCreate, owner_id: int
     ) -> CompanyDetail:
+        """
+        Add a new company and set the owner as a member.
+        """
         async with uow:
             await CompanyService._check_existing_member(uow, owner_id)
 
@@ -26,7 +29,6 @@ class CompanyService:
             company_model = await uow.company.add_one(company_dict)
 
             await CompanyService._add_owner_as_member(uow, owner_id, company_model.id)
-
             await uow.commit()
             return CompanyDetail(**company_model.__dict__)
 
@@ -34,6 +36,9 @@ class CompanyService:
     async def get_companies(
         uow: IUnitOfWork, current_user_id: int, skip: int = 0, limit: int = 10
     ) -> CompaniesListResponse:
+        """
+        Retrieve a list of companies visible to the user and owned by the user.
+        """
         async with uow:
             visible_companies = await uow.company.find_all_visible(
                 skip=skip, limit=limit
@@ -45,7 +50,6 @@ class CompanyService:
             combined_companies = CompanyService._combine_and_paginate_companies(
                 visible_companies, user_companies, skip, limit
             )
-
             return CompaniesListResponse(
                 companies=[
                     CompanyBase(**company.__dict__)
@@ -56,6 +60,9 @@ class CompanyService:
 
     @staticmethod
     async def get_company_by_id(uow: IUnitOfWork, company_id: int) -> CompanyDetail:
+        """
+        Get company details by ID.
+        """
         async with uow:
             company_model = await uow.company.find_one(id=company_id)
             if not company_model:
@@ -70,6 +77,9 @@ class CompanyService:
         current_user_id: int,
         company_update: CompanyUpdate,
     ) -> CompanyDetail:
+        """
+        Update company details.
+        """
         async with uow:
             await CompanyService.ensure_owner(uow, company_id, current_user_id)
             await uow.company.edit_one(company_id, company_update.model_dump())
@@ -82,6 +92,9 @@ class CompanyService:
     async def delete_company(
         uow: IUnitOfWork, company_id: int, current_user_id: int
     ) -> int:
+        """
+        Delete a company by ID.
+        """
         async with uow:
             await CompanyService.ensure_owner(uow, company_id, current_user_id)
             deleted_company = await uow.company.delete_one(company_id)
@@ -92,6 +105,9 @@ class CompanyService:
     async def change_company_visibility(
         uow: IUnitOfWork, company_id: int, current_user_id: int, is_visible: bool
     ) -> CompanyDetail:
+        """
+        Change the visibility of a company.
+        """
         async with uow:
             await CompanyService.ensure_owner(uow, company_id, current_user_id)
             company_model = await uow.company.find_one(id=company_id)
@@ -106,6 +122,9 @@ class CompanyService:
 
     @staticmethod
     def _combine_and_paginate_companies(visible_companies, user_companies, skip, limit):
+        """
+        Combine and paginate companies.
+        """
         combined_companies = list(
             {
                 company.id: company for company in (visible_companies + user_companies)
@@ -116,6 +135,9 @@ class CompanyService:
 
     @staticmethod
     async def ensure_owner(uow: IUnitOfWork, company_id: int, user_id: int):
+        """
+        Ensure the user is the owner of the company.
+        """
         company = await CompanyService.get_company_by_id(uow, company_id)
         if company.owner_id != user_id:
             raise UnAuthorizedException()
@@ -123,6 +145,9 @@ class CompanyService:
 
     @staticmethod
     async def _check_existing_member(uow: IUnitOfWork, owner_id: int):
+        """
+        Check if the owner is already a member of another company.
+        """
         existing_member = await uow.member.find_one(user_id=owner_id)
         if existing_member:
             logger.error("User is already a member of another company")
@@ -130,6 +155,9 @@ class CompanyService:
 
     @staticmethod
     async def _add_owner_as_member(uow: IUnitOfWork, owner_id: int, company_id: int):
+        """
+        Add the owner as a member of the company.
+        """
         member_data = MemberCreate(
             user_id=owner_id, company_id=company_id, role=Role.OWNER.value
         )
