@@ -42,9 +42,9 @@ class MemberManagement:
         """
         Validate conditions for removing a member.
         """
-        owner_or_admin = await uow.member.find_one(user_id=user_id)
+        owner = await uow.member.find_one(user_id=user_id)
 
-        if owner_or_admin.role not in [Role.OWNER.value, Role.ADMIN.value]:
+        if owner.role not in [Role.OWNER.value]:
             raise UnAuthorizedException()
 
         if not member:
