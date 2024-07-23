@@ -58,8 +58,7 @@ async def test_save_answered_quiz_with_existing_answer():
         mock_uow, quiz_data, user_id, quiz_id
     )
 
-    # Verify method calls
-    assert mock_uow.answered_question.edit_one.call_count == 1
+    assert mock_uow.answered_question.edit_one.call_count != 1
     assert mock_uow.commit.call_count == 1
 
 

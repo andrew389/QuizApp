@@ -19,7 +19,7 @@ class InvitationRepository(SQLAlchemyRepository):
     ):
         stmt = (
             select(self.model)
-            .filter_by(receiver_id=receiver_id)
+            .where(self.model.receiver_id == receiver_id)
             .offset(skip)
             .limit(limit)
         )
