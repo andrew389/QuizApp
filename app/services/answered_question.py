@@ -129,6 +129,9 @@ class AnsweredQuestionService:
         quiz_id: int,
         company_id: int,
     ) -> str:
+        """
+        Prepares the data for storing in Redis.
+        """
         redis_data = {
             "user_id": user_id,
             "quiz_id": quiz_id,
@@ -143,6 +146,9 @@ class AnsweredQuestionService:
     async def _fetch_answer_details(
         uow: UnitOfWork, quiz_data: SendAnsweredQuiz
     ) -> list:
+        """
+        Fetches detailed information about each answer from the provided quiz data.
+        """
         return [
             {
                 "question_id": question_id,

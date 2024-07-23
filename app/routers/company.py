@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Dict
+
 from fastapi import APIRouter, Query, Depends
 
 from app.core.dependencies import (
@@ -407,6 +410,80 @@ async def get_avg_score_within_company(
         )
         return {"average_score": avg_score}
     except Exception:
+        raise CalculatingException()
+
+
+@router.get("/{company_id}/quizzes/score/members", response_model=Dict[int, float])
+async def get_company_members_average_scores(
+    company_id: int,
+    uow: UOWDep,
+    analytics_service: AnalyticsServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    start_date: datetime = Query(..., alias="start_date"),
+    end_date: datetime = Query(..., alias="end_date"),
+):
+    """
+    Get average scores for all members of a specified company within the given time range.
+    """
+    try:
+        average_scores = (
+            await analytics_service.calculate_company_members_average_scores(
+                uow, current_user.id, company_id, start_date, end_date
+            )
+        )
+        return average_scores
+    except Exception as e:
+        logger.error(f"Error calculating average scores for company members: {e}")
+        raise CalculatingException()
+
+
+@router.get(
+    "/{company_id}/quizzes/score/members/last-completion",
+    response_model=Dict[int, datetime],
+)
+async def get_users_last_quiz_attempts(
+    company_id: int,
+    uow: UOWDep,
+    analytics_service: AnalyticsServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    List all users in a company with the timestamp of their last quiz attempt.
+    """
+    try:
+        last_attempts = await analytics_service.list_users_last_quiz_attempts(
+            uow, current_user.id, company_id
+        )
+        return last_attempts
+    except Exception as e:
+        logger.error(f"Error fetching users' last quiz attempts: {e}")
+        raise FetchingException()
+
+
+@router.get(
+    "/{company_id}/quizzes/score/members/{member_id}", response_model=Dict[int, float]
+)
+async def get_detailed_average_scores(
+    uow: UOWDep,
+    analytics_service: AnalyticsServiceDep,
+    member_id: int,
+    company_id: int,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    start_date: datetime = Query(..., alias="start_date"),
+    end_date: datetime = Query(..., alias="end_date"),
+):
+    """
+    Get detailed average scores for each quiz taken by the user within the specified time range.
+    """
+    try:
+        detailed_average_scores = (
+            await analytics_service.calculate_detailed_average_scores(
+                uow, current_user.id, member_id, company_id, start_date, end_date
+            )
+        )
+        return detailed_average_scores
+    except Exception as e:
+        logger.error(f"Error calculating detailed average scores: {e}")
         raise CalculatingException()
 
 

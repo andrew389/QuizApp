@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Dict
+
 from fastapi import APIRouter, Depends, status, Query
 
 from app.core.dependencies import (
@@ -84,7 +87,7 @@ async def get_sent_invitations(
         raise FetchingException()
 
 
-@router.get("/quizzes/score", status_code=200, response_model=dict)
+@router.get("/quizzes/score/system", status_code=200, response_model=dict)
 async def get_avg_score_across_system(
     uow: UOWDep,
     analytics_service: AnalyticsServiceDep,
@@ -116,3 +119,43 @@ async def get_quiz_results_for_last_48h(
     except Exception as e:
         logger.error(f"Error fetching results for user: {e}")
         raise FetchingException()
+
+
+@router.get("/quizzes/score/last-completion", response_model=Dict[int, datetime])
+async def get_quiz_completion_timestamps(
+    uow: UOWDep,
+    analytics_service: AnalyticsServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    Get a list of quizzes with the timestamps of their last completion by the current user.
+    """
+    try:
+        timestamps = await analytics_service.get_last_completion_timestamps(
+            uow, current_user.id
+        )
+        return timestamps
+    except Exception as e:
+        logger.error(f"Error fetching quiz completion timestamps: {e}")
+        raise FetchingException()
+
+
+@router.get("/quizzes/score/all", response_model=Dict[int, float])
+async def get_average_scores_by_quiz(
+    uow: UOWDep,
+    analytics_service: AnalyticsServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    start_date: datetime = Query(..., alias="start_date"),
+    end_date: datetime = Query(..., alias="end_date"),
+):
+    """
+    Get average scores for each quiz taken by the current user within the specified time range.
+    """
+    try:
+        average_scores = await analytics_service.calculate_average_scores_by_quiz(
+            uow, current_user.id, start_date, end_date
+        )
+        return average_scores
+    except Exception as e:
+        logger.error(f"Error calculating average scores by quiz: {e}")
+        raise CalculatingException()
