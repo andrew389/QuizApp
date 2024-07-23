@@ -24,14 +24,8 @@ class MemberDelete(BaseModel):
 
 
 class MemberRequest(BaseModel):
-    company_id: int
     title: str
     description: str
-
-
-class AdminRequest(BaseModel):
-    company_id: int
-    member_id: int
 
 
 class MembersListResponse(BaseModel):
