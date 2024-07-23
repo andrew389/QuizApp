@@ -2,6 +2,7 @@ from typing import Annotated, Type
 
 from fastapi import Depends
 
+from app.services.analytics import AnalyticsService
 from app.services.answer import AnswerService
 from app.services.answered_question import AnsweredQuestionService
 from app.services.auth import AuthService
@@ -35,3 +36,5 @@ AnswerServiceDep = Annotated[AnswerService, Depends()]
 AnsweredQuestionServiceDep = Annotated[AnsweredQuestionService, Depends()]
 
 DataExportServiceDep = Annotated[DataExportService, Depends()]
+
+AnalyticsServiceDep = Annotated[AnalyticsService, Depends()]

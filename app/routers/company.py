@@ -11,6 +11,7 @@ from app.core.dependencies import (
     MemberQueriesDep,
     AnsweredQuestionServiceDep,
     DataExportServiceDep,
+    AnalyticsServiceDep,
 )
 from app.exceptions.base import (
     UpdatingException,
@@ -394,17 +395,15 @@ async def get_results_by_company_id(
 async def get_avg_score_within_company(
     company_id: int,
     uow: UOWDep,
-    answered_question_service: AnsweredQuestionServiceDep,
+    analytics_service: AnalyticsServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
     Get average score of user within company
     """
     try:
-        avg_score = (
-            await answered_question_service.calculate_average_score_within_company(
-                uow, current_user.id, company_id
-            )
+        avg_score = await analytics_service.calculate_average_score_within_company(
+            uow, current_user.id, company_id
         )
         return {"average_score": avg_score}
     except Exception:

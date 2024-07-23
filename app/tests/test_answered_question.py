@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import AsyncMock
 from app.exceptions.base import NotFoundException
 from app.schemas.answered_question import SendAnsweredQuiz
+from app.services.analytics import AnalyticsService
 from app.services.answered_question import AnsweredQuestionService
 from app.uow.unitofwork import UnitOfWork
 
@@ -45,10 +46,8 @@ async def test_calculate_average_score_within_company():
         answered_questions
     )
 
-    average_score = (
-        await AnsweredQuestionService.calculate_average_score_within_company(
-            mock_uow, user_id, company_id
-        )
+    average_score = await AnalyticsService.calculate_average_score_within_company(
+        mock_uow, user_id, company_id
     )
 
     assert average_score == 0.5
@@ -64,7 +63,7 @@ async def test_calculate_average_score_across_system():
     answered_questions = [AsyncMock(is_correct=True), AsyncMock(is_correct=False)]
     mock_uow.answered_question.find_by_user.return_value = answered_questions
 
-    average_score = await AnsweredQuestionService.calculate_average_score_across_system(
+    average_score = await AnalyticsService.calculate_average_score_across_system(
         mock_uow, user_id
     )
 

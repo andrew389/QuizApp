@@ -32,8 +32,8 @@ class MemberRepository(SQLAlchemyRepository):
         self, company_id: int, role: int, skip: int = 0, limit: int = 10
     ):
         stmt = (
-            select(Member)
-            .filter_by(company_id=company_id, role=role)
+            select(self.model)
+            .where(self.model.company_id == company_id, self.model.role == role)
             .offset(skip)
             .limit(limit)
         )
