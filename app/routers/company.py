@@ -371,7 +371,7 @@ async def get_results_by_company_id_quiz_id(
 
 
 @router.get("/{company_id}/results")
-async def export_data_to_json(
+async def get_results_by_company_id(
     company_id: int,
     is_csv: bool,
     data_export_service: DataExportServiceDep,
@@ -379,7 +379,7 @@ async def export_data_to_json(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Export quiz data for a specific company.
+    Export quiz results for a specific company.
     """
     try:
         return await data_export_service.read_data_by_company_id(
