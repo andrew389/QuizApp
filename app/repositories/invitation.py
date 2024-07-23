@@ -9,7 +9,10 @@ class InvitationRepository(SQLAlchemyRepository):
 
     async def find_all_by_sender(self, sender_id: int, skip: int = 0, limit: int = 10):
         stmt = (
-            select(self.model).filter_by(sender_id=sender_id).offset(skip).limit(limit)
+            select(self.model)
+            .where(self.model.sender_id == sender_id)
+            .offset(skip)
+            .limit(limit)
         )
         res = await self.session.execute(stmt)
         return res.scalars().all()
@@ -19,7 +22,7 @@ class InvitationRepository(SQLAlchemyRepository):
     ):
         stmt = (
             select(self.model)
-            .filter_by(receiver_id=receiver_id)
+            .where(self.model.receiver_id == receiver_id)
             .offset(skip)
             .limit(limit)
         )
