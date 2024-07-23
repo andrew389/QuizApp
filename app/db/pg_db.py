@@ -14,5 +14,12 @@ Base = declarative_base()
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Provides an asynchronous SQLAlchemy session for database operations.
+
+    Returns:
+        AsyncGenerator[AsyncSession, None]: An asynchronous generator that yields
+        an instance of AsyncSession.
+    """
     async with async_session_maker() as session:
         yield session
