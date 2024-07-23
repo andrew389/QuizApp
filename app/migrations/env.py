@@ -19,6 +19,8 @@ from app.models.invitation import Invitation
 from app.models.question import Question
 from app.models.answer import Answer
 from app.models.quiz import Quiz
+from app.models.answered_question import AnsweredQuestion
+from app.models.notification import Notification
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

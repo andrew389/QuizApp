@@ -9,11 +9,17 @@ from app.core.dependencies import (
     InvitationServiceDep,
     DataExportServiceDep,
     AnalyticsServiceDep,
+    NotificationServiceDep,
 )
 from app.core.logger import logger
-from app.exceptions.base import FetchingException, CalculatingException
+from app.exceptions.base import (
+    FetchingException,
+    CalculatingException,
+    UpdatingException,
+)
 from app.models.user import User
 from app.schemas.invitation import InvitationsListResponse
+from app.schemas.notification import NotificationsListResponse, NotificationResponse
 from app.schemas.token import Token
 from app.schemas.user import UserResponse, SignInRequest
 from app.exceptions.auth import AuthenticationException
@@ -159,3 +165,61 @@ async def get_average_scores_by_quiz(
     except Exception as e:
         logger.error(f"Error calculating average scores by quiz: {e}")
         raise CalculatingException()
+
+
+@router.post("/notifications/{notification_id}/read")
+async def mark_notification_as_read(
+    uow: UOWDep,
+    notification_id: int,
+    notification_service: NotificationServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    Marks a specific notification as read for the current user.
+    """
+    try:
+        await notification_service.mark_as_read(uow, current_user.id, notification_id)
+        return {"msg": "Notification marked as read."}
+    except Exception as e:
+        logger.error(f"{e}")
+        raise UpdatingException()
+
+
+@router.get("/notifications", response_model=NotificationsListResponse)
+async def get_notifications(
+    uow: UOWDep,
+    notification_service: NotificationServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    skip: int = 0,
+    limit: int = 10,
+):
+    """
+    Retrieves a list of notifications for the current user.
+    """
+    try:
+        return await notification_service.get_notifications(
+            uow, current_user.id, skip, limit
+        )
+    except Exception as e:
+        logger.error(f"{e}")
+        raise FetchingException()
+
+
+@router.get("/notifications/{notification_id}", response_model=NotificationResponse)
+async def get_notification_by_id(
+    notification_id: int,
+    uow: UOWDep,
+    notification_service: NotificationServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    Retrieves a specific notification by its ID for the current user.
+    """
+    try:
+        notification = await notification_service.get_notification_by_id(
+            uow, current_user.id, notification_id
+        )
+        return notification
+    except Exception as e:
+        logger.error(f"{e}")
+        raise FetchingException()

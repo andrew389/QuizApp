@@ -10,6 +10,7 @@ from app.schemas.quiz import (
     QuizzesListResponse,
     QuizResponseForList,
 )
+from app.services.notification import NotificationService
 from app.services.question import QuestionService
 from app.uow.unitofwork import UnitOfWork
 
@@ -57,6 +58,10 @@ class QuizService:
                 else:
                     logger.error(f"Question with ID {question_id} not found.")
                     raise NotFoundException()
+
+            await NotificationService.send_notifications(
+                uow, quiz.company_id, f"A new quiz has been created: {quiz.title}"
+            )
 
             return QuizBase(**new_quiz.__dict__)
 
