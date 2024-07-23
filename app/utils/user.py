@@ -27,7 +27,7 @@ def create_user(email: str) -> UserCreate:
         city="City",
         phone="1234567890",
         avatar="",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
     )
     return user_create
