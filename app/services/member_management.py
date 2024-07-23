@@ -82,9 +82,9 @@ class MemberManagement:
             UnAuthorizedException: If the user does not have permission to remove the member.
             NotFoundException: If the member is not found.
         """
-        owner_or_admin = await uow.member.find_one(user_id=user_id)
+        owner = await uow.member.find_one(user_id=user_id)
 
-        if owner_or_admin.role not in [Role.OWNER.value, Role.ADMIN.value]:
+        if owner.role not in [Role.OWNER.value]:
             logger.error(
                 f"User {user_id} is not authorized to remove member {member_id}"
             )

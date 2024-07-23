@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+from app.core.logger import logger
 from app.db.redis_db import redis
 from app.exceptions.base import NotFoundException
 from app.schemas.answered_question import SendAnsweredQuiz, AnsweredQuestionBase
@@ -22,7 +23,7 @@ class AnsweredQuestionService:
 
         quiz = await uow.quiz.find_one(id=quiz_id)
 
-        redis_key = f"answered_quiz_{user_id}_{quiz_id}"
+        redis_key = f"answered_quiz_{user_id}_{quiz.company_id}_{quiz_id}"
         redis_data_json = await AnsweredQuestionService._prepare_redis_data(
             uow, quiz_data, user_id, quiz_id, quiz.company_id
         )
@@ -52,55 +53,34 @@ class AnsweredQuestionService:
         question = await uow.question.find_one(id=question_id)
         answer = await uow.answer.find_one(id=answer_id)
 
-        if question.quiz_id != quiz_id:
-            raise NotFoundException()
+        if not question and not answer:
+            logger.error(f"Not found: question_id={question_id}, answer_id={answer_id}")
+        elif not question:
+            logger.error(f"Question not found: question_id={question_id}")
+        elif not answer:
+            logger.error(f"Answer not found: answer_id={answer_id}")
 
         if not question or not answer:
-            return
+            raise NotFoundException()
+
+        if question.quiz_id != quiz_id:
+            logger.error(f"Quiz not found: quiz_id={quiz_id}")
+            raise NotFoundException()
 
         is_correct = answer.is_correct
         answer_text = answer.text
 
         quiz = await uow.quiz.find_one(id=quiz_id)
 
-        existing_answered_question = await uow.answered_question.find_one(
-            user_id=user_id, question_id=question_id
-        )
-
-        if existing_answered_question:
-            await AnsweredQuestionService._update_answered_question(
-                uow, existing_answered_question.id, answer_id, answer_text, is_correct
-            )
-        else:
-            await AnsweredQuestionService._add_answered_question(
-                uow,
-                quiz.company_id,
-                quiz_id,
-                question_id,
-                answer_id,
-                answer_text,
-                is_correct,
-                user_id,
-            )
-
-    @staticmethod
-    async def _update_answered_question(
-        uow: UnitOfWork,
-        answered_question_id: int,
-        answer_id: int,
-        answer_text: str,
-        is_correct: bool,
-    ):
-        """
-        Updates an existing answered question record.
-        """
-        await uow.answered_question.edit_one(
-            answered_question_id,
-            {
-                "answer_id": answer_id,
-                "answer_text": answer_text,
-                "is_correct": is_correct,
-            },
+        await AnsweredQuestionService._add_answered_question(
+            uow,
+            quiz.company_id,
+            quiz_id,
+            question_id,
+            answer_id,
+            answer_text,
+            is_correct,
+            user_id,
         )
 
     @staticmethod
