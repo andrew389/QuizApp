@@ -7,12 +7,10 @@ from app.uow.repository import SQLAlchemyRepository
 class InvitationRepository(SQLAlchemyRepository):
     model = Invitation
 
-    async def find_all_by_sender_company(
-        self, company_id: int, skip: int = 0, limit: int = 10
-    ):
+    async def find_all_by_sender(self, sender_id: int, skip: int = 0, limit: int = 10):
         stmt = (
             select(self.model)
-            .filter_by(company_id=company_id)
+            .where(self.model.sender_id == sender_id)
             .offset(skip)
             .limit(limit)
         )
@@ -24,7 +22,7 @@ class InvitationRepository(SQLAlchemyRepository):
     ):
         stmt = (
             select(self.model)
-            .filter_by(receiver_id=receiver_id)
+            .where(self.model.receiver_id == receiver_id)
             .offset(skip)
             .limit(limit)
         )

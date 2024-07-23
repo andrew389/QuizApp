@@ -33,9 +33,10 @@ class MemberRepository(SQLAlchemyRepository):
     ):
         stmt = (
             select(self.model)
-            .filter_by(company_id=company_id, role=role)
+            .where(self.model.company_id == company_id, self.model.role == role)
             .offset(skip)
             .limit(limit)
         )
+
         res = await self.session.execute(stmt)
         return res.scalars().all()

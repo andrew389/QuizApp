@@ -25,7 +25,7 @@ async def test_login_for_access_token():
     AuthService.create_access_token = MagicMock(return_value="mock_access_token")
 
     response = client.post(
-        "api/v1/auth/login", data={"email": "test@test.com", "password": "password"}
+        "api/v1/me/login", data={"email": "test@test.com", "password": "password"}
     )
 
     assert response.status_code == 422
@@ -43,9 +43,7 @@ async def test_read_users_me():
 
     AuthService.get_current_user = AsyncMock(return_value=mock_user)
 
-    response = client.get(
-        "api/v1/auth/me", headers={"Authorization": "Bearer mock_token"}
-    )
+    response = client.get("api/v1/me/", headers={"Authorization": "Bearer mock_token"})
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -56,7 +54,7 @@ async def test_incorrect_login():
     AuthService.authenticate_user = AsyncMock(return_value=None)
 
     response = client.post(
-        "api/v1/auth/login", data={"email": "wronguser", "password": "wrongpassword"}
+        "api/v1/me/login", data={"email": "wronguser", "password": "wrongpassword"}
     )
 
     assert response.status_code == 422

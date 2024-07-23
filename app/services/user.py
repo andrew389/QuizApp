@@ -15,11 +15,14 @@ from app.uow.unitofwork import IUnitOfWork
 class UserService:
     @staticmethod
     async def add_user(uow: IUnitOfWork, user: UserCreate) -> UserBase:
+        """
+        Add a new user to the system.
+        """
         async with uow:
             existing_user = await uow.user.find_one(email=user.email)
             if existing_user:
                 logger.error("User with this email already exists")
-                raise ValueError()
+                raise ValueError("User with this email already exists")
 
             user_dict = user.model_dump()
             user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
@@ -33,6 +36,9 @@ class UserService:
     async def get_users(
         uow: IUnitOfWork, skip: int = 0, limit: int = 10
     ) -> UsersListResponse:
+        """
+        Retrieve a list of users with pagination.
+        """
         async with uow:
             users = await uow.user.find_all(skip=skip, limit=limit)
             user_list = UsersListResponse(
@@ -42,31 +48,53 @@ class UserService:
 
     @staticmethod
     async def get_user_by_id(uow: IUnitOfWork, user_id: int) -> UserBase:
+        """
+        Retrieve user details by user ID.
+        """
         async with uow:
             user_model = await uow.user.find_one(id=user_id)
-            if user_model:
-                return UserBase(**user_model.__dict__)
+            if not user_model:
+                logger.error("User not found")
+                raise NotFoundException()
+
+            return UserBase(**user_model.__dict__)
 
     @staticmethod
     async def get_user_by_username(uow: IUnitOfWork, username: str) -> UserDetail:
+        """
+        Retrieve user details by username.
+        """
         async with uow:
             user_model = await uow.user.find_one(username=username)
-            if user_model:
-                return UserDetail(**user_model.__dict__)
+            if not user_model:
+                logger.error("User not found")
+                raise NotFoundException()
+
+            return UserDetail(**user_model.__dict__)
 
     @staticmethod
     async def get_user_by_email(uow: IUnitOfWork, email: str) -> UserDetail:
+        """
+        Retrieve user details by email.
+        """
         async with uow:
             user_model = await uow.user.find_one(email=email)
-            if user_model:
-                return UserDetail(**user_model.__dict__)
+            if not user_model:
+                logger.error("User not found")
+                raise NotFoundException()
+
+            return UserDetail(**user_model.__dict__)
 
     @staticmethod
     async def validate_user_update(
         uow: IUnitOfWork, user_id: int, user_update: UserUpdate
     ) -> UserUpdate:
+        """
+        Validate user update data, replacing default values with current values from the database.
+        """
         current_user = await uow.user.find_one(id=user_id)
         if not current_user:
+            logger.error("User not found")
             raise NotFoundException()
 
         user_data = user_update.model_dump()
@@ -84,8 +112,12 @@ class UserService:
     async def update_user(
         uow: IUnitOfWork, current_user_id: int, user_id: int, user_update: UserUpdate
     ) -> UserDetail:
+        """
+        Update user details.
+        """
         async with uow:
             if current_user_id != user_id:
+                logger.error("Unauthorized to update user")
                 raise UnAuthorizedException()
 
             user_update = await UserService.validate_user_update(
@@ -103,12 +135,17 @@ class UserService:
     async def deactivate_user(
         uow: IUnitOfWork, user_id: int, current_user_id: int
     ) -> UserDetail:
+        """
+        Deactivate a user.
+        """
         async with uow:
             if current_user_id != user_id:
+                logger.error("Unauthorized to deactivate user")
                 raise UnAuthorizedException()
 
             user_model = await uow.user.find_one(id=user_id)
             if not user_model:
+                logger.error("User not found")
                 raise NotFoundException()
 
             user_model.is_active = False

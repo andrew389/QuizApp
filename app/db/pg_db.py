@@ -1,9 +1,9 @@
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 
 from app.core.config import settings
+from sqlalchemy.ext.declarative import declarative_base
 
 
 engine = create_async_engine(settings.database.async_url)

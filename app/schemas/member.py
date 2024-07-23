@@ -23,11 +23,15 @@ class MemberDelete(BaseModel):
 
 
 class MemberRequest(BaseModel):
-    company_id: int
     title: str
     description: str
 
 
 class MembersListResponse(BaseModel):
     members: List[MemberBase]
+    total: int
+
+
+class AdminsListResponse(BaseModel):
+    admins: List[MemberBase]
     total: int
