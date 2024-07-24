@@ -4,6 +4,7 @@ import os
 
 import aiofiles
 from fastapi.responses import StreamingResponse
+
 from app.db.redis_db import redis
 from app.services.member_management import MemberManagement
 from app.uow.unitofwork import UnitOfWork
@@ -11,7 +12,7 @@ from app.uow.unitofwork import UnitOfWork
 
 class DataExportService:
     @staticmethod
-    async def _fetch_data(pattern: str) -> list:
+    async def fetch_data(pattern: str) -> list:
         """
         Fetches data from Redis based on the given pattern.
 
@@ -21,6 +22,7 @@ class DataExportService:
         Returns:
             list: A list of data retrieved from Redis.
         """
+
         keys = await redis.redis.keys(pattern)
         all_data = []
         for key in keys:
@@ -105,7 +107,7 @@ class DataExportService:
         )
 
         pattern = f"answered_quiz_{user_id}_{company_id}_*"
-        all_data = await DataExportService._fetch_data(pattern)
+        all_data = await DataExportService.fetch_data(pattern)
         return await DataExportService._export_data(
             all_data,
             (
@@ -137,7 +139,7 @@ class DataExportService:
         )
 
         pattern = f"answered_quiz_*_{company_id}_*"
-        all_data = await DataExportService._fetch_data(pattern)
+        all_data = await DataExportService.fetch_data(pattern)
         return await DataExportService._export_data(
             all_data,
             (
@@ -174,7 +176,7 @@ class DataExportService:
         )
 
         pattern = f"answered_quiz_*_{company_id}_{quiz_id}"
-        all_data = await DataExportService._fetch_data(pattern)
+        all_data = await DataExportService.fetch_data(pattern)
         return await DataExportService._export_data(
             all_data,
             (

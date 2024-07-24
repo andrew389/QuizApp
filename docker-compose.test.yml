@@ -39,5 +39,56 @@ services:
     env_file:
       - .env
 
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery:celery worker --config=celery
+    volumes:
+      - .:/code
+    environment:
+      - POSTGRES_DB_HOST=main_db
+      - REDIS_DB_HOST=redis
+    depends_on:
+      - test_db
+      - redis
+    env_file:
+      - .env
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery:celery beat --loglevel=info
+    volumes:
+      - .:/code
+    environment:
+      - POSTGRES_DB_HOST=main_db
+      - REDIS_DB_HOST=redis
+    depends_on:
+      - redis
+      - test_db
+      - celery_worker
+    env_file:
+      - .env
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery:celery flower --port=5555
+    volumes:
+      - .:/code
+    environment:
+      - POSTGRES_DB_HOST=main_db
+      - REDIS_DB_HOST=redis
+    depends_on:
+      - redis
+      - test_db
+      - celery_worker
+    env_file:
+      - .env
+    ports:
+      - "5555:5555"
 volumes:
   postgres_test_data:

@@ -32,6 +32,25 @@ class NotificationService:
 
         for notification in notifications:
             await uow.notification.add_one(notification.dict(exclude={"id"}))
+            await uow.commit()
+
+    @staticmethod
+    async def send_one_notification(
+        uow: UnitOfWork, user_id: int, company_id: int, message: str
+    ):
+        """
+        Send notification from to a specific member of the company.
+        """
+
+        notification = NotificationCreate(
+            message=message,
+            receiver_id=user_id,
+            company_id=company_id,
+            status="pending",
+        )
+
+        await uow.notification.add_one(notification.dict(exclude={"id"}))
+        await uow.commit()
 
     @staticmethod
     async def mark_as_read(uow: UnitOfWork, user_id: int, notification_id: int) -> None:
