@@ -70,7 +70,7 @@ class DataExportService:
             StreamingResponse: A StreamingResponse containing the exported data.
         """
         pattern = f"answered_quiz_{current_user_id}_*_*"
-        all_data = await DataExportService._fetch_data(pattern)
+        all_data = await DataExportService.fetch_data(pattern)
         return await DataExportService._export_data(
             all_data,
             (

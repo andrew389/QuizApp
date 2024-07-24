@@ -28,7 +28,6 @@ def mock_uow():
 
 @pytest.mark.asyncio
 async def test_read_data_by_user_id(mock_redis):
-    # Mock data
     mock_redis.keys.return_value = ["answered_quiz_1_1_1"]
     mock_redis.get.return_value = json.dumps({"key": "value"})
 
