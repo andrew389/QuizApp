@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from pydantic import BaseModel, field_validator
 
@@ -32,7 +32,7 @@ class QuestionUpdate(BaseModel):
 class QuestionResponse(BaseModel):
     id: int
     title: str
-    answers: List[AnswerResponse] = []
+    answers: List[Union[AnswerBase, AnswerResponse]] = []
 
 
 class QuestionResponseForList(BaseModel):
