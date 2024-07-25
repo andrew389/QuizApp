@@ -1,6 +1,7 @@
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException, UpdatingException
+from app.models.notification import Notification
 from app.schemas.notification import (
     NotificationCreate,
     NotificationsListResponse,
@@ -38,7 +39,24 @@ class NotificationService:
         """
         Mark a notification as read.
         """
+        notification = await NotificationService._validate_notification(
+            uow, user_id, notification_id
+        )
+        await uow.notification.edit_one(notification.id, {"status": "read"})
+        await uow.commit()
+
+    @staticmethod
+    async def _validate_notification(
+        uow: UnitOfWork, user_id: int, notification_id: int
+    ) -> Notification:
+        """
+        Validate notification
+        """
         notification = await uow.notification.find_one(id=notification_id)
+
+        if not notification:
+            logger.error(f"Notification with ID {notification_id} not found.")
+            raise NotFoundException()
 
         if notification.receiver_id != user_id:
             logger.error(f"You didn't have permissions for this notification.")
@@ -48,12 +66,18 @@ class NotificationService:
             logger.error(f"You already marked this notification")
             raise UpdatingException()
 
-        if not notification:
-            logger.error(f"Notification with ID {notification_id} not found.")
-            raise NotFoundException()
+        return notification
 
-        await uow.notification.edit_one(notification_id, {"status": "read"})
-        await uow.commit()
+    @staticmethod
+    async def mark_all_as_read(uow: UnitOfWork, user_id: int) -> None:
+        """
+        Mark all notifications as read.
+        """
+        notifications = await uow.notification.find_all_by_receiver(receiver_id=user_id)
+
+        for notification in notifications:
+            await uow.notification.edit_one(notification.id, {"status": "read"})
+            await uow.commit()
 
     @staticmethod
     async def get_notifications(

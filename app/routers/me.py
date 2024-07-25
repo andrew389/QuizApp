@@ -185,6 +185,23 @@ async def mark_notification_as_read(
         raise UpdatingException()
 
 
+@router.post("/notifications/read")
+async def mark_all_notifications_as_read(
+    uow: UOWDep,
+    notification_service: NotificationServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    Marks all notifications as read for the current user.
+    """
+    try:
+        await notification_service.mark_all_as_read(uow, current_user.id)
+        return {"msg": "Notifications marked as read."}
+    except Exception as e:
+        logger.error(f"{e}")
+        raise UpdatingException()
+
+
 @router.get("/notifications", response_model=NotificationsListResponse)
 async def get_notifications(
     uow: UOWDep,
