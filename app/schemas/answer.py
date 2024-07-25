@@ -22,6 +22,13 @@ class AnswerUpdate(BaseModel):
     is_correct: bool
 
 
+class AnswerResponse(BaseModel):
+    id: Optional[int] = None
+    text: str
+    company_id: int
+    question_id: Optional[int] = None
+
+
 class AnswersListResponse(BaseModel):
     answers: List[AnswerBase] = []
     total: int

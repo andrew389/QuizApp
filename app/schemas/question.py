@@ -1,8 +1,8 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from pydantic import BaseModel, field_validator
 
-from app.schemas.answer import AnswerBase
+from app.schemas.answer import AnswerBase, AnswerResponse
 
 
 class QuestionBase(BaseModel):
@@ -32,7 +32,7 @@ class QuestionUpdate(BaseModel):
 class QuestionResponse(BaseModel):
     id: int
     title: str
-    answers: List[AnswerBase] = []
+    answers: List[Union[AnswerBase, AnswerResponse]] = []
 
 
 class QuestionResponseForList(BaseModel):
