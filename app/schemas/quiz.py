@@ -35,7 +35,7 @@ class QuizUpdate(BaseModel):
 
 class QuizResponse(BaseModel):
     title: str
-    description: str
+    description: Optional[str] = None
     frequency: int
     questions: List[QuestionResponse] = []
 
