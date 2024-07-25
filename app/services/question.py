@@ -144,17 +144,21 @@ class QuestionService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, question.company_id
             )
-            if not has_permission:
-                logger.error(
-                    f"User {current_user_id} lacks permission to view question {question_id}."
-                )
-                raise UnAuthorizedException()
 
-            question_data = {
-                "id": question_id,
-                "title": question.title,
-                "answers": [AnswerResponse(**answer.__dict__) for answer in answers],
-            }
+            if has_permission:
+                question_data = {
+                    "id": question_id,
+                    "title": question.title,
+                    "answers": [AnswerBase(**answer.__dict__) for answer in answers],
+                }
+            else:
+                question_data = {
+                    "id": question_id,
+                    "title": question.title,
+                    "answers": [
+                        AnswerResponse(**answer.__dict__) for answer in answers
+                    ],
+                }
 
             return QuestionResponse(**question_data)
 
