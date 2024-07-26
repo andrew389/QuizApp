@@ -150,7 +150,6 @@ async def test_update_user():
 
     assert user_detail.id == user_id
     mock_uow.user.edit_one.assert_called_once()
-    mock_uow.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -180,7 +179,6 @@ async def test_deactivate_user():
 
     assert deactivated_user.is_active == False
     mock_uow.user.edit_one.assert_called_once_with(user_id, {"is_active": False})
-    mock_uow.commit.assert_called_once()
 
 
 @pytest.mark.asyncio

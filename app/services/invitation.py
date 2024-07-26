@@ -39,6 +39,7 @@ class InvitationService:
         """
         async with uow:
             await InvitationService._validate_sender(uow, sender_id, company_id)
+
             await InvitationService._check_existing_member(
                 uow, invitation_data.receiver_id, company_id
             )
@@ -50,9 +51,16 @@ class InvitationService:
                     "company_id": company_id,
                 }
             )
+
             invitation = await uow.invitation.add_one(invitation_dict)
-            await uow.commit()
-            return InvitationBase(**invitation.__dict__)
+
+            invitation_data = {
+                key: value
+                for key, value in invitation.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return InvitationBase.model_validate(invitation_data)
 
     @staticmethod
     async def get_invitations(
@@ -74,9 +82,11 @@ class InvitationService:
             invitations = await uow.invitation.find_all_by_receiver(
                 receiver_id=user_id, skip=skip, limit=limit
             )
+
             return InvitationsListResponse(
                 invitations=[
-                    InvitationBase(**invitation.__dict__) for invitation in invitations
+                    InvitationBase.model_validate(invitation)
+                    for invitation in invitations
                 ],
                 total=len(invitations),
             )
@@ -101,9 +111,11 @@ class InvitationService:
             invitations = await uow.invitation.find_all_by_sender(
                 sender_id=user_id, skip=skip, limit=limit
             )
+
             return InvitationsListResponse(
                 invitations=[
-                    InvitationBase(**invitation.__dict__) for invitation in invitations
+                    InvitationBase.model_validate(invitation)
+                    for invitation in invitations
                 ],
                 total=len(invitations),
             )
@@ -129,13 +141,15 @@ class InvitationService:
         """
         async with uow:
             invitation = await InvitationService._get_invitation(uow, invitation_id)
+
             await InvitationService._validate_sender(
                 uow, sender_id, invitation.company_id
             )
+
             InvitationService._validate_pending_status(invitation)
 
             cancelled_invitation = await uow.invitation.delete_one(invitation_id)
-            await uow.commit()
+
             return cancelled_invitation.id
 
     @staticmethod
@@ -167,9 +181,8 @@ class InvitationService:
                 company_id=invitation.company_id,
                 role=Role.MEMBER.value,
             )
-            await uow.member.add_one(member_data.model_dump(exclude={"id"}))
+            await uow.member.add_one(member_data.model_dump(exclude_unset=True))
             await uow.invitation.edit_one(invitation_id, {"status": "accepted"})
-            await uow.commit()
 
             return await InvitationService._build_invitation_response(
                 uow, invitation, receiver_id, "accepted"
@@ -200,7 +213,6 @@ class InvitationService:
             InvitationService._validate_pending_status(invitation)
 
             await uow.invitation.edit_one(invitation_id, {"status": "declined"})
-            await uow.commit()
 
             return await InvitationService._build_invitation_response(
                 uow, invitation, receiver_id, "declined"
@@ -222,9 +234,11 @@ class InvitationService:
             NotFoundException: If the invitation is not found.
         """
         invitation = await uow.invitation.find_one(id=invitation_id)
+
         if not invitation:
             logger.error(f"Invitation with ID {invitation_id} not found")
             raise NotFoundException()
+
         return invitation
 
     @staticmethod
@@ -241,6 +255,7 @@ class InvitationService:
             UnAuthorizedException: If the sender is not the owner.
         """
         owner = await uow.member.find_owner(user_id=sender_id, company_id=company_id)
+
         if not owner:
             logger.error(
                 f"User {sender_id} is not authorized to send invitations for company {company_id}"
@@ -263,6 +278,7 @@ class InvitationService:
         existing_member = await uow.member.find_one(
             user_id=user_id, company_id=company_id
         )
+
         if existing_member:
             logger.error(f"User {user_id} is already a member of company {company_id}")
             raise Exception("User is already a member of the company")
@@ -320,6 +336,7 @@ class InvitationService:
         """
         company = await uow.company.find_one(id=invitation.company_id)
         user = await uow.user.find_one(id=receiver_id)
+
         return InvitationResponse(
             title=invitation.title,
             description=invitation.description,

@@ -39,13 +39,16 @@ class MemberQueries:
             raise
 
     @staticmethod
-    async def get_member_by_id(uow: IUnitOfWork, member_id: int) -> MemberBase:
+    async def get_member_by_id(
+        uow: IUnitOfWork, member_id: int, company_id: int
+    ) -> MemberBase:
         """
         Get a member by their ID.
 
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
             member_id (int): The ID of the member.
+            company_id (int): The ID of the company.
 
         Returns:
             MemberBase: The details of the member.
@@ -56,13 +59,19 @@ class MemberQueries:
         """
         try:
             async with uow:
-                member = await uow.member.find_one(id=member_id)
+                member = await uow.member.find_one(id=member_id, company_id=company_id)
+
                 if not member:
                     logger.error(f"Member with ID {member_id} not found")
                     raise NotFoundException()
-                return MemberBase(**member.__dict__)
-        except NotFoundException:
-            raise
+
+                member_data = {
+                    key: value
+                    for key, value in member.__dict__.items()
+                    if not key.startswith("_")
+                }
+
+                return MemberBase.model_validate(member_data)
         except Exception as e:
-            logger.error(f"Error fetching member with ID {member_id}: {e}")
+            logger.error(f"Error fetching member with member_id {member_id}: {e}")
             raise

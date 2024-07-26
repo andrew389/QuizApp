@@ -36,12 +36,12 @@ class SQLAlchemyRepository(AbstractRepository):
     async def add_one(self, data: dict) -> Any:
         stmt = insert(self.model).values(**data).returning(self.model)
         res = await self.session.execute(stmt)
-        return res.scalar_one()
+        return res.scalars().first()
 
     async def edit_one(self, id: int, data: dict) -> Any:
         stmt = update(self.model).values(**data).filter_by(id=id).returning(self.model)
         res = await self.session.execute(stmt)
-        return res.scalar_one()
+        return res.scalars().first()
 
     async def find_all(self, skip: int = 0, limit: int = 10):
         stmt = select(self.model).offset(skip).limit(limit)
@@ -51,9 +51,9 @@ class SQLAlchemyRepository(AbstractRepository):
     async def find_one(self, **filter_by):
         stmt = select(self.model).filter_by(**filter_by)
         res = await self.session.execute(stmt)
-        return res.scalar_one_or_none()
+        return res.scalars().first()
 
     async def delete_one(self, id: int) -> int:
         stmt = delete(self.model).filter_by(id=id).returning(self.model)
         res = await self.session.execute(stmt)
-        return res.scalar_one()
+        return res.scalars().first()

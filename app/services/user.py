@@ -38,9 +38,8 @@ class UserService:
             user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
 
             user_model = await uow.user.add_one(user_dict)
-            await uow.commit()
 
-        return UserBase(**user_model.__dict__)
+        return UserBase.model_validate(user_model)
 
     @staticmethod
     async def get_users(
@@ -59,8 +58,9 @@ class UserService:
         """
         async with uow:
             users = await uow.user.find_all(skip=skip, limit=limit)
+
             user_list = UsersListResponse(
-                users=[UserBase(**user.__dict__) for user in users],
+                users=[UserBase.model_validate(user) for user in users],
                 total=len(users),
             )
             return user_list
@@ -83,7 +83,7 @@ class UserService:
         async with uow:
             user_model = await uow.user.find_one(id=user_id)
             if user_model:
-                return UserBase(**user_model.__dict__)
+                return UserBase.model_validate(user_model)
             else:
                 logger.error(f"User with ID {user_id} not found.")
                 raise NotFoundException()
@@ -106,7 +106,7 @@ class UserService:
         async with uow:
             user_model = await uow.user.find_one(username=username)
             if user_model:
-                return UserDetail(**user_model.__dict__)
+                return UserDetail.model_validate(user_model)
             else:
                 logger.error(f"User with username {username} not found.")
                 raise NotFoundException()
@@ -129,7 +129,7 @@ class UserService:
         async with uow:
             user_model = await uow.user.find_one(email=email)
             if user_model:
-                return UserDetail(**user_model.__dict__)
+                return UserDetail.model_validate(user_model)
             else:
                 logger.error(f"User with email {email} not found.")
                 raise NotFoundException()
@@ -165,7 +165,7 @@ class UserService:
             if field_value in [None, ""]:
                 setattr(user_update, field_name, getattr(current_user, field_name))
 
-        return user_update
+        return UserUpdate.model_validate(user_update)
 
     @staticmethod
     async def update_user(
@@ -197,13 +197,15 @@ class UserService:
             user_update = await UserService.validate_user_update(
                 uow, user_id, user_update
             )
+
             user_dict = user_update.model_dump()
             user_dict["id"] = user_id
 
             await uow.user.edit_one(user_id, user_dict)
-            await uow.commit()
+
             updated_user = await uow.user.find_one(id=user_id)
-            return UserDetail(**updated_user.__dict__)
+
+            return UserDetail.model_validate(updated_user)
 
     @staticmethod
     async def deactivate_user(
@@ -232,11 +234,13 @@ class UserService:
                 raise UnAuthorizedException()
 
             user_model = await uow.user.find_one(id=user_id)
+
             if not user_model:
                 logger.error(f"User with ID {user_id} not found.")
                 raise NotFoundException()
 
             user_model.is_active = False
+
             await uow.user.edit_one(user_id, {"is_active": False})
-            await uow.commit()
-            return UserDetail(**user_model.__dict__)
+
+            return UserDetail.model_validate(user_model)

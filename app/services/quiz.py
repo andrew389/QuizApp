@@ -40,6 +40,7 @@ class QuizService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, quiz.company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to create quiz in company {quiz.company_id}."
@@ -52,13 +53,14 @@ class QuizService:
                 existing_question = await uow.question.find_one(
                     id=question_id, quiz_id=None
                 )
+
                 if existing_question:
                     await uow.question.edit_one(question_id, {"quiz_id": new_quiz.id})
                 else:
                     logger.error(f"Question with ID {question_id} not found.")
                     raise NotFoundException()
 
-            return QuizBase(**new_quiz.__dict__)
+            return QuizBase.model_validate(new_quiz)
 
     @staticmethod
     async def update_quiz(
@@ -84,6 +86,7 @@ class QuizService:
 
         async with uow:
             quiz_to_update = await uow.quiz.find_one(id=quiz_id)
+
             if not quiz_to_update:
                 logger.error(f"Quiz with ID {quiz_id} not found.")
                 raise NotFoundException()
@@ -91,6 +94,7 @@ class QuizService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, quiz_to_update.company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to update quiz {quiz_id}."
@@ -98,7 +102,8 @@ class QuizService:
                 raise UnAuthorizedException()
 
             updated_quiz = await uow.quiz.edit_one(quiz_id, quiz.dict())
-            return QuizBase(**updated_quiz.__dict__)
+
+            return QuizBase.model_validate(updated_quiz)
 
     @staticmethod
     async def get_quiz_by_id(
@@ -129,15 +134,11 @@ class QuizService:
                 raise NotFoundException()
 
             questions = await uow.question.find_all_by_quiz_id(quiz_id=quiz_id)
-            if len(questions) < 2:
-                logger.error(
-                    f"Quiz with ID {quiz_id} has an insufficient number of questions."
-                )
-                raise FetchingException()
 
             has_permission = await MemberManagement.check_is_user_member_or_higher(
                 uow, current_user_id, quiz.company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to view quiz {quiz_id}."
@@ -160,7 +161,7 @@ class QuizService:
                 ],
             }
 
-            return QuizResponse(**quiz_data)
+            return QuizResponse.model_validate(quiz_data)
 
     @staticmethod
     async def get_quizzes(
@@ -192,6 +193,7 @@ class QuizService:
             has_permission = await MemberManagement.check_is_user_member_or_higher(
                 uow, current_user_id, company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to view quizzes for company {company_id}."
@@ -199,12 +201,13 @@ class QuizService:
                 raise UnAuthorizedException()
 
             quizzes = await uow.quiz.find_all(skip=skip, limit=limit)
+
             quizzes_list = QuizzesListResponse(
-                quizzes=[QuizResponseForList(**quiz.__dict__) for quiz in quizzes],
+                quizzes=[QuizResponseForList.from_orm(quiz) for quiz in quizzes],
                 total=len(quizzes),
             )
 
-            return quizzes_list
+            return QuizzesListResponse.model_validate(quizzes_list)
 
     @staticmethod
     async def delete_quiz(
@@ -229,6 +232,7 @@ class QuizService:
 
         async with uow:
             quiz_to_delete = await uow.quiz.find_one(id=quiz_id)
+
             if not quiz_to_delete:
                 logger.error(f"Quiz with ID {quiz_id} not found.")
                 raise NotFoundException()
@@ -236,6 +240,7 @@ class QuizService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, quiz_to_delete.company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to delete quiz {quiz_id}."
@@ -243,10 +248,18 @@ class QuizService:
                 raise UnAuthorizedException()
 
             questions = await uow.question.find_all_by_quiz_id(quiz_id=quiz_id)
+
             for question in questions:
                 await uow.question.edit_one(
                     question.id, {"quiz_id": None, "company_id": None}
                 )
 
             deleted_quiz = await uow.quiz.delete_one(quiz_id)
-            return QuizBase(**deleted_quiz.__dict__)
+
+            quiz_data = {
+                key: value
+                for key, value in deleted_quiz.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return QuizBase.model_validate(quiz_data)

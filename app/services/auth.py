@@ -36,10 +36,11 @@ class AuthService:
         """
         async with uow:
             user = await UserService.get_user_by_email(uow, email)
+
             if user and Hasher.verify_password(password, user.password):
                 return user
-            else:
-                raise NotAuthenticatedException()
+
+            raise NotAuthenticatedException()
 
     @staticmethod
     def create_access_token(data: dict):
@@ -53,12 +54,17 @@ class AuthService:
             Tuple[str, datetime]: The encoded JWT token and its expiration time.
         """
         expires_delta = timedelta(minutes=settings.auth.access_token_expire_minutes)
+
         to_encode = data.copy()
+
         expire = datetime.now() + expires_delta
+
         to_encode.update({"exp": expire})
+
         encoded_jwt = jwt.encode(
             to_encode, settings.auth.secret_key, algorithm=settings.auth.algorithm
         )
+
         return encoded_jwt, expire
 
     @staticmethod
@@ -91,13 +97,17 @@ class AuthService:
         """
         try:
             verify_token = VerifyToken(token.credentials)
+
             if len(token.credentials) > 168:
                 payload = verify_token.verify_auth0()
             else:
                 payload = verify_token.verify_jwt()
+
             if "status" in payload and payload["status"] == "error":
                 raise ValidateCredentialsException()
+
             return payload
+
         except JWTError as e:
             raise ValidateCredentialsException() from e
 
@@ -116,8 +126,10 @@ class AuthService:
             ValidateCredentialsException: If email is not found in payload.
         """
         email = payload.get("email")
+
         if email is None:
             raise ValidateCredentialsException()
+
         return email
 
     @staticmethod
@@ -134,9 +146,11 @@ class AuthService:
         """
         async with uow:
             user = await UserService.get_user_by_email(uow, email=email)
+
             if user is None:
                 user = create_user(email)
                 await UserService.add_user(uow, user)
+
             return user
 
     @staticmethod
@@ -158,8 +172,11 @@ class AuthService:
             NotAuthenticatedException: If authentication fails.
         """
         AuthService.verify_token_credentials(token)
+
         payload = AuthService.get_payload_from_token(token)
+
         email = AuthService.get_email_from_payload(payload)
+
         return await AuthService.get_user_by_email_or_create(uow, email)
 
 

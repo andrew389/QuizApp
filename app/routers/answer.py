@@ -19,10 +19,10 @@ from app.schemas.answer import (
     AnswersListResponse,
 )
 
-router = APIRouter(prefix="/answer", tags=["Answer"])
+router = APIRouter(prefix="/answers", tags=["Answer"])
 
 
-@router.post("/answers", response_model=AnswerBase)
+@router.post("/", response_model=AnswerBase)
 async def create_answer(
     answer: AnswerCreate,
     uow: UOWDep,
@@ -48,7 +48,7 @@ async def create_answer(
         raise CreatingException()
 
 
-@router.put("/answers/{answer_id}", response_model=AnswerBase)
+@router.put("/{answer_id}", response_model=AnswerBase)
 async def update_answer(
     answer_id: int,
     answer: AnswerUpdate,
@@ -78,7 +78,7 @@ async def update_answer(
         raise UpdatingException()
 
 
-@router.get("/answers/{answer_id}", response_model=AnswerBase)
+@router.get("/{answer_id}", response_model=AnswerBase)
 async def get_answer_by_id(
     answer_id: int,
     uow: UOWDep,
@@ -104,7 +104,7 @@ async def get_answer_by_id(
         raise FetchingException()
 
 
-@router.delete("/answers/{answer_id}", response_model=AnswerBase)
+@router.delete("/{answer_id}", response_model=AnswerBase)
 async def delete_answer(
     answer_id: int,
     uow: UOWDep,
@@ -130,7 +130,7 @@ async def delete_answer(
         raise DeletingException()
 
 
-@router.get("/answers/", response_model=AnswersListResponse)
+@router.get("/", response_model=AnswersListResponse)
 async def get_answers(
     company_id: int,
     uow: UOWDep,

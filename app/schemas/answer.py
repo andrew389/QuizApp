@@ -10,6 +10,9 @@ class AnswerBase(BaseModel):
     company_id: int
     question_id: Optional[int] = None
 
+    class Config:
+        from_attributes = True
+
 
 class AnswerCreate(BaseModel):
     text: str
@@ -19,6 +22,7 @@ class AnswerCreate(BaseModel):
 
 class AnswerUpdate(BaseModel):
     text: str
+    company_id: int
     is_correct: bool
 
 

@@ -34,7 +34,7 @@ class CompanyService:
         async with uow:
             await CompanyService._validate_owner(uow, owner_id)
 
-            company_dict = company.model_dump()
+            company_dict = company.model_dump(exclude_unset=True)
             company_dict["owner_id"] = owner_id
             company_model = await uow.company.add_one(company_dict)
 
@@ -42,8 +42,13 @@ class CompanyService:
                 uow, owner_id, company_model.id
             )
 
-            await uow.commit()
-            return CompanyDetail(**company_model.__dict__)
+            company_data = {
+                key: value
+                for key, value in company_model.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return CompanyDetail.model_validate(company_data)
 
     @staticmethod
     async def get_companies(
@@ -65,6 +70,7 @@ class CompanyService:
             visible_companies = await uow.company.find_all_visible(
                 skip=skip, limit=limit
             )
+
             user_companies = await uow.company.find_all_by_owner(
                 owner_id=current_user_id, skip=skip, limit=limit
             )
@@ -98,10 +104,18 @@ class CompanyService:
         """
         async with uow:
             company_model = await uow.company.find_one(id=company_id)
+
             if not company_model:
                 logger.warning(f"Company with ID {company_id} not found")
                 raise NotFoundException()
-            return CompanyDetail(**company_model.__dict__)
+
+            company_data = {
+                key: value
+                for key, value in company_model.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return CompanyDetail.model_validate(company_data)
 
     @staticmethod
     async def update_company(
@@ -127,11 +141,18 @@ class CompanyService:
         """
         async with uow:
             await CompanyService._ensure_ownership(uow, company_id, current_user_id)
+
             await uow.company.edit_one(company_id, company_update.model_dump())
-            await uow.commit()
 
             updated_company = await uow.company.find_one(id=company_id)
-            return CompanyDetail(**updated_company.__dict__)
+
+            company_data = {
+                key: value
+                for key, value in updated_company.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return CompanyDetail.model_validate(company_data)
 
     @staticmethod
     async def delete_company(
@@ -153,8 +174,9 @@ class CompanyService:
         """
         async with uow:
             await CompanyService._ensure_ownership(uow, company_id, current_user_id)
+
             deleted_company = await uow.company.delete_one(company_id)
-            await uow.commit()
+
             return deleted_company.id
 
     @staticmethod
@@ -179,16 +201,26 @@ class CompanyService:
         """
         async with uow:
             await CompanyService._ensure_ownership(uow, company_id, current_user_id)
+
             company_model = await uow.company.find_one(id=company_id)
+
             if not company_model:
                 logger.warning(f"Company with ID {company_id} not found")
                 raise ValueError("Company not found")
 
             company_model.is_visible = is_visible
-            await uow.company.edit_one(company_id, {"is_visible": is_visible})
-            await uow.commit()
 
-            return CompanyDetail(**company_model.__dict__)
+            await uow.company.edit_one(company_id, {"is_visible": is_visible})
+
+            updated_company = await uow.company.find_one(id=company_id)
+
+            company_data = {
+                key: value
+                for key, value in updated_company.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return CompanyDetail.model_validate(company_data)
 
     @staticmethod
     def _merge_and_paginate_companies(visible_companies, user_companies, skip, limit):
@@ -209,7 +241,9 @@ class CompanyService:
                 company.id: company for company in (visible_companies + user_companies)
             }.values()
         )
+
         paginated_companies = combined_companies[skip : skip + limit]
+
         return {"paginated": paginated_companies, "total": len(combined_companies)}
 
     @staticmethod
@@ -229,11 +263,13 @@ class CompanyService:
             UnAuthorizedException: If the current user is not the owner of the company.
         """
         company = await CompanyService.get_company_by_id(uow, company_id)
+
         if company.owner_id != user_id:
             logger.error(
                 f"User {user_id} is not authorized to access company {company_id}"
             )
             raise UnAuthorizedException()
+
         return company
 
     @staticmethod
@@ -249,6 +285,7 @@ class CompanyService:
             UnAuthorizedException: If the owner is already a member of another company.
         """
         existing_member = await uow.member.find_one(user_id=owner_id)
+
         if existing_member:
             logger.error(f"User {owner_id} is already a member of another company")
             raise UnAuthorizedException()
@@ -264,4 +301,5 @@ class CompanyService:
             company_id (int): The ID of the company.
         """
         member_data = MemberCreate(user_id=owner_id, company_id=company_id, role=1)
-        await uow.member.add_one(member_data.model_dump(exclude={"id"}))
+
+        await uow.member.add_one(member_data.model_dump(exclude_unset=True))

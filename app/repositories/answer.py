@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from app.models.answer import Answer
+from app.models import Answer
 from app.uow.repository import SQLAlchemyRepository
 
 

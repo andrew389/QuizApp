@@ -48,7 +48,7 @@ async def test_get_member_by_id():
         updated_at=datetime.now(),
     )
 
-    response = await MemberQueries.get_member_by_id(mock_uow, member_id=1)
+    response = await MemberQueries.get_member_by_id(mock_uow, member_id=1, company_id=1)
 
     assert isinstance(response, MemberBase)
     assert response.id == 1
@@ -124,7 +124,6 @@ async def test_appoint_admin():
 
     assert isinstance(response, MemberBase)
     assert response.role == Role.ADMIN.value
-    mock_uow.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
