@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from app.models.invitation import Invitation
+from app.models import Invitation
 from app.uow.repository import SQLAlchemyRepository
 
 

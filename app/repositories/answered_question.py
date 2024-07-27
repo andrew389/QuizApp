@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from app.models.answered_question import AnsweredQuestion
+from app.models import AnsweredQuestion
 from app.uow.repository import SQLAlchemyRepository
 
 
