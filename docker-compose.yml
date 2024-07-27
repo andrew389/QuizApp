@@ -1,20 +1,6 @@
 version: '3.8'
 
 services:
-  main_db:
-    image: postgres:latest
-    env_file:
-      - .env
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_DB: "main"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
 
   redis:
     image: redis:latest
@@ -32,10 +18,10 @@ services:
     ports:
       - "8010:8000"
     environment:
-      - POSTGRES_DB_HOST=main_db
+      - POSTGRES_DB_USER=ubuntu
+      - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - REDIS_DB_HOST=redis
     depends_on:
-      - main_db
       - redis
     env_file:
       - .env
@@ -48,10 +34,10 @@ services:
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_HOST=main_db
+      - POSTGRES_DB_USER=ubuntu
+      - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - REDIS_DB_HOST=redis
     depends_on:
-      - main_db
       - redis
     env_file:
       - .env
@@ -64,11 +50,11 @@ services:
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_HOST=main_db
+      - POSTGRES_DB_USER=ubuntu
+      - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - REDIS_DB_HOST=redis
     depends_on:
       - redis
-      - main_db
       - celery_worker
     env_file:
       - .env
@@ -81,11 +67,11 @@ services:
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_HOST=main_db
+      - POSTGRES_DB_USER=ubuntu
+      - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - REDIS_DB_HOST=redis
     depends_on:
       - redis
-      - main_db
       - celery_worker
     env_file:
       - .env
