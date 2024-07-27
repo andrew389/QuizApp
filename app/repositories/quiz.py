@@ -1,4 +1,4 @@
-from app.models.quiz import Quiz
+from app.models import Quiz
 from app.uow.repository import SQLAlchemyRepository
 
 
