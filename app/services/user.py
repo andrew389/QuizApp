@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
@@ -10,6 +12,7 @@ from app.schemas.user import (
 )
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.hasher import Hasher
+from app.utils.user import get_pagination_urls
 
 
 class UserService:
@@ -38,19 +41,19 @@ class UserService:
             user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
 
             user_model = await uow.user.add_one(user_dict)
-            await uow.commit()
 
-        return UserBase(**user_model.__dict__)
+        return UserBase.model_validate(user_model)
 
     @staticmethod
     async def get_users(
-        uow: IUnitOfWork, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork, request: Request, skip: int = 0, limit: int = 10
     ) -> UsersListResponse:
         """
         Retrieve a list of users.
 
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
+            request (Request): request from endpoint to get base url.
             skip (int, optional): Number of users to skip (default is 0).
             limit (int, optional): Maximum number of users to return (default is 10).
 
@@ -59,11 +62,17 @@ class UserService:
         """
         async with uow:
             users = await uow.user.find_all(skip=skip, limit=limit)
+
+            total_users = await uow.user.count()
+
+            links = get_pagination_urls(request, skip, limit, total_users)
+
             user_list = UsersListResponse(
-                users=[UserBase(**user.__dict__) for user in users],
-                total=len(users),
+                links=links,
+                users=[UserBase.model_validate(user) for user in users],
+                total=total_users,
             )
-            return user_list
+            return UsersListResponse.model_validate(user_list)
 
     @staticmethod
     async def get_user_by_id(uow: IUnitOfWork, user_id: int) -> UserBase:
@@ -83,7 +92,7 @@ class UserService:
         async with uow:
             user_model = await uow.user.find_one(id=user_id)
             if user_model:
-                return UserBase(**user_model.__dict__)
+                return UserBase.model_validate(user_model)
             else:
                 logger.error(f"User with ID {user_id} not found.")
                 raise NotFoundException()
@@ -106,7 +115,7 @@ class UserService:
         async with uow:
             user_model = await uow.user.find_one(username=username)
             if user_model:
-                return UserDetail(**user_model.__dict__)
+                return UserDetail.model_validate(user_model)
             else:
                 logger.error(f"User with username {username} not found.")
                 raise NotFoundException()
@@ -129,7 +138,7 @@ class UserService:
         async with uow:
             user_model = await uow.user.find_one(email=email)
             if user_model:
-                return UserDetail(**user_model.__dict__)
+                return UserDetail.model_validate(user_model)
             else:
                 logger.error(f"User with email {email} not found.")
                 raise NotFoundException()
@@ -165,7 +174,7 @@ class UserService:
             if field_value in [None, ""]:
                 setattr(user_update, field_name, getattr(current_user, field_name))
 
-        return user_update
+        return UserUpdate.model_validate(user_update)
 
     @staticmethod
     async def update_user(
@@ -201,9 +210,10 @@ class UserService:
             user_dict["id"] = user_id
 
             await uow.user.edit_one(user_id, user_dict)
-            await uow.commit()
+
             updated_user = await uow.user.find_one(id=user_id)
-            return UserDetail(**updated_user.__dict__)
+
+            return UserDetail.model_validate(updated_user)
 
     @staticmethod
     async def deactivate_user(
@@ -237,6 +247,7 @@ class UserService:
                 raise NotFoundException()
 
             user_model.is_active = False
+
             await uow.user.edit_one(user_id, {"is_active": False})
-            await uow.commit()
-            return UserDetail(**user_model.__dict__)
+
+            return UserDetail.model_validate(user_model)

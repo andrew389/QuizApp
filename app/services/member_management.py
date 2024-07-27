@@ -29,8 +29,14 @@ class MemberManagement:
         )
         try:
             member = await uow.member.add_one(member_data.model_dump(exclude={"id"}))
-            await uow.commit()
-            return MemberBase(**member.__dict__)
+
+            member_data = {
+                key: value
+                for key, value in member.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return MemberBase.model_validate(member_data)
         except Exception as e:
             logger.error(f"Error adding member {user_id} to company {company_id}: {e}")
             raise
@@ -56,14 +62,22 @@ class MemberManagement:
         """
         async with uow:
             member = await uow.member.find_one(user_id=member_id)
+
             await MemberManagement._validate_member_for_remove(
                 uow, member, user_id, member_id
             )
+
             updated_member = await uow.member.edit_one(
                 member_id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
-            await uow.commit()
-            return MemberBase(**updated_member.__dict__)
+
+            member_data = {
+                key: value
+                for key, value in updated_member.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return MemberBase.model_validate(member_data)
 
     @staticmethod
     async def _validate_member_for_remove(
@@ -123,12 +137,20 @@ class MemberManagement:
         """
         async with uow:
             member = await uow.member.find_one(user_id=user_id, company_id=company_id)
+
             MemberManagement._validate_member_for_leave(member)
+
             updated_member = await uow.member.edit_one(
                 member.id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
-            await uow.commit()
-            return MemberBase(**updated_member.__dict__)
+
+            member_data = {
+                key: value
+                for key, value in updated_member.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return MemberBase.model_validate(member_data)
 
     @staticmethod
     def _validate_member_for_leave(member):
@@ -178,8 +200,14 @@ class MemberManagement:
             updated_member = await uow.member.edit_one(
                 member_id, {"role": Role.ADMIN.value}
             )
-            await uow.commit()
-            return MemberBase(**updated_member.__dict__)
+
+            member_data = {
+                key: value
+                for key, value in updated_member.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return MemberBase.model_validate(member_data)
 
     @staticmethod
     async def remove_admin(
@@ -205,6 +233,7 @@ class MemberManagement:
         async with uow:
             await MemberRequests.validate_owner(uow, owner_id, company_id)
             member = await uow.member.find_one(user_id=member_id)
+
             if not member or member.role != Role.ADMIN.value:
                 logger.error(
                     f"Admin with ID {member_id} not found or not eligible to be removed"
@@ -214,33 +243,14 @@ class MemberManagement:
             updated_member = await uow.member.edit_one(
                 member_id, {"role": Role.MEMBER.value}
             )
-            await uow.commit()
-            return MemberBase(**updated_member.__dict__)
 
-    @staticmethod
-    async def get_admins(
-        uow: IUnitOfWork, company_id: int, skip: int = 0, limit: int = 10
-    ) -> AdminsListResponse:
-        """
-        Get a list of admins for a company.
+            member_data = {
+                key: value
+                for key, value in updated_member.__dict__.items()
+                if not key.startswith("_")
+            }
 
-        Args:
-            uow (IUnitOfWork): The unit of work for database transactions.
-            company_id (int): The ID of the company.
-            skip (int): Number of admins to skip (pagination).
-            limit (int): Maximum number of admins to return (pagination).
-
-        Returns:
-            AdminsListResponse: The list of admins and total count.
-        """
-        async with uow:
-            admins = await uow.member.find_all_by_company_and_role(
-                company_id=company_id, role=Role.ADMIN.value, skip=skip, limit=limit
-            )
-            return AdminsListResponse(
-                admins=[MemberBase(**admin.__dict__) for admin in admins],
-                total=len(admins),
-            )
+            return MemberBase.model_validate(member_data)
 
     @staticmethod
     async def check_is_user_have_permission(
@@ -262,9 +272,11 @@ class MemberManagement:
         """
         async with uow:
             member = await uow.member.find_one(user_id=user_id, company_id=company_id)
+
             if not member:
                 logger.error(f"User {user_id} not found in company {company_id}")
                 raise UnAuthorizedException()
+
             if member.role in [Role.OWNER.value, Role.ADMIN.value]:
                 return True
 
@@ -290,6 +302,7 @@ class MemberManagement:
         """
         async with uow:
             member = await uow.member.find_one(user_id=user_id, company_id=company_id)
+
             if not member:
                 logger.error(f"User {user_id} is not a member of company {company_id}")
                 raise UnAuthorizedException()

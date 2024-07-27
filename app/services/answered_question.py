@@ -19,7 +19,6 @@ class AnsweredQuestionService:
                     uow, question_id, answer_id, quiz_id, user_id
                 )
             await AnsweredQuestionService._increment_quiz_frequency(uow, quiz_id)
-            await uow.commit()
 
     @staticmethod
     async def _process_answer(
@@ -84,7 +83,9 @@ class AnsweredQuestionService:
             answer_text=answer_text,
             is_correct=is_correct,
         )
-        await uow.answered_question.add_one(answered_question_data.dict(exclude={"id"}))
+        await uow.answered_question.add_one(
+            answered_question_data.model_dump(exclude={"id"})
+        )
 
     @staticmethod
     async def _increment_quiz_frequency(uow: UnitOfWork, quiz_id: int):

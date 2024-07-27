@@ -34,7 +34,6 @@ async def test_save_answered_quiz():
     )
 
     assert mock_uow.answered_question.add_one.call_count == 2
-    assert mock_uow.commit.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -59,7 +58,6 @@ async def test_save_answered_quiz_with_existing_answer():
     )
 
     assert mock_uow.answered_question.edit_one.call_count != 1
-    assert mock_uow.commit.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -85,7 +83,6 @@ async def test_save_answered_quiz_with_invalid_question():
         )
 
     assert mock_uow.answered_question.add_one.call_count == 0
-    assert mock_uow.commit.call_count == 0
 
 
 @pytest.mark.asyncio
