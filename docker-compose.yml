@@ -18,7 +18,7 @@ services:
     ports:
       - "8010:8000"
     environment:
-      - POSTGRES_DB_USER=ubuntu
+      - POSTGRES_DB_USER=postgres
       - POSTGRES_DB_HOST=172.31.19.122
       - REDIS_DB_HOST=redis
     depends_on:
@@ -34,7 +34,7 @@ services:
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_USER=ubuntu
+      - POSTGRES_DB_USER=postgres
       - POSTGRES_DB_HOST=172.31.19.122
       - REDIS_DB_HOST=redis
     depends_on:
@@ -50,7 +50,7 @@ services:
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_USER=ubuntu
+      - POSTGRES_DB_USER=postgres
       - POSTGRES_DB_HOST=172.31.19.122
       - REDIS_DB_HOST=redis
     depends_on:
@@ -67,7 +67,7 @@ services:
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_USER=ubuntu
+      - POSTGRES_DB_USER=postgres
       - POSTGRES_DB_HOST=172.31.19.122
       - REDIS_DB_HOST=redis
     depends_on:
