@@ -1,6 +1,8 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException, FetchingException
+from app.exceptions.base import NotFoundException
 from app.schemas.answer import AnswerBase, AnswerResponse
 from app.schemas.question import (
     QuestionCreate,
@@ -11,6 +13,7 @@ from app.schemas.question import (
     QuestionResponseForList,
 )
 from app.uow.unitofwork import UnitOfWork
+from app.utils.user import get_pagination_urls
 
 
 class QuestionService:
@@ -46,7 +49,7 @@ class QuestionService:
                 raise UnAuthorizedException()
 
             new_question = await uow.question.add_one(
-                question.dict(exclude={"answers", "id"})
+                question.model_dump(exclude={"answers", "id"})
             )
 
             for answer_id in question.answers:
@@ -61,7 +64,13 @@ class QuestionService:
                     logger.error(f"Answer with ID {answer_id} not found.")
                     raise NotFoundException()
 
-            return QuestionBase(**new_question.__dict__)
+            question_data = {
+                key: value
+                for key, value in new_question.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return QuestionBase.model_validate(question_data)
 
     @staticmethod
     async def update_question(
@@ -90,6 +99,7 @@ class QuestionService:
             from app.services.member_management import MemberManagement
 
             question_to_update = await uow.question.find_one(id=question_id)
+
             if not question_to_update:
                 logger.error(f"Question with ID {question_id} not found.")
                 raise NotFoundException()
@@ -97,6 +107,7 @@ class QuestionService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, question_to_update.company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to update question {question_id}."
@@ -104,7 +115,14 @@ class QuestionService:
                 raise UnAuthorizedException()
 
             updated_question = await uow.question.edit_one(question_id, question.dict())
-            return QuestionBase(**updated_question.__dict__)
+
+            question_data = {
+                key: value
+                for key, value in updated_question.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return QuestionBase.model_validate(question_data)
 
     @staticmethod
     async def get_question_by_id(
@@ -135,11 +153,6 @@ class QuestionService:
                 raise NotFoundException()
 
             answers = await uow.answer.find_all_by_question_id(question_id=question_id)
-            if len(answers) < 2 or len(answers) > 4:
-                logger.error(
-                    f"Question with ID {question_id} has an invalid number of answers."
-                )
-                raise FetchingException()
 
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, question.company_id
@@ -149,22 +162,21 @@ class QuestionService:
                 question_data = {
                     "id": question_id,
                     "title": question.title,
-                    "answers": [AnswerBase(**answer.__dict__) for answer in answers],
+                    "answers": [AnswerBase.from_orm(answer) for answer in answers],
                 }
             else:
                 question_data = {
                     "id": question_id,
                     "title": question.title,
-                    "answers": [
-                        AnswerResponse(**answer.__dict__) for answer in answers
-                    ],
+                    "answers": [AnswerResponse.from_orm(answer) for answer in answers],
                 }
 
-            return QuestionResponse(**question_data)
+            return QuestionResponse.model_validate(question_data)
 
     @staticmethod
     async def get_questions(
         uow: UnitOfWork,
+        request: Request,
         company_id: int,
         current_user_id: int,
         skip: int = 0,
@@ -177,6 +189,7 @@ class QuestionService:
             uow (UnitOfWork): The unit of work for database transactions.
             company_id (int): The ID of the company.
             current_user_id (int): The ID of the user requesting the list.
+            request (Request): request from endpoint to get base url.*
             skip (int, optional): Number of questions to skip (default is 0).
             limit (int, optional): Maximum number of questions to return (default is 10).
 
@@ -192,6 +205,7 @@ class QuestionService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to view questions for company {company_id}."
@@ -199,15 +213,20 @@ class QuestionService:
                 raise UnAuthorizedException()
 
             questions = await uow.question.find_all(skip=skip, limit=limit)
+
+            total_questions = await uow.question.count()
+
+            links = get_pagination_urls(request, skip, limit, total_questions)
+
             question_list = QuestionsListResponse(
+                links=links,
                 questions=[
-                    QuestionResponseForList(**question.__dict__)
-                    for question in questions
+                    QuestionResponseForList.from_orm(question) for question in questions
                 ],
-                total=len(questions),
+                total=total_questions,
             )
 
-            return question_list
+            return QuestionsListResponse.model_validate(question_list)
 
     @staticmethod
     async def delete_question(
@@ -232,6 +251,7 @@ class QuestionService:
 
         async with uow:
             question_to_delete = await uow.question.find_one(id=question_id)
+
             if not question_to_delete:
                 logger.error(f"Question with ID {question_id} not found.")
                 raise NotFoundException()
@@ -239,6 +259,7 @@ class QuestionService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, question_to_delete.company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to delete question {question_id}."
@@ -246,10 +267,18 @@ class QuestionService:
                 raise UnAuthorizedException()
 
             answers = await uow.answer.find_all_by_question_id(question_id=question_id)
+
             for answer in answers:
                 await uow.answer.edit_one(
                     answer.id, {"question_id": None, "company_id": None}
                 )
 
             deleted_question = await uow.question.delete_one(question_id)
-            return QuestionBase(**deleted_question.__dict__)
+
+            question_data = {
+                key: value
+                for key, value in deleted_question.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return QuestionBase.model_validate(question_data)

@@ -1,6 +1,8 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException, FetchingException
+from app.exceptions.base import NotFoundException
 from app.schemas.question import QuestionResponse
 from app.schemas.quiz import (
     QuizCreate,
@@ -12,6 +14,7 @@ from app.schemas.quiz import (
 )
 from app.services.question import QuestionService
 from app.uow.unitofwork import UnitOfWork
+from app.utils.user import get_pagination_urls
 
 
 class QuizService:
@@ -58,7 +61,7 @@ class QuizService:
                     logger.error(f"Question with ID {question_id} not found.")
                     raise NotFoundException()
 
-            return QuizBase(**new_quiz.__dict__)
+            return QuizBase.model_validate(new_quiz)
 
     @staticmethod
     async def update_quiz(
@@ -97,8 +100,14 @@ class QuizService:
                 )
                 raise UnAuthorizedException()
 
-            updated_quiz = await uow.quiz.edit_one(quiz_id, quiz.dict())
-            return QuizBase(**updated_quiz.__dict__)
+            updated_quiz = await uow.quiz.edit_one(quiz_id, quiz.model_dump())
+            quiz_data = {
+                key: value
+                for key, value in updated_quiz.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return QuizBase.model_validate(quiz_data)
 
     @staticmethod
     async def get_quiz_by_id(
@@ -129,15 +138,11 @@ class QuizService:
                 raise NotFoundException()
 
             questions = await uow.question.find_all_by_quiz_id(quiz_id=quiz_id)
-            if len(questions) < 2:
-                logger.error(
-                    f"Quiz with ID {quiz_id} has an insufficient number of questions."
-                )
-                raise FetchingException()
 
             has_permission = await MemberManagement.check_is_user_member_or_higher(
                 uow, current_user_id, quiz.company_id
             )
+
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to view quiz {quiz_id}."
@@ -160,13 +165,14 @@ class QuizService:
                 ],
             }
 
-            return QuizResponse(**quiz_data)
+            return QuizResponse.model_validate(quiz_data)
 
     @staticmethod
     async def get_quizzes(
         uow: UnitOfWork,
         company_id: int,
         current_user_id: int,
+        request: Request,
         skip: int = 0,
         limit: int = 10,
     ) -> QuizzesListResponse:
@@ -177,6 +183,7 @@ class QuizService:
             uow (UnitOfWork): The unit of work for database transactions.
             company_id (int): The ID of the company.
             current_user_id (int): The ID of the user requesting the list.
+            request (Request): request from endpoint to get base url./
             skip (int, optional): Number of quizzes to skip (default is 0).
             limit (int, optional): Maximum number of quizzes to return (default is 10).
 
@@ -199,12 +206,17 @@ class QuizService:
                 raise UnAuthorizedException()
 
             quizzes = await uow.quiz.find_all(skip=skip, limit=limit)
+
+            total_quizzes = await uow.quiz.count()
+            links = get_pagination_urls(request, skip, limit, total_quizzes)
+
             quizzes_list = QuizzesListResponse(
-                quizzes=[QuizResponseForList(**quiz.__dict__) for quiz in quizzes],
-                total=len(quizzes),
+                links=links,
+                quizzes=[QuizResponseForList.from_orm(quiz) for quiz in quizzes],
+                total=total_quizzes,
             )
 
-            return quizzes_list
+            return QuizzesListResponse.model_validate(quizzes_list)
 
     @staticmethod
     async def delete_quiz(
@@ -249,4 +261,11 @@ class QuizService:
                 )
 
             deleted_quiz = await uow.quiz.delete_one(quiz_id)
-            return QuizBase(**deleted_quiz.__dict__)
+
+            quiz_data = {
+                key: value
+                for key, value in deleted_quiz.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return QuizBase.model_validate(quiz_data)

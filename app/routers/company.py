@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, Request
 
 from app.core.dependencies import (
     UOWDep,
@@ -67,6 +67,7 @@ async def add_company(
 @router.get("/", response_model=CompaniesListResponse)
 async def get_companies(
     uow: UOWDep,
+    request: Request,
     company_service: CompanyServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
@@ -77,7 +78,11 @@ async def get_companies(
     """
     try:
         companies = await company_service.get_companies(
-            uow, current_user_id=current_user.id, skip=skip, limit=limit
+            uow,
+            current_user_id=current_user.id,
+            request=request,
+            skip=skip,
+            limit=limit,
         )
         return companies
     except Exception as e:
@@ -246,6 +251,7 @@ async def send_invitation_to_user(
 async def get_members(
     company_id: int,
     uow: UOWDep,
+    request: Request,
     member_service: MemberQueriesDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
@@ -255,7 +261,7 @@ async def get_members(
     """
     try:
         members = await member_service.get_members(
-            uow, company_id=company_id, skip=skip, limit=limit
+            uow, company_id=company_id, request=request, skip=skip, limit=limit
         )
         return members
     except Exception as e:
@@ -287,6 +293,7 @@ async def get_member_by_id(
 async def get_quizzes(
     company_id: int,
     uow: UOWDep,
+    request: Request,
     quiz_service: QuizServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
@@ -300,6 +307,7 @@ async def get_quizzes(
             uow,
             company_id=company_id,
             current_user_id=current_user.id,
+            request=request,
             skip=skip,
             limit=limit,
         )
@@ -414,7 +422,8 @@ async def get_avg_score_within_company(
 @router.get("/{company_id}/admins", response_model=AdminsListResponse)
 async def get_admins(
     uow: UOWDep,
-    member_service: MemberManagementDep,
+    request: Request,
+    member_service: MemberQueriesDep,
     company_id: int,
     skip: int = 0,
     limit: int = 10,
@@ -422,7 +431,7 @@ async def get_admins(
     """
     Retrieves a list of admins for a company.
     """
-    return await member_service.get_admins(uow, company_id, skip, limit)
+    return await member_service.get_admins(uow, company_id, request, skip, limit)
 
 
 @router.post("/{member_id}/remove", response_model=MemberBase)

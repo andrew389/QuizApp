@@ -2,6 +2,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, field_validator
 
+from app.schemas.pagination import PaginationLinks
 from app.schemas.question import QuestionResponse
 
 
@@ -39,6 +40,12 @@ class QuizResponse(BaseModel):
     frequency: int
     questions: List[QuestionResponse] = []
 
+    @field_validator("questions", mode="before")
+    def validate_questions_length(cls, questions):
+        if len(questions) < 2:
+            raise ValueError("The list of questions must contain at least 2 items.")
+        return questions
+
 
 class QuizResponseForList(BaseModel):
     id: int
@@ -47,7 +54,11 @@ class QuizResponseForList(BaseModel):
     frequency: int
     company_id: int
 
+    class Config:
+        from_attributes = True
+
 
 class QuizzesListResponse(BaseModel):
+    links: PaginationLinks
     quizzes: List[QuizResponseForList] = []
     total: int

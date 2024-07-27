@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
@@ -10,6 +12,7 @@ from app.schemas.company import (
 )
 from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.user import get_pagination_urls
 
 
 class CompanyService:
@@ -34,7 +37,7 @@ class CompanyService:
         async with uow:
             await CompanyService._validate_owner(uow, owner_id)
 
-            company_dict = company.model_dump()
+            company_dict = company.model_dump(exclude_unset=True)
             company_dict["owner_id"] = owner_id
             company_model = await uow.company.add_one(company_dict)
 
@@ -42,12 +45,21 @@ class CompanyService:
                 uow, owner_id, company_model.id
             )
 
-            await uow.commit()
-            return CompanyDetail(**company_model.__dict__)
+            company_data = {
+                key: value
+                for key, value in company_model.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return CompanyDetail.model_validate(company_data)
 
     @staticmethod
     async def get_companies(
-        uow: IUnitOfWork, current_user_id: int, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork,
+        current_user_id: int,
+        request: Request,
+        skip: int = 0,
+        limit: int = 10,
     ) -> CompaniesListResponse:
         """
         Retrieve a list of companies visible to the current user and owned by them.
@@ -55,6 +67,7 @@ class CompanyService:
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
             current_user_id (int): The ID of the current user.
+            request (Request): request from endpoint to get base url.
             skip (int): The number of companies to skip (pagination).
             limit (int): The maximum number of companies to return (pagination).
 
@@ -65,6 +78,7 @@ class CompanyService:
             visible_companies = await uow.company.find_all_visible(
                 skip=skip, limit=limit
             )
+
             user_companies = await uow.company.find_all_by_owner(
                 owner_id=current_user_id, skip=skip, limit=limit
             )
@@ -73,7 +87,12 @@ class CompanyService:
                 visible_companies, user_companies, skip, limit
             )
 
+            total_companies = await uow.company.count()
+
+            links = get_pagination_urls(request, skip, limit, total_companies)
+
             return CompaniesListResponse(
+                links=links,
                 companies=[
                     CompanyBase(**company.__dict__)
                     for company in combined_companies["paginated"]
@@ -98,10 +117,18 @@ class CompanyService:
         """
         async with uow:
             company_model = await uow.company.find_one(id=company_id)
+
             if not company_model:
                 logger.warning(f"Company with ID {company_id} not found")
                 raise NotFoundException()
-            return CompanyDetail(**company_model.__dict__)
+
+            company_data = {
+                key: value
+                for key, value in company_model.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return CompanyDetail.model_validate(company_data)
 
     @staticmethod
     async def update_company(
@@ -131,7 +158,14 @@ class CompanyService:
             await uow.commit()
 
             updated_company = await uow.company.find_one(id=company_id)
-            return CompanyDetail(**updated_company.__dict__)
+
+            company_data = {
+                key: value
+                for key, value in updated_company.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return CompanyDetail.model_validate(company_data)
 
     @staticmethod
     async def delete_company(
@@ -154,7 +188,7 @@ class CompanyService:
         async with uow:
             await CompanyService._ensure_ownership(uow, company_id, current_user_id)
             deleted_company = await uow.company.delete_one(company_id)
-            await uow.commit()
+
             return deleted_company.id
 
     @staticmethod
@@ -180,15 +214,23 @@ class CompanyService:
         async with uow:
             await CompanyService._ensure_ownership(uow, company_id, current_user_id)
             company_model = await uow.company.find_one(id=company_id)
+
             if not company_model:
                 logger.warning(f"Company with ID {company_id} not found")
                 raise ValueError("Company not found")
 
             company_model.is_visible = is_visible
-            await uow.company.edit_one(company_id, {"is_visible": is_visible})
-            await uow.commit()
 
-            return CompanyDetail(**company_model.__dict__)
+            await uow.company.edit_one(company_id, {"is_visible": is_visible})
+            updated_company = await uow.company.find_one(id=company_id)
+
+            company_data = {
+                key: value
+                for key, value in updated_company.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return CompanyDetail.model_validate(company_data)
 
     @staticmethod
     def _merge_and_paginate_companies(visible_companies, user_companies, skip, limit):
@@ -210,6 +252,7 @@ class CompanyService:
             }.values()
         )
         paginated_companies = combined_companies[skip : skip + limit]
+
         return {"paginated": paginated_companies, "total": len(combined_companies)}
 
     @staticmethod
@@ -229,11 +272,13 @@ class CompanyService:
             UnAuthorizedException: If the current user is not the owner of the company.
         """
         company = await CompanyService.get_company_by_id(uow, company_id)
+
         if company.owner_id != user_id:
             logger.error(
                 f"User {user_id} is not authorized to access company {company_id}"
             )
             raise UnAuthorizedException()
+
         return company
 
     @staticmethod
@@ -249,6 +294,7 @@ class CompanyService:
             UnAuthorizedException: If the owner is already a member of another company.
         """
         existing_member = await uow.member.find_one(user_id=owner_id)
+
         if existing_member:
             logger.error(f"User {owner_id} is already a member of another company")
             raise UnAuthorizedException()

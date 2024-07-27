@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, Request
 from app.core.dependencies import (
     UOWDep,
     UserServiceDep,
@@ -41,6 +41,7 @@ async def add_user(
 @router.get("/", response_model=UsersListResponse)
 async def get_users(
     uow: UOWDep,
+    request: Request,
     user_service: UserServiceDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
@@ -49,7 +50,7 @@ async def get_users(
     Retrieve a list of users.
     """
     try:
-        users = await user_service.get_users(uow, skip=skip, limit=limit)
+        users = await user_service.get_users(uow, request, skip=skip, limit=limit)
         return users
     except Exception as e:
         logger.error(f"Error fetching users: {e}")

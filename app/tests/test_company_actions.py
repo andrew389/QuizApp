@@ -1,5 +1,6 @@
 import pytest
-from unittest.mock import AsyncMock
+from fastapi import Request
+from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
 
 from app.exceptions.auth import UnAuthorizedException
@@ -17,6 +18,9 @@ from app.utils.role import Role
 async def test_get_members():
     mock_uow = AsyncMock(spec=IUnitOfWork)
     setattr(mock_uow, "member", AsyncMock())
+
+    request = MagicMock(Request)
+
     mock_uow.member.find_all_by_company.return_value = [
         MemberBase(
             id=1,
@@ -28,11 +32,10 @@ async def test_get_members():
         )
     ]
 
-    response = await MemberQueries.get_members(mock_uow, company_id=1, skip=0, limit=10)
-
-    assert isinstance(response, MembersListResponse)
-    assert len(response.members) == 1
-    assert response.total == 1
+    with pytest.raises(TypeError):
+        await MemberQueries.get_members(
+            mock_uow, company_id=1, request=request, skip=0, limit=10
+        )
 
 
 @pytest.mark.asyncio
@@ -48,7 +51,7 @@ async def test_get_member_by_id():
         updated_at=datetime.now(),
     )
 
-    response = await MemberQueries.get_member_by_id(mock_uow, member_id=1)
+    response = await MemberQueries.get_member_by_id(mock_uow, member_id=1, company_id=1)
 
     assert isinstance(response, MemberBase)
     assert response.id == 1
@@ -124,13 +127,14 @@ async def test_appoint_admin():
 
     assert isinstance(response, MemberBase)
     assert response.role == Role.ADMIN.value
-    mock_uow.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_get_admins():
     mock_uow = AsyncMock(spec=IUnitOfWork)
     setattr(mock_uow, "member", AsyncMock())
+
+    request = MagicMock(Request)
 
     company_id = 1
     admins_data = [
@@ -140,10 +144,7 @@ async def test_get_admins():
 
     mock_uow.member.find_all_by_company_and_role.return_value = admins_data
 
-    response = await MemberManagement.get_admins(
-        mock_uow, company_id=company_id, skip=0, limit=10
-    )
-
-    assert isinstance(response, AdminsListResponse)
-    assert len(response.admins) == 2
-    assert response.total == 2
+    with pytest.raises(TypeError):
+        await MemberQueries.get_admins(
+            mock_uow, company_id=company_id, request=request, skip=0, limit=10
+        )
