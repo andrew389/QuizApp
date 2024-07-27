@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
 from app.schemas.answer import (
@@ -7,6 +9,7 @@ from app.schemas.answer import (
     AnswersListResponse,
 )
 from app.uow.unitofwork import UnitOfWork
+from app.utils.user import get_pagination_urls
 
 
 class AnswerService:
@@ -136,6 +139,7 @@ class AnswerService:
         uow: UnitOfWork,
         company_id: int,
         current_user_id: int,
+        request: Request,
         skip: int = 0,
         limit: int = 10,
     ) -> AnswersListResponse:
@@ -146,6 +150,7 @@ class AnswerService:
             uow (UnitOfWork): The unit of work object for database transactions.
             company_id (int): The ID of the company whose answers are being retrieved.
             current_user_id (int): The ID of the user requesting the answers.
+            request (Request): request from endpoint to get base url.
             skip (int): Number of answers to skip (default 0).
             limit (int): Maximum number of answers to return (default 10).
 
@@ -167,9 +172,14 @@ class AnswerService:
 
             answers = await uow.answer.find_all(skip=skip, limit=limit)
 
+            total_answers = await uow.answer.count()
+
+            links = get_pagination_urls(request, skip, limit, total_answers)
+
             answer_list = AnswersListResponse(
+                links=links,
                 answers=[AnswerBase(**answer.__dict__) for answer in answers],
-                total=len(answers),
+                total=total_answers,
             )
 
             return AnswersListResponse.model_validate(answer_list)

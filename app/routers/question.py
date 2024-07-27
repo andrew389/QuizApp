@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from app.core.dependencies import (
     UOWDep,
-    AnswerServiceDep,
     QuestionServiceDep,
-    QuizServiceDep,
     AuthServiceDep,
 )
 from app.core.logger import logger
@@ -14,12 +12,6 @@ from app.exceptions.base import (
     DeletingException,
 )
 from app.models.user import User
-from app.schemas.answer import (
-    AnswerBase,
-    AnswerCreate,
-    AnswerUpdate,
-    AnswersListResponse,
-)
 from app.schemas.question import (
     QuestionBase,
     QuestionCreate,
@@ -27,13 +19,7 @@ from app.schemas.question import (
     QuestionResponse,
     QuestionsListResponse,
 )
-from app.schemas.quiz import (
-    QuizResponse,
-    QuizCreate,
-    QuizBase,
-    QuizzesListResponse,
-    QuizUpdate,
-)
+
 
 router = APIRouter(prefix="/questions", tags=["Question"])
 
@@ -115,6 +101,7 @@ async def delete_question(
 async def get_questions(
     company_id: int,
     uow: UOWDep,
+    request: Request,
     question_service: QuestionServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
@@ -128,6 +115,7 @@ async def get_questions(
             uow,
             company_id=company_id,
             current_user_id=current_user.id,
+            request=request,
             skip=skip,
             limit=limit,
         )

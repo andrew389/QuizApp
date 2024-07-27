@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, insert, select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -24,6 +24,10 @@ class AbstractRepository(ABC):
 
     @abstractmethod
     async def delete_one(self, id: int) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def count(self) -> int:
         raise NotImplementedError
 
 
@@ -57,3 +61,8 @@ class SQLAlchemyRepository(AbstractRepository):
         stmt = delete(self.model).filter_by(id=id).returning(self.model)
         res = await self.session.execute(stmt)
         return res.scalars().first()
+
+    async def count(self) -> int:
+        stmt = select(func.count()).select_from(self.model)
+        res = await self.session.execute(stmt)
+        return res.scalar()

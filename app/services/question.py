@@ -1,6 +1,8 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException, FetchingException
+from app.exceptions.base import NotFoundException
 from app.schemas.answer import AnswerBase, AnswerResponse
 from app.schemas.question import (
     QuestionCreate,
@@ -11,6 +13,7 @@ from app.schemas.question import (
     QuestionResponseForList,
 )
 from app.uow.unitofwork import UnitOfWork
+from app.utils.user import get_pagination_urls
 
 
 class QuestionService:
@@ -178,6 +181,7 @@ class QuestionService:
         uow: UnitOfWork,
         company_id: int,
         current_user_id: int,
+        request: Request,
         skip: int = 0,
         limit: int = 10,
     ) -> QuestionsListResponse:
@@ -188,6 +192,7 @@ class QuestionService:
             uow (UnitOfWork): The unit of work for database transactions.
             company_id (int): The ID of the company.
             current_user_id (int): The ID of the user requesting the list.
+            request (Request): request from endpoint to get base url.
             skip (int, optional): Number of questions to skip (default is 0).
             limit (int, optional): Maximum number of questions to return (default is 10).
 
@@ -212,11 +217,16 @@ class QuestionService:
 
             questions = await uow.question.find_all(skip=skip, limit=limit)
 
+            total_questions = await uow.question.count()
+
+            links = get_pagination_urls(request, skip, limit, total_questions)
+
             question_list = QuestionsListResponse(
+                links=links,
                 questions=[
                     QuestionResponseForList.from_orm(question) for question in questions
                 ],
-                total=len(questions),
+                total=total_questions,
             )
 
             return QuestionsListResponse.model_validate(question_list)

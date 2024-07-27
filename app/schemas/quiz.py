@@ -2,6 +2,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, field_validator
 
+from app.schemas.pagination import PaginationLinks
 from app.schemas.question import QuestionResponse
 
 
@@ -58,5 +59,6 @@ class QuizResponseForList(BaseModel):
 
 
 class QuizzesListResponse(BaseModel):
+    links: PaginationLinks
     quizzes: List[QuizResponseForList] = []
     total: int

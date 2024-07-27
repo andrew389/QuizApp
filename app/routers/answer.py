@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from app.core.dependencies import (
     UOWDep,
     AnswerServiceDep,
@@ -134,6 +134,7 @@ async def delete_answer(
 async def get_answers(
     company_id: int,
     uow: UOWDep,
+    request: Request,
     answer_service: AnswerServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
@@ -158,6 +159,7 @@ async def get_answers(
             uow,
             company_id=company_id,
             current_user_id=current_user.id,
+            request=request,
             skip=skip,
             limit=limit,
         )

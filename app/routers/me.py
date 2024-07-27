@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, Request
 
 from app.core.dependencies import UOWDep, AuthServiceDep, InvitationServiceDep
 from app.core.logger import logger
@@ -39,6 +39,7 @@ async def get_info(current_user: User = Depends(AuthServiceDep.get_current_user)
 @router.get("/invites", response_model=InvitationsListResponse)
 async def get_new_invitations(
     uow: UOWDep,
+    request: Request,
     invitation_service: InvitationServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
@@ -49,7 +50,7 @@ async def get_new_invitations(
     """
     try:
         invitations = await invitation_service.get_invitations(
-            uow, current_user.id, skip=skip, limit=limit
+            uow, current_user.id, request, skip=skip, limit=limit
         )
         return invitations
     except Exception as e:
@@ -60,6 +61,7 @@ async def get_new_invitations(
 @router.get("/requests", response_model=InvitationsListResponse)
 async def get_sent_invitations(
     uow: UOWDep,
+    request: Request,
     invitation_service: InvitationServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
@@ -70,7 +72,7 @@ async def get_sent_invitations(
     """
     try:
         invitations = await invitation_service.get_sent_invitations(
-            uow, current_user.id, skip=skip, limit=limit
+            uow, current_user.id, request, skip=skip, limit=limit
         )
         return invitations
     except Exception as e:

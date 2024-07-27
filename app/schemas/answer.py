@@ -2,6 +2,8 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 
+from app.schemas.pagination import PaginationLinks
+
 
 class AnswerBase(BaseModel):
     id: Optional[int] = None
@@ -34,5 +36,6 @@ class AnswerResponse(BaseModel):
 
 
 class AnswersListResponse(BaseModel):
+    links: PaginationLinks
     answers: List[AnswerBase] = []
     total: int

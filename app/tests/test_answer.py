@@ -1,16 +1,14 @@
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
+from fastapi import Request
 
 from app.schemas.answer import (
     AnswerCreate,
-    AnswerUpdate,
     AnswerBase,
-    AnswersListResponse,
 )
 from app.services.answer import AnswerService
 from app.uow.unitofwork import UnitOfWork
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException
 
 
 @pytest.mark.asyncio
@@ -65,6 +63,8 @@ async def test_get_answers():
     mock_uow.answer = AsyncMock()
     mock_uow.member = AsyncMock()
 
+    request = MagicMock(Request)
+
     company_id = 1
     mock_answers = [
         AnswerBase(
@@ -74,7 +74,9 @@ async def test_get_answers():
     mock_uow.answer.find_all.return_value = mock_answers
 
     with pytest.raises(UnAuthorizedException):
-        await AnswerService.get_answers(mock_uow, company_id, current_user_id=1)
+        await AnswerService.get_answers(
+            mock_uow, company_id, current_user_id=1, request=request
+        )
 
 
 @pytest.mark.asyncio

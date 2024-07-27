@@ -1,6 +1,6 @@
 import pytest
-from unittest.mock import AsyncMock
-from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
+from fastapi import Request
 
 from app.schemas.answer import AnswerBase
 from app.schemas.question import (
@@ -8,12 +8,10 @@ from app.schemas.question import (
     QuestionUpdate,
     QuestionResponse,
     QuestionBase,
-    QuestionsListResponse,
 )
 from app.services.question import QuestionService
 from app.uow.unitofwork import UnitOfWork
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException, FetchingException
 
 
 @pytest.mark.asyncio
@@ -87,12 +85,16 @@ async def test_get_questions():
     mock_uow.question = AsyncMock()
     mock_uow.member = AsyncMock()
 
+    request = MagicMock(Request)
+
     company_id = 1
     mock_questions = [QuestionBase(id=1, title="Test Question", company_id=1)]
     mock_uow.question.find_all.return_value = mock_questions
 
     with pytest.raises(UnAuthorizedException):
-        await QuestionService.get_questions(mock_uow, company_id, current_user_id=1)
+        await QuestionService.get_questions(
+            mock_uow, company_id, current_user_id=1, request=request
+        )
 
 
 @pytest.mark.asyncio

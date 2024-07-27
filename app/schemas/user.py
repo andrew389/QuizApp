@@ -2,6 +2,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
+from app.schemas.pagination import PaginationLinks
+
 
 class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -57,5 +59,6 @@ class SignUpRequest(UserCreate):
 
 
 class UsersListResponse(BaseModel):
+    links: PaginationLinks
     users: List[UserBase]
     total: int

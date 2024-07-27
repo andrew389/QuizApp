@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
@@ -10,6 +12,7 @@ from app.schemas.invitation import (
 from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.role import Role
+from app.utils.user import get_pagination_urls
 
 
 class InvitationService:
@@ -64,7 +67,7 @@ class InvitationService:
 
     @staticmethod
     async def get_invitations(
-        uow: IUnitOfWork, user_id: int, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork, user_id: int, request: Request, skip: int = 0, limit: int = 10
     ) -> InvitationsListResponse:
         """
         Retrieve a list of invitations received by the user.
@@ -72,6 +75,7 @@ class InvitationService:
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
             user_id (int): The ID of the user.
+            request (Request): request from endpoint to get base url.
             skip (int): Number of invitations to skip (pagination).
             limit (int): Maximum number of invitations to return (pagination).
 
@@ -83,17 +87,22 @@ class InvitationService:
                 receiver_id=user_id, skip=skip, limit=limit
             )
 
+            total_invitations = await uow.invitation.count_all_by_receiver(
+                receiver_id=user_id
+            )
+            links = get_pagination_urls(request, skip, limit, total_invitations)
+
             return InvitationsListResponse(
+                links=links,
                 invitations=[
-                    InvitationBase.model_validate(invitation)
-                    for invitation in invitations
+                    InvitationBase(**invitation.__dict__) for invitation in invitations
                 ],
-                total=len(invitations),
+                total=total_invitations,
             )
 
     @staticmethod
     async def get_sent_invitations(
-        uow: IUnitOfWork, user_id: int, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork, user_id: int, request: Request, skip: int = 0, limit: int = 10
     ) -> InvitationsListResponse:
         """
         Retrieve a list of invitations sent by the user.
@@ -101,6 +110,7 @@ class InvitationService:
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
             user_id (int): The ID of the user.
+            request (Request): request from endpoint to get base url.
             skip (int): Number of invitations to skip (pagination).
             limit (int): Maximum number of invitations to return (pagination).
 
@@ -112,12 +122,17 @@ class InvitationService:
                 sender_id=user_id, skip=skip, limit=limit
             )
 
+            total_invitations = await uow.invitation.count_all_by_sender(
+                sender_id=user_id
+            )
+            links = get_pagination_urls(request, skip, limit, total_invitations)
+
             return InvitationsListResponse(
+                links=links,
                 invitations=[
-                    InvitationBase.model_validate(invitation)
-                    for invitation in invitations
+                    InvitationBase(**invitation.__dict__) for invitation in invitations
                 ],
-                total=len(invitations),
+                total=total_invitations,
             )
 
     @staticmethod

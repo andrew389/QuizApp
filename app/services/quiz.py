@@ -1,6 +1,8 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException, FetchingException
+from app.exceptions.base import NotFoundException
 from app.schemas.question import QuestionResponse
 from app.schemas.quiz import (
     QuizCreate,
@@ -12,6 +14,7 @@ from app.schemas.quiz import (
 )
 from app.services.question import QuestionService
 from app.uow.unitofwork import UnitOfWork
+from app.utils.user import get_pagination_urls
 
 
 class QuizService:
@@ -168,6 +171,7 @@ class QuizService:
         uow: UnitOfWork,
         company_id: int,
         current_user_id: int,
+        request: Request,
         skip: int = 0,
         limit: int = 10,
     ) -> QuizzesListResponse:
@@ -178,6 +182,7 @@ class QuizService:
             uow (UnitOfWork): The unit of work for database transactions.
             company_id (int): The ID of the company.
             current_user_id (int): The ID of the user requesting the list.
+            request (Request): request from endpoint to get base url.
             skip (int, optional): Number of quizzes to skip (default is 0).
             limit (int, optional): Maximum number of quizzes to return (default is 10).
 
@@ -202,9 +207,13 @@ class QuizService:
 
             quizzes = await uow.quiz.find_all(skip=skip, limit=limit)
 
+            total_quizzes = await uow.quiz.count()
+            links = get_pagination_urls(request, skip, limit, total_quizzes)
+
             quizzes_list = QuizzesListResponse(
+                links=links,
                 quizzes=[QuizResponseForList.from_orm(quiz) for quiz in quizzes],
-                total=len(quizzes),
+                total=total_quizzes,
             )
 
             return QuizzesListResponse.model_validate(quizzes_list)

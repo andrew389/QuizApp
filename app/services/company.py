@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
@@ -10,6 +12,7 @@ from app.schemas.company import (
 )
 from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.user import get_pagination_urls
 
 
 class CompanyService:
@@ -52,7 +55,11 @@ class CompanyService:
 
     @staticmethod
     async def get_companies(
-        uow: IUnitOfWork, current_user_id: int, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork,
+        current_user_id: int,
+        request: Request,
+        skip: int = 0,
+        limit: int = 10,
     ) -> CompaniesListResponse:
         """
         Retrieve a list of companies visible to the current user and owned by them.
@@ -60,6 +67,7 @@ class CompanyService:
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
             current_user_id (int): The ID of the current user.
+            request (Request): request from endpoint to get base url.
             skip (int): The number of companies to skip (pagination).
             limit (int): The maximum number of companies to return (pagination).
 
@@ -79,7 +87,12 @@ class CompanyService:
                 visible_companies, user_companies, skip, limit
             )
 
+            total_companies = await uow.company.count()
+
+            links = get_pagination_urls(request, skip, limit, total_companies)
+
             return CompaniesListResponse(
+                links=links,
                 companies=[
                     CompanyBase(**company.__dict__)
                     for company in combined_companies["paginated"]

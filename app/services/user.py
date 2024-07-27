@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
@@ -10,6 +12,7 @@ from app.schemas.user import (
 )
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.hasher import Hasher
+from app.utils.user import get_pagination_urls
 
 
 class UserService:
@@ -43,13 +46,14 @@ class UserService:
 
     @staticmethod
     async def get_users(
-        uow: IUnitOfWork, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork, request: Request, skip: int = 0, limit: int = 10
     ) -> UsersListResponse:
         """
         Retrieve a list of users.
 
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
+            request (Request): request from endpoint to get base url.
             skip (int, optional): Number of users to skip (default is 0).
             limit (int, optional): Maximum number of users to return (default is 10).
 
@@ -58,11 +62,16 @@ class UserService:
         """
         async with uow:
             users = await uow.user.find_all(skip=skip, limit=limit)
+            total_users = await uow.user.count()
+
+            links = get_pagination_urls(request, skip, limit, total_users)
 
             user_list = UsersListResponse(
+                links=links,
                 users=[UserBase.model_validate(user) for user in users],
-                total=len(users),
+                total=total_users,
             )
+
             return user_list
 
     @staticmethod
