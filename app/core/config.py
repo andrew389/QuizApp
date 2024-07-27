@@ -3,7 +3,7 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-env_file = Path(__file__).resolve().parents[2] / ".env"
+env_file = Path(__file__).resolve().parents[2] / ".env.sample"
 
 
 class DatabaseSettings(BaseSettings):

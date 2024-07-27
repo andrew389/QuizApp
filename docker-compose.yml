@@ -5,7 +5,7 @@ services:
   redis:
     image: redis:latest
     env_file:
-      - .env
+      - .env.sample
     ports:
       - "6379:6379"
 
@@ -24,7 +24,7 @@ services:
     depends_on:
       - redis
     env_file:
-      - .env
+      - .env.sample
 
   celery_worker:
     build:
@@ -40,7 +40,7 @@ services:
     depends_on:
       - redis
     env_file:
-      - .env
+      - .env.sample
 
   celery_beat:
     build:
@@ -57,7 +57,7 @@ services:
       - redis
       - celery_worker
     env_file:
-      - .env
+      - .env.sample
 
   flower:
     build:
@@ -74,7 +74,7 @@ services:
       - redis
       - celery_worker
     env_file:
-      - .env
+      - .env.sample
     ports:
       - "5555:5555"
 
