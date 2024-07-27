@@ -67,7 +67,13 @@ class QuizService:
                 uow, quiz.company_id, f"A new quiz has been created: {quiz.title}"
             )
 
-            return QuizBase.model_validate(new_quiz)
+            quiz_data = {
+                key: value
+                for key, value in new_quiz.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return QuizBase.model_validate(quiz_data)
 
     @staticmethod
     async def update_quiz(
