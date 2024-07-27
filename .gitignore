@@ -3,6 +3,4 @@
 *.log
 __pycache__/
 
-celerybeat-schedule.bak
-celerybeat-schedule.dat
-celerybeat-schedule.dir
+app/exported_data
