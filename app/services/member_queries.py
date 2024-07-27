@@ -1,14 +1,22 @@
-from app.schemas.member import MembersListResponse, MemberBase
+from fastapi import Request
+
+from app.schemas.member import MembersListResponse, MemberBase, AdminsListResponse
 from app.uow.unitofwork import IUnitOfWork
 from app.exceptions.base import NotFoundException
 from app.core.logger import logger
+from app.utils.role import Role
+from app.utils.user import get_pagination_urls
 
 
 class MemberQueries:
 
     @staticmethod
     async def get_members(
-        uow: IUnitOfWork, company_id: int, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork,
+        company_id: int,
+        request: Request,
+        skip: int = 0,
+        limit: int = 10,
     ) -> MembersListResponse:
         """
         Get a paginated list of members in a company.
@@ -16,6 +24,7 @@ class MemberQueries:
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
             company_id (int): The ID of the company.
+            request (Request): request from endpoint to get base url.
             skip (int): Number of members to skip (pagination).
             limit (int): Maximum number of members to return (pagination).
 
@@ -30,22 +39,70 @@ class MemberQueries:
                 members = await uow.member.find_all_by_company(
                     company_id=company_id, skip=skip, limit=limit
                 )
-                return MembersListResponse(
-                    members=[MemberBase(**member.__dict__) for member in members],
-                    total=len(members),
+
+                total_members = await uow.member.count_all_by_company(
+                    company_id=company_id
                 )
+
+                links = get_pagination_urls(request, skip, limit, total_members)
+
+                return MembersListResponse(
+                    links=links,
+                    members=[MemberBase(**member.__dict__) for member in members],
+                    total=total_members,
+                )
+
         except Exception as e:
             logger.error(f"Error fetching members for company {company_id}: {e}")
             raise
 
     @staticmethod
-    async def get_member_by_id(uow: IUnitOfWork, member_id: int) -> MemberBase:
+    async def get_admins(
+        uow: IUnitOfWork,
+        company_id: int,
+        request: Request,
+        skip: int = 0,
+        limit: int = 10,
+    ) -> AdminsListResponse:
+        """
+        Get a list of admins for a company.
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            company_id (int): The ID of the company.
+            request (Request): request from endpoint to get base url.
+            skip (int): Number of admins to skip (pagination).
+            limit (int): Maximum number of admins to return (pagination).
+        Returns:
+            AdminsListResponse: The list of admins and total count.
+        """
+        async with uow:
+            admins = await uow.member.find_all_by_company_and_role(
+                company_id=company_id, role=Role.ADMIN.value, skip=skip, limit=limit
+            )
+
+            total_admins = await uow.member.count_all_by_company_and_role(
+                company_id=company_id, role=Role.ADMIN.value
+            )
+
+            links = get_pagination_urls(request, skip, limit, total_admins)
+
+            return AdminsListResponse(
+                links=links,
+                admins=[MemberBase(**admin.__dict__) for admin in admins],
+                total=total_admins,
+            )
+
+    @staticmethod
+    async def get_member_by_id(
+        uow: IUnitOfWork, member_id: int, company_id: int
+    ) -> MemberBase:
         """
         Get a member by their ID.
 
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
             member_id (int): The ID of the member.
+            company_id (int): The ID of the company.
 
         Returns:
             MemberBase: The details of the member.
@@ -56,13 +113,19 @@ class MemberQueries:
         """
         try:
             async with uow:
-                member = await uow.member.find_one(id=member_id)
+                member = await uow.member.find_one(id=member_id, company_id=company_id)
+
                 if not member:
                     logger.error(f"Member with ID {member_id} not found")
                     raise NotFoundException()
-                return MemberBase(**member.__dict__)
-        except NotFoundException:
-            raise
+
+                member_data = {
+                    key: value
+                    for key, value in member.__dict__.items()
+                    if not key.startswith("_")
+                }
+
+                return MemberBase.model_validate(member_data)
         except Exception as e:
-            logger.error(f"Error fetching member with ID {member_id}: {e}")
+            logger.error(f"Error fetching member with member_id {member_id}: {e}")
             raise

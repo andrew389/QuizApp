@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from app.models.company import Company
+from app.models import Company
 from app.uow.repository import SQLAlchemyRepository
 
 

@@ -166,10 +166,16 @@ class AnsweredQuestionService:
 
     @staticmethod
     async def _get_answer_text(uow: UnitOfWork, answer_id: int) -> str:
+        """
+        Get answer text from answer
+        """
         answer = await uow.answer.find_one(id=answer_id)
         return answer.text if answer else None
 
     @staticmethod
     async def _is_correct_answer(uow: UnitOfWork, answer_id: int) -> bool:
+        """
+        Check is user_answer is correct
+        """
         answer = await uow.answer.find_one(id=answer_id)
         return answer.is_correct if answer else False

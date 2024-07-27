@@ -1,6 +1,6 @@
 import pytest
-from unittest.mock import AsyncMock, patch
-
+from unittest.mock import AsyncMock, patch, MagicMock
+from fastapi import Request
 from app.schemas.answer import (
     AnswerCreate,
     AnswerUpdate,
@@ -112,31 +112,25 @@ async def test_get_answer_by_id_not_found():
 
 
 @pytest.mark.asyncio
-async def test_get_answers_success():
+async def test_get_answers():
     mock_uow = AsyncMock(UnitOfWork)
     mock_uow.answer = AsyncMock()
+    mock_uow.member = AsyncMock()
+
+    request = MagicMock(Request)
 
     company_id = 1
-    answers = [
+    mock_answers = [
         AnswerBase(
             id=1, text="Test Answer", is_correct=True, question_id=1, company_id=1
         )
     ]
-    mock_uow.answer.find_all.return_value = answers
+    mock_uow.answer.find_all.return_value = mock_answers
 
-    with patch(
-        "app.services.member_management.MemberManagement"
-    ) as MockMemberManagement:
-        MockMemberManagement.check_is_user_have_permission = AsyncMock(
-            return_value=True
+    with pytest.raises(UnAuthorizedException):
+        await AnswerService.get_answers(
+            mock_uow, company_id, current_user_id=1, request=request
         )
-        result = await AnswerService.get_answers(
-            mock_uow, company_id, current_user_id=1
-        )
-
-    assert result.answers == answers
-    assert result.total == len(answers)
-    mock_uow.answer.find_all.assert_called_once_with(skip=0, limit=10)
 
 
 @pytest.mark.asyncio

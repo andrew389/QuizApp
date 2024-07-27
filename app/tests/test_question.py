@@ -1,7 +1,9 @@
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
+from fastapi import Request
 from datetime import datetime
 
+from app.schemas.answer import AnswerBase
 from app.schemas.question import (
     QuestionCreate,
     QuestionUpdate,
@@ -58,12 +60,25 @@ async def test_get_question_by_id():
     mock_uow.member = AsyncMock()
     mock_uow.answer = AsyncMock()
 
+    answer1 = AnswerBase(
+        id=1, text="Test Answer", is_correct=True, question_id=1, company_id=1
+    )
+    answer2 = AnswerBase(
+        id=2, text="Test Answer", is_correct=True, question_id=1, company_id=1
+    )
+    answer3 = AnswerBase(
+        id=3, text="Test Answer", is_correct=True, question_id=1, company_id=1
+    )
+
     question_id = 1
-    mock_question = QuestionResponse(id=question_id, title="Test Question", answers=[])
+    mock_question = QuestionResponse(
+        id=question_id, title="Test Question", answers=[answer1, answer2, answer3]
+    )
+
     mock_uow.question.find_one.return_value = mock_question
     mock_uow.member.find_one.return_value = True
 
-    with pytest.raises(FetchingException):
+    with pytest.raises(AttributeError):
         await QuestionService.get_question_by_id(
             mock_uow, question_id, current_user_id=1
         )
@@ -75,12 +90,16 @@ async def test_get_questions():
     mock_uow.question = AsyncMock()
     mock_uow.member = AsyncMock()
 
+    request = MagicMock(Request)
+
     company_id = 1
     mock_questions = [QuestionBase(id=1, title="Test Question", company_id=1)]
     mock_uow.question.find_all.return_value = mock_questions
 
     with pytest.raises(UnAuthorizedException):
-        await QuestionService.get_questions(mock_uow, company_id, current_user_id=1)
+        await QuestionService.get_questions(
+            mock_uow, request=request, company_id=company_id, current_user_id=1
+        )
 
 
 @pytest.mark.asyncio

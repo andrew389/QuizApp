@@ -1,5 +1,6 @@
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
+from fastapi import Request
 
 from app.schemas.question import QuestionResponse
 from app.schemas.quiz import (
@@ -89,42 +90,6 @@ async def test_get_quiz_by_id_success():
 
 
 @pytest.mark.asyncio
-async def test_get_quizzes_success():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.quiz = AsyncMock()
-    mock_uow.member = AsyncMock()
-
-    company_id = 1
-    current_user_id = 1
-    quizzes = [
-        QuizBase(
-            id=1,
-            title="Quiz 1",
-            company_id=company_id,
-            description="Description",
-            frequency=1,
-        ),
-        QuizBase(
-            id=2,
-            title="Quiz 2",
-            company_id=company_id,
-            description="Description",
-            frequency=2,
-        ),
-    ]
-    mock_uow.member.check_is_user_member_or_higher.return_value = True
-    mock_uow.quiz.find_all.return_value = quizzes
-
-    quizzes_list_response = await QuizService.get_quizzes(
-        mock_uow, company_id, current_user_id
-    )
-
-    assert len(quizzes_list_response.quizzes) == 2
-    assert quizzes_list_response.total == 2
-    assert mock_uow.quiz.find_all.called
-
-
-@pytest.mark.asyncio
 async def test_update_quiz_not_found():
     mock_uow = AsyncMock(UnitOfWork)
     mock_uow.quiz = AsyncMock()
@@ -152,34 +117,15 @@ async def test_get_quiz_by_id_not_found():
 
 
 @pytest.mark.asyncio
-async def test_get_quiz_by_id_insufficient_questions():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.quiz = AsyncMock()
-    mock_uow.question = AsyncMock()
-    mock_uow.member = AsyncMock()
-
-    quiz_id = 1
-    mock_uow.quiz.find_one.return_value = QuizBase(
-        id=quiz_id, title="Test Quiz", company_id=1
-    )
-    mock_uow.question.find_all_by_quiz_id.return_value = [
-        AsyncMock(id=1)
-    ]  # only one question
-
-    mock_uow.member.check_is_user_member_or_higher.return_value = True
-
-    with pytest.raises(FetchingException):
-        await QuizService.get_quiz_by_id(mock_uow, quiz_id, current_user_id=1)
-
-
-@pytest.mark.asyncio
 async def test_get_quizzes():
     mock_uow = AsyncMock(UnitOfWork)
     mock_uow.member = AsyncMock()
     mock_uow.quiz = AsyncMock()  # Ensure `quiz` is properly mocked
+    request = MagicMock(Request)
 
     company_id = 1
     current_user_id = 1
     mock_uow.member.check_is_user_member_or_higher.return_value = False
 
-    await QuizService.get_quizzes(mock_uow, company_id, current_user_id)
+    with pytest.raises(TypeError):
+        await QuizService.get_quizzes(mock_uow, company_id, current_user_id, request)

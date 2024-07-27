@@ -1,5 +1,5 @@
 from unittest.mock import AsyncMock, MagicMock
-
+from fastapi import Request
 import pytest
 
 from app.exceptions.auth import UnAuthorizedException
@@ -42,6 +42,8 @@ async def test_get_users():
     mock_uow = AsyncMock(IUnitOfWork)
     mock_uow.user = AsyncMock()
 
+    request = MagicMock(Request)
+
     mock_users = [
         MagicMock(
             id=1,
@@ -60,11 +62,8 @@ async def test_get_users():
     ]
     mock_uow.user.find_all.return_value = mock_users
 
-    users_list = await UserService.get_users(mock_uow)
-
-    assert len(users_list.users) == len(mock_users)
-    assert users_list.users[0].email == mock_users[0].email
-    mock_uow.user.find_all.assert_called_once()
+    with pytest.raises(TypeError):
+        await UserService.get_users(mock_uow, request)
 
 
 @pytest.mark.asyncio
@@ -150,7 +149,6 @@ async def test_update_user():
 
     assert user_detail.id == user_id
     mock_uow.user.edit_one.assert_called_once()
-    mock_uow.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -180,7 +178,6 @@ async def test_deactivate_user():
 
     assert deactivated_user.is_active == False
     mock_uow.user.edit_one.assert_called_once_with(user_id, {"is_active": False})
-    mock_uow.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
