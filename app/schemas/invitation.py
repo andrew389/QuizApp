@@ -2,6 +2,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
+from app.schemas.pagination import PaginationLinks
+
 
 class InvitationBase(BaseModel):
     id: Optional[int] = None
@@ -28,5 +30,6 @@ class InvitationResponse(BaseModel):
 
 
 class InvitationsListResponse(BaseModel):
+    links: PaginationLinks
     invitations: List[InvitationBase]
     total: int

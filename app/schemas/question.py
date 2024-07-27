@@ -3,6 +3,7 @@ from typing import Optional, List, Union
 from pydantic import BaseModel, field_validator
 
 from app.schemas.answer import AnswerBase, AnswerResponse
+from app.schemas.pagination import PaginationLinks
 
 
 class QuestionBase(BaseModel):
@@ -24,6 +25,9 @@ class QuestionCreate(BaseModel):
             raise ValueError("The list of answers must contain between 2 and 4 items.")
         return answers
 
+    class Config:
+        from_attributes = True
+
 
 class QuestionUpdate(BaseModel):
     title: str
@@ -41,7 +45,11 @@ class QuestionResponseForList(BaseModel):
     quiz_id: Optional[int] = None
     company_id: int
 
+    class Config:
+        from_attributes = True
+
 
 class QuestionsListResponse(BaseModel):
+    links: PaginationLinks
     questions: List[QuestionResponseForList] = []
     total: int
