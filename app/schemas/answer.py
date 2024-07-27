@@ -34,6 +34,9 @@ class AnswerResponse(BaseModel):
     company_id: int
     question_id: Optional[int] = None
 
+    class Config:
+        from_attributes = True
+
 
 class AnswersListResponse(BaseModel):
     links: PaginationLinks
