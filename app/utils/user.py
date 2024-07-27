@@ -1,6 +1,10 @@
+from fastapi import Request
+
 import secrets
 import string
 from datetime import datetime
+
+from app.schemas.pagination import PaginationLinks
 from app.schemas.user import UserCreate
 
 
@@ -27,7 +31,23 @@ def create_user(email: str) -> UserCreate:
         city="City",
         phone="1234567890",
         avatar="",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
     )
     return user_create
+
+
+def get_pagination_urls(
+    request: Request, skip: int, limit: int, total_users: int
+) -> PaginationLinks:
+    base_url = str(request.url).split("?")[0]
+
+    next_url = (
+        f"{base_url}?skip={skip + limit}&limit={limit}"
+        if skip + limit < total_users
+        else None
+    )
+    previous_url = (
+        f"{base_url}?skip={max(skip - limit, 0)}&limit={limit}" if skip > 0 else None
+    )
+    return PaginationLinks(next=next_url, previous=previous_url)

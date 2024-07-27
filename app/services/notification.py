@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException, UpdatingException
@@ -9,6 +11,7 @@ from app.schemas.notification import (
     NotificationResponse,
 )
 from app.uow.unitofwork import UnitOfWork, IUnitOfWork
+from app.utils.user import get_pagination_urls
 
 
 class NotificationService:
@@ -76,11 +79,10 @@ class NotificationService:
 
         for notification in notifications:
             await uow.notification.edit_one(notification.id, {"status": "read"})
-            await uow.commit()
 
     @staticmethod
     async def get_notifications(
-        uow: IUnitOfWork, user_id: int, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork, request: Request, user_id: int, skip: int = 0, limit: int = 10
     ) -> NotificationsListResponse:
         """
         Retrieves a list of notifications for a specific user with pagination.
@@ -89,12 +91,19 @@ class NotificationService:
             notifications = await uow.notification.find_all_by_receiver(
                 receiver_id=user_id, skip=skip, limit=limit
             )
+
+            total_notifications = await uow.notification.count_all_by_receiver(
+                receiver_id=user_id
+            )
+            links = get_pagination_urls(request, skip, limit, total_notifications)
+
             return NotificationsListResponse(
+                links=links,
                 notifications=[
                     NotificationBase(**notification.__dict__)
                     for notification in notifications
                 ],
-                total=len(notifications),
+                total=total_notifications,
             )
 
     @staticmethod
