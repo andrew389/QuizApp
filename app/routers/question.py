@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from app.core.dependencies import (
     UOWDep,
-    AnswerServiceDep,
     QuestionServiceDep,
-    QuizServiceDep,
     AuthServiceDep,
 )
 from app.core.logger import logger
@@ -14,12 +12,7 @@ from app.exceptions.base import (
     DeletingException,
 )
 from app.models.user import User
-from app.schemas.answer import (
-    AnswerBase,
-    AnswerCreate,
-    AnswerUpdate,
-    AnswersListResponse,
-)
+
 from app.schemas.question import (
     QuestionBase,
     QuestionCreate,
@@ -27,18 +20,11 @@ from app.schemas.question import (
     QuestionResponse,
     QuestionsListResponse,
 )
-from app.schemas.quiz import (
-    QuizResponse,
-    QuizCreate,
-    QuizBase,
-    QuizzesListResponse,
-    QuizUpdate,
-)
 
-router = APIRouter(prefix="/question", tags=["Question"])
+router = APIRouter(prefix="/questions", tags=["Question"])
 
 
-@router.post("/questions/", response_model=QuestionBase)
+@router.post("/", response_model=QuestionBase)
 async def create_question(
     question: QuestionCreate,
     uow: UOWDep,
@@ -55,7 +41,7 @@ async def create_question(
         raise CreatingException()
 
 
-@router.put("/questions/{question_id}", response_model=QuestionBase)
+@router.put("/{question_id}", response_model=QuestionBase)
 async def update_question(
     question_id: int,
     question: QuestionUpdate,
@@ -75,7 +61,7 @@ async def update_question(
         raise UpdatingException()
 
 
-@router.get("/questions/{question_id}", response_model=QuestionResponse)
+@router.get("/{question_id}", response_model=QuestionResponse)
 async def get_question_by_id(
     question_id: int,
     uow: UOWDep,
@@ -94,7 +80,7 @@ async def get_question_by_id(
         raise FetchingException()
 
 
-@router.delete("/questions/{question_id}", response_model=QuestionBase)
+@router.delete("/{question_id}", response_model=QuestionBase)
 async def delete_question(
     question_id: int,
     uow: UOWDep,
@@ -111,10 +97,11 @@ async def delete_question(
         raise DeletingException()
 
 
-@router.get("/questions/", response_model=QuestionsListResponse)
+@router.get("/", response_model=QuestionsListResponse)
 async def get_questions(
     company_id: int,
     uow: UOWDep,
+    request: Request,
     question_service: QuestionServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
@@ -128,6 +115,7 @@ async def get_questions(
             uow,
             company_id=company_id,
             current_user_id=current_user.id,
+            request=request,
             skip=skip,
             limit=limit,
         )

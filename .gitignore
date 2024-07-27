@@ -3,7 +3,7 @@
 *.log
 __pycache__/
 
-/app/exported_data
+app/exported_data
 
 celerybeat-schedule.bak
 celerybeat-schedule.dat

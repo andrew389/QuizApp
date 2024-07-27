@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from app.core.dependencies import (
     UOWDep,
     AnswerServiceDep,
@@ -19,10 +19,10 @@ from app.schemas.answer import (
     AnswersListResponse,
 )
 
-router = APIRouter(prefix="/answer", tags=["Answer"])
+router = APIRouter(prefix="/answers", tags=["Answer"])
 
 
-@router.post("/answers", response_model=AnswerBase)
+@router.post("/", response_model=AnswerBase)
 async def create_answer(
     answer: AnswerCreate,
     uow: UOWDep,
@@ -48,7 +48,7 @@ async def create_answer(
         raise CreatingException()
 
 
-@router.put("/answers/{answer_id}", response_model=AnswerBase)
+@router.put("/{answer_id}", response_model=AnswerBase)
 async def update_answer(
     answer_id: int,
     answer: AnswerUpdate,
@@ -78,7 +78,7 @@ async def update_answer(
         raise UpdatingException()
 
 
-@router.get("/answers/{answer_id}", response_model=AnswerBase)
+@router.get("/{answer_id}", response_model=AnswerBase)
 async def get_answer_by_id(
     answer_id: int,
     uow: UOWDep,
@@ -104,7 +104,7 @@ async def get_answer_by_id(
         raise FetchingException()
 
 
-@router.delete("/answers/{answer_id}", response_model=AnswerBase)
+@router.delete("/{answer_id}", response_model=AnswerBase)
 async def delete_answer(
     answer_id: int,
     uow: UOWDep,
@@ -130,10 +130,11 @@ async def delete_answer(
         raise DeletingException()
 
 
-@router.get("/answers/", response_model=AnswersListResponse)
+@router.get("/", response_model=AnswersListResponse)
 async def get_answers(
     company_id: int,
     uow: UOWDep,
+    request: Request,
     answer_service: AnswerServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
@@ -145,6 +146,7 @@ async def get_answers(
     Args:
         company_id (int): The ID of the company to retrieve answers for.
         uow (UOWDep): Unit of Work dependency.
+        request (Request): Request to get base URL.
         answer_service (AnswerServiceDep): Answer service dependency.
         current_user (User): The currently authenticated user.
         skip (int): The number of items to skip (pagination).
@@ -158,6 +160,7 @@ async def get_answers(
             uow,
             company_id=company_id,
             current_user_id=current_user.id,
+            request=request,
             skip=skip,
             limit=limit,
         )

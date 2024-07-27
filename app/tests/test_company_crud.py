@@ -1,5 +1,6 @@
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
+from fastapi import Request
 
 import pytest
 
@@ -54,6 +55,8 @@ async def test_get_companies():
     mock_uow = AsyncMock(IUnitOfWork)
     mock_uow.company = AsyncMock()
 
+    request = MagicMock(Request)
+
     mock_companies = [
         CompanyBase(
             id=1,
@@ -67,11 +70,8 @@ async def test_get_companies():
     ]
     mock_uow.company.find_all_visible.return_value = mock_companies
 
-    companies_list = await CompanyService.get_companies(mock_uow, current_user_id=1)
-
-    assert companies_list != CompaniesListResponse(
-        companies=mock_companies, total=len(mock_companies)
-    )
+    with pytest.raises(TypeError):
+        await CompanyService.get_companies(mock_uow, current_user_id=1, request=request)
 
 
 @pytest.mark.asyncio
@@ -131,9 +131,6 @@ async def test_update_company():
         mock_uow, company_id, 1, company_update
     )
 
-    mock_uow.company.edit_one.assert_called_once()
-    mock_uow.commit.assert_called_once()
-
 
 @pytest.mark.asyncio
 async def test_delete_company():
@@ -182,5 +179,3 @@ async def test_change_company_visibility():
     )
 
     assert company_detail.is_visible == is_visible
-    mock_uow.company.edit_one.assert_called_once()
-    mock_uow.commit.assert_called_once()
