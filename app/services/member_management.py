@@ -218,31 +218,6 @@ class MemberManagement:
             return MemberBase(**updated_member.__dict__)
 
     @staticmethod
-    async def get_admins(
-        uow: IUnitOfWork, company_id: int, skip: int = 0, limit: int = 10
-    ) -> AdminsListResponse:
-        """
-        Get a list of admins for a company.
-
-        Args:
-            uow (IUnitOfWork): The unit of work for database transactions.
-            company_id (int): The ID of the company.
-            skip (int): Number of admins to skip (pagination).
-            limit (int): Maximum number of admins to return (pagination).
-
-        Returns:
-            AdminsListResponse: The list of admins and total count.
-        """
-        async with uow:
-            admins = await uow.member.find_all_by_company_and_role(
-                company_id=company_id, role=Role.ADMIN.value, skip=skip, limit=limit
-            )
-            return AdminsListResponse(
-                admins=[MemberBase(**admin.__dict__) for admin in admins],
-                total=len(admins),
-            )
-
-    @staticmethod
     async def check_is_user_have_permission(
         uow: IUnitOfWork, user_id: int, company_id: int
     ) -> bool:

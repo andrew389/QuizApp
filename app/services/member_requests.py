@@ -30,12 +30,20 @@ class MemberRequests:
         async with uow:
             if await MemberRequests._is_existing_member(uow, user_id, company_id):
                 raise UnAuthorizedException()
+
             owner = await uow.company.find_one(id=company_id)
+
             invitation = await MemberRequests._create_invitation(
                 uow, request, user_id, owner.owner_id, company_id
             )
-            await uow.commit()
-            return InvitationBase(**invitation.__dict__)
+
+            invitation_data = {
+                key: value
+                for key, value in invitation.__dict__.items()
+                if not key.startswith("_")
+            }
+
+            return InvitationBase.model_validate(invitation_data)
 
     @staticmethod
     async def _is_existing_member(
@@ -55,9 +63,11 @@ class MemberRequests:
         existing_member = await uow.member.find_one(
             user_id=user_id, company_id=company_id
         )
+
         if existing_member:
             logger.error(f"User {user_id} is already a member of company {company_id}")
             return True
+
         return False
 
     @staticmethod
@@ -88,9 +98,11 @@ class MemberRequests:
             company_id=company_id,
         )
         invitation_dict = invitation_data.model_dump()
+
         invitation_dict.update(
             {"sender_id": user_id, "status": "pending", "company_id": company_id}
         )
+
         return await uow.invitation.add_one(invitation_dict)
 
     @staticmethod
@@ -114,9 +126,11 @@ class MemberRequests:
         """
         async with uow:
             invitation = await uow.invitation.find_one(id=request_id)
+
             MemberRequests._validate_invitation_for_cancel(invitation, sender_id)
+
             cancelled_request = await uow.invitation.delete_one(request_id)
-            await uow.commit()
+
             return cancelled_request.id
 
     @staticmethod
@@ -167,13 +181,17 @@ class MemberRequests:
 
         async with uow:
             request = await uow.invitation.find_one(id=request_id)
+
             MemberRequests._validate_request_for_accept(request)
+
             await MemberRequests.validate_owner(uow, owner_id, request.company_id)
+
             await uow.invitation.edit_one(request_id, {"status": "accepted"})
+
             await MemberManagement.add_member(
                 uow, request.sender_id, request.company_id
             )
-            await uow.commit()
+
             return await MemberRequests._create_invitation_response(
                 uow, request, "accepted"
             )
@@ -214,7 +232,9 @@ class MemberRequests:
             InvitationResponse: The response of the invitation.
         """
         company = await uow.company.find_one(id=request.company_id)
+
         user = await uow.user.find_one(id=request.receiver_id)
+
         return InvitationResponse(
             title=request.title,
             description=request.description,
@@ -244,10 +264,13 @@ class MemberRequests:
         """
         async with uow:
             request = await uow.invitation.find_one(id=request_id)
+
             MemberRequests._validate_request_for_accept(request)
+
             await MemberRequests.validate_owner(uow, owner_id, request.company_id)
+
             await uow.invitation.edit_one(request_id, {"status": "declined"})
-            await uow.commit()
+
             return await MemberRequests._create_invitation_response(
                 uow, request, "declined"
             )
@@ -266,6 +289,7 @@ class MemberRequests:
             UnAuthorizedException: If the user is not the owner.
         """
         owner = await uow.member.find_owner(user_id=user_id, company_id=company_id)
+
         if not owner:
             logger.error(f"User {user_id} is not the owner of company {company_id}")
             raise UnAuthorizedException()
