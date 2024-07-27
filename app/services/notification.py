@@ -32,7 +32,7 @@ class NotificationService:
         ]
 
         for notification in notifications:
-            await uow.notification.add_one(notification.dict(exclude={"id"}))
+            await uow.notification.add_one(notification.model_dump(exclude={"id"}))
 
     @staticmethod
     async def mark_as_read(uow: UnitOfWork, user_id: int, notification_id: int) -> None:
@@ -43,7 +43,6 @@ class NotificationService:
             uow, user_id, notification_id
         )
         await uow.notification.edit_one(notification.id, {"status": "read"})
-        await uow.commit()
 
     @staticmethod
     async def _validate_notification(

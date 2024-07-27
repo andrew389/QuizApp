@@ -2,4 +2,5 @@
 .env
 *.log
 __pycache__/
+
 /app/exported_data
