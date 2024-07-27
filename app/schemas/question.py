@@ -38,6 +38,15 @@ class QuestionResponse(BaseModel):
     title: str
     answers: List[Union[AnswerBase, AnswerResponse]] = []
 
+    @field_validator("answers", mode="before")
+    def validate_answers_length(cls, answers):
+        if len(answers) < 2 or len(answers) > 4:
+            raise ValueError("The list of answers must contain between 2 and 4 items.")
+        return answers
+
+    class Config:
+        from_attributes = True
+
 
 class QuestionResponseForList(BaseModel):
     id: int
