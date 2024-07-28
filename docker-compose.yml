@@ -1,13 +1,6 @@
 version: '3.8'
 
 services:
-  redis:
-    image: redis:latest
-    env_file:
-      - .env.sample
-    ports:
-      - "6379:6379"
-
   app:
     build:
       context: .
@@ -18,7 +11,7 @@ services:
       - "8010:8000"
     environment:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
-      - REDIS_DB_HOST=redis
+      - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
     depends_on:
       - redis
     env_file:
@@ -33,7 +26,7 @@ services:
       - .:/code
     environment:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
-      - REDIS_DB_HOST=redis
+      - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
     depends_on:
       - redis
     env_file:
@@ -48,7 +41,7 @@ services:
       - .:/code
     environment:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
-      - REDIS_DB_HOST=redis
+      - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
     depends_on:
       - redis
       - celery_worker
@@ -64,7 +57,7 @@ services:
       - .:/code
     environment:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
-      - REDIS_DB_HOST=redis
+      - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
     depends_on:
       - redis
       - celery_worker
