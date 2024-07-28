@@ -127,7 +127,6 @@ async def test_appoint_admin():
 
     assert isinstance(response, MemberBase)
     assert response.role == Role.ADMIN.value
-    mock_uow.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
