@@ -14,7 +14,7 @@ from app.schemas.quiz import (
 )
 from app.services.question import QuestionService
 from app.uow.unitofwork import UnitOfWork
-from app.utils.user import get_pagination_urls
+from app.utils.user import get_pagination_urls, filter_data
 
 
 class QuizService:
@@ -61,11 +61,7 @@ class QuizService:
                     logger.error(f"Question with ID {question_id} not found.")
                     raise NotFoundException()
 
-            quiz_data = {
-                key: value
-                for key, value in new_quiz.__dict__.items()
-                if not key.startswith("_")
-            }
+            quiz_data = filter_data(new_quiz)
 
             return QuizBase.model_validate(quiz_data)
 
@@ -107,11 +103,8 @@ class QuizService:
                 raise UnAuthorizedException()
 
             updated_quiz = await uow.quiz.edit_one(quiz_id, quiz.model_dump())
-            quiz_data = {
-                key: value
-                for key, value in updated_quiz.__dict__.items()
-                if not key.startswith("_")
-            }
+
+            quiz_data = filter_data(updated_quiz)
 
             return QuizBase.model_validate(quiz_data)
 
@@ -268,10 +261,6 @@ class QuizService:
 
             deleted_quiz = await uow.quiz.delete_one(quiz_id)
 
-            quiz_data = {
-                key: value
-                for key, value in deleted_quiz.__dict__.items()
-                if not key.startswith("_")
-            }
+            quiz_data = filter_data(deleted_quiz)
 
             return QuizBase.model_validate(quiz_data)

@@ -1,9 +1,10 @@
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
-from app.schemas.member import MemberCreate, AdminsListResponse, MemberBase
+from app.schemas.member import MemberCreate, MemberBase
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.role import Role
+from app.utils.user import filter_data
 
 
 class MemberManagement:
@@ -28,9 +29,13 @@ class MemberManagement:
             user_id=user_id, company_id=company_id, role=Role.MEMBER.value
         )
         try:
-            member = await uow.member.add_one(member_data.model_dump(exclude={"id"}))
-            await uow.commit()
-            return MemberBase(**member.__dict__)
+            member = await uow.member.add_one(
+                member_data.model_dump(exclude_unset=True)
+            )
+
+            member_data = filter_data(member)
+
+            return MemberBase.model_validate(member_data)
         except Exception as e:
             logger.error(f"Error adding member {user_id} to company {company_id}: {e}")
             raise
@@ -56,14 +61,18 @@ class MemberManagement:
         """
         async with uow:
             member = await uow.member.find_one(user_id=member_id)
+
             await MemberManagement._validate_member_for_remove(
                 uow, member, user_id, member_id
             )
+
             updated_member = await uow.member.edit_one(
                 member_id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
-            await uow.commit()
-            return MemberBase(**updated_member.__dict__)
+
+            member_data = filter_data(updated_member)
+
+            return MemberBase.model_validate(member_data)
 
     @staticmethod
     async def _validate_member_for_remove(
@@ -123,12 +132,16 @@ class MemberManagement:
         """
         async with uow:
             member = await uow.member.find_one(user_id=user_id, company_id=company_id)
+
             MemberManagement._validate_member_for_leave(member)
+
             updated_member = await uow.member.edit_one(
                 member.id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
-            await uow.commit()
-            return MemberBase(**updated_member.__dict__)
+
+            member_data = filter_data(updated_member)
+
+            return MemberBase.model_validate(member_data)
 
     @staticmethod
     def _validate_member_for_leave(member):
@@ -168,7 +181,9 @@ class MemberManagement:
 
         async with uow:
             await MemberRequests.validate_owner(uow, owner_id, company_id)
+
             member = await uow.member.find_one(user_id=member_id)
+
             if not member or member.role != Role.MEMBER.value:
                 logger.error(
                     f"Member with ID {member_id} not found or not eligible to be an admin"
@@ -178,8 +193,10 @@ class MemberManagement:
             updated_member = await uow.member.edit_one(
                 member_id, {"role": Role.ADMIN.value}
             )
-            await uow.commit()
-            return MemberBase(**updated_member.__dict__)
+
+            member_data = filter_data(updated_member)
+
+            return MemberBase.model_validate(member_data)
 
     @staticmethod
     async def remove_admin(
@@ -204,7 +221,9 @@ class MemberManagement:
 
         async with uow:
             await MemberRequests.validate_owner(uow, owner_id, company_id)
+
             member = await uow.member.find_one(user_id=member_id)
+
             if not member or member.role != Role.ADMIN.value:
                 logger.error(
                     f"Admin with ID {member_id} not found or not eligible to be removed"
@@ -214,8 +233,10 @@ class MemberManagement:
             updated_member = await uow.member.edit_one(
                 member_id, {"role": Role.MEMBER.value}
             )
-            await uow.commit()
-            return MemberBase(**updated_member.__dict__)
+
+            member_data = filter_data(updated_member)
+
+            return MemberBase.model_validate(member_data)
 
     @staticmethod
     async def check_is_user_have_permission(
@@ -237,9 +258,11 @@ class MemberManagement:
         """
         async with uow:
             member = await uow.member.find_one(user_id=user_id, company_id=company_id)
+
             if not member:
                 logger.error(f"User {user_id} not found in company {company_id}")
                 raise UnAuthorizedException()
+
             if member.role in [Role.OWNER.value, Role.ADMIN.value]:
                 return True
 
@@ -265,7 +288,9 @@ class MemberManagement:
         """
         async with uow:
             member = await uow.member.find_one(user_id=user_id, company_id=company_id)
+
             if not member:
                 logger.error(f"User {user_id} is not a member of company {company_id}")
                 raise UnAuthorizedException()
+
             return True

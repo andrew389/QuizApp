@@ -5,7 +5,7 @@ from app.uow.unitofwork import IUnitOfWork
 from app.exceptions.base import NotFoundException
 from app.core.logger import logger
 from app.utils.role import Role
-from app.utils.user import get_pagination_urls
+from app.utils.user import get_pagination_urls, filter_data
 
 
 class MemberQueries:
@@ -119,11 +119,7 @@ class MemberQueries:
                     logger.error(f"Member with ID {member_id} not found")
                     raise NotFoundException()
 
-                member_data = {
-                    key: value
-                    for key, value in member.__dict__.items()
-                    if not key.startswith("_")
-                }
+                member_data = filter_data(member)
 
                 return MemberBase.model_validate(member_data)
         except Exception as e:
