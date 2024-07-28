@@ -1,9 +1,10 @@
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
-from app.schemas.member import MemberCreate, AdminsListResponse, MemberBase
+from app.schemas.member import MemberCreate, MemberBase
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.role import Role
+from app.utils.user import filter_data
 
 
 class MemberManagement:
@@ -30,11 +31,7 @@ class MemberManagement:
         try:
             member = await uow.member.add_one(member_data.model_dump(exclude={"id"}))
 
-            member_data = {
-                key: value
-                for key, value in member.__dict__.items()
-                if not key.startswith("_")
-            }
+            member_data = filter_data(member)
 
             return MemberBase.model_validate(member_data)
         except Exception as e:
@@ -71,11 +68,7 @@ class MemberManagement:
                 member_id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
 
-            member_data = {
-                key: value
-                for key, value in updated_member.__dict__.items()
-                if not key.startswith("_")
-            }
+            member_data = filter_data(updated_member)
 
             return MemberBase.model_validate(member_data)
 
@@ -144,11 +137,7 @@ class MemberManagement:
                 member.id, {"role": Role.UNEMPLOYED.value, "company_id": None}
             )
 
-            member_data = {
-                key: value
-                for key, value in updated_member.__dict__.items()
-                if not key.startswith("_")
-            }
+            member_data = filter_data(updated_member)
 
             return MemberBase.model_validate(member_data)
 
@@ -201,11 +190,7 @@ class MemberManagement:
                 member_id, {"role": Role.ADMIN.value}
             )
 
-            member_data = {
-                key: value
-                for key, value in updated_member.__dict__.items()
-                if not key.startswith("_")
-            }
+            member_data = filter_data(updated_member)
 
             return MemberBase.model_validate(member_data)
 
@@ -244,11 +229,7 @@ class MemberManagement:
                 member_id, {"role": Role.MEMBER.value}
             )
 
-            member_data = {
-                key: value
-                for key, value in updated_member.__dict__.items()
-                if not key.startswith("_")
-            }
+            member_data = filter_data(updated_member)
 
             return MemberBase.model_validate(member_data)
 

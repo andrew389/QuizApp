@@ -4,6 +4,7 @@ from app.exceptions.base import NotFoundException
 from app.schemas.invitation import InvitationBase, SendInvitation, InvitationResponse
 from app.schemas.member import MemberRequest
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.user import filter_data
 
 
 class MemberRequests:
@@ -37,11 +38,7 @@ class MemberRequests:
                 uow, request, user_id, owner.owner_id, company_id
             )
 
-            invitation_data = {
-                key: value
-                for key, value in invitation.__dict__.items()
-                if not key.startswith("_")
-            }
+            invitation_data = filter_data(invitation)
 
             return InvitationBase.model_validate(invitation_data)
 

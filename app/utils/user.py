@@ -51,3 +51,7 @@ def get_pagination_urls(
         f"{base_url}?skip={max(skip - limit, 0)}&limit={limit}" if skip > 0 else None
     )
     return PaginationLinks(next=next_url, previous=previous_url)
+
+
+def filter_data(data) -> dict:
+    return {k: v for k, v in data.__dict__.items() if k != "_sa_instance_state"}
