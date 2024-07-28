@@ -13,7 +13,7 @@ from app.schemas.question import (
     QuestionResponseForList,
 )
 from app.uow.unitofwork import UnitOfWork
-from app.utils.user import get_pagination_urls
+from app.utils.user import get_pagination_urls, filter_data
 
 
 class QuestionService:
@@ -64,11 +64,7 @@ class QuestionService:
                     logger.error(f"Answer with ID {answer_id} not found.")
                     raise NotFoundException()
 
-            question_data = {
-                key: value
-                for key, value in new_question.__dict__.items()
-                if not key.startswith("_")
-            }
+            question_data = filter_data(new_question)
 
             return QuestionBase.model_validate(question_data)
 
@@ -116,11 +112,7 @@ class QuestionService:
 
             updated_question = await uow.question.edit_one(question_id, question.dict())
 
-            question_data = {
-                key: value
-                for key, value in updated_question.__dict__.items()
-                if not key.startswith("_")
-            }
+            question_data = filter_data(updated_question)
 
             return QuestionBase.model_validate(question_data)
 
@@ -275,10 +267,6 @@ class QuestionService:
 
             deleted_question = await uow.question.delete_one(question_id)
 
-            question_data = {
-                key: value
-                for key, value in deleted_question.__dict__.items()
-                if not key.startswith("_")
-            }
+            question_data = filter_data(deleted_question)
 
             return QuestionBase.model_validate(question_data)
