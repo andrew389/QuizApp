@@ -12,7 +12,7 @@ from app.schemas.invitation import (
 from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
 from app.utils.role import Role
-from app.utils.user import get_pagination_urls
+from app.utils.user import get_pagination_urls, filter_data
 
 
 class InvitationService:
@@ -56,11 +56,7 @@ class InvitationService:
 
             invitation = await uow.invitation.add_one(invitation_dict)
 
-            invitation_data = {
-                key: value
-                for key, value in invitation.__dict__.items()
-                if not key.startswith("_")
-            }
+            invitation_data = filter_data(invitation)
 
             return InvitationBase.model_validate(invitation_data)
 
