@@ -60,13 +60,15 @@ class RedisSettings(BaseSettings):
 
     host: str = Field(alias="REDIS_DB_HOST")
     port: int = Field(alias="REDIS_DB_PORT")
+    use_tls: bool = Field(alias="REDIS_USE_TLS")
 
     @property
     def url(self):
         """
         Returns the Redis connection URL.
         """
-        return f"redis://{self.host}:{self.port}"
+        scheme = "rediss" if self.use_tls else "redis"
+        return f"{scheme}://{self.host}:{self.port}"
 
 
 class AuthSettings(BaseSettings):
