@@ -12,8 +12,6 @@ services:
     environment:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
-    depends_on:
-      - redis
     env_file:
       - .env.sample
 
@@ -27,8 +25,6 @@ services:
     environment:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
-    depends_on:
-      - redis
     env_file:
       - .env.sample
 
@@ -43,7 +39,6 @@ services:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
     depends_on:
-      - redis
       - celery_worker
     env_file:
       - .env.sample
@@ -59,7 +54,6 @@ services:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
     depends_on:
-      - redis
       - celery_worker
     env_file:
       - .env.sample
