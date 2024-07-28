@@ -12,7 +12,7 @@ from app.schemas.company import (
 )
 from app.schemas.member import MemberCreate
 from app.uow.unitofwork import IUnitOfWork
-from app.utils.user import get_pagination_urls
+from app.utils.user import get_pagination_urls, filter_data
 
 
 class CompanyService:
@@ -45,11 +45,7 @@ class CompanyService:
                 uow, owner_id, company_model.id
             )
 
-            company_data = {
-                key: value
-                for key, value in company_model.__dict__.items()
-                if not key.startswith("_")
-            }
+            company_data = filter_data(company_model)
 
             return CompanyDetail.model_validate(company_data)
 
@@ -122,11 +118,7 @@ class CompanyService:
                 logger.warning(f"Company with ID {company_id} not found")
                 raise NotFoundException()
 
-            company_data = {
-                key: value
-                for key, value in company_model.__dict__.items()
-                if not key.startswith("_")
-            }
+            company_data = filter_data(company_model)
 
             return CompanyDetail.model_validate(company_data)
 
@@ -159,11 +151,7 @@ class CompanyService:
 
             updated_company = await uow.company.find_one(id=company_id)
 
-            company_data = {
-                key: value
-                for key, value in updated_company.__dict__.items()
-                if not key.startswith("_")
-            }
+            company_data = filter_data(updated_company)
 
             return CompanyDetail.model_validate(company_data)
 
@@ -227,11 +215,7 @@ class CompanyService:
 
             updated_company = await uow.company.find_one(id=company_id)
 
-            company_data = {
-                key: value
-                for key, value in updated_company.__dict__.items()
-                if not key.startswith("_")
-            }
+            company_data = filter_data(updated_company)
 
             return CompanyDetail.model_validate(company_data)
 

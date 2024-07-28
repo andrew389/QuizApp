@@ -9,7 +9,7 @@ from app.schemas.answer import (
     AnswersListResponse,
 )
 from app.uow.unitofwork import UnitOfWork
-from app.utils.user import get_pagination_urls
+from app.utils.user import get_pagination_urls, filter_data
 
 
 class AnswerService:
@@ -43,11 +43,7 @@ class AnswerService:
 
             new_answer = await uow.answer.add_one(answer.model_dump(exclude_unset=True))
 
-            answer_data = {
-                key: value
-                for key, value in new_answer.__dict__.items()
-                if not key.startswith("_")
-            }
+            answer_data = filter_data(new_answer)
 
             return AnswerBase.model_validate(answer_data)
 
@@ -84,11 +80,7 @@ class AnswerService:
                 answer_id, answer.model_dump(exclude_unset=True)
             )
 
-            answer_data = {
-                key: value
-                for key, value in updated_answer.__dict__.items()
-                if not key.startswith("_")
-            }
+            answer_data = filter_data(updated_answer)
 
             return AnswerBase.model_validate(answer_data)
 
@@ -126,11 +118,7 @@ class AnswerService:
             if not has_permission:
                 raise UnAuthorizedException()
 
-            answer_data = {
-                key: value
-                for key, value in answer.__dict__.items()
-                if not key.startswith("_")
-            }
+            answer_data = filter_data(answer)
 
             return AnswerBase.model_validate(answer_data)
 
@@ -220,10 +208,6 @@ class AnswerService:
 
             deleted_answer = await uow.answer.delete_one(answer_id)
 
-            deleted_answer_dict = {
-                k: v
-                for k, v in deleted_answer.__dict__.items()
-                if k != "_sa_instance_state"
-            }
+            deleted_answer_dict = filter_data(deleted_answer)
 
             return AnswerBase.model_validate(deleted_answer_dict)
