@@ -5,7 +5,7 @@ import os
 import aiofiles
 from fastapi.responses import StreamingResponse
 
-from app.db.redis_db import redis
+from app.db.redis_db import redis_connection
 from app.services.member_management import MemberManagement
 from app.uow.unitofwork import UnitOfWork
 
@@ -23,11 +23,11 @@ class DataExportService:
             list: A list of data retrieved from Redis.
         """
 
-        keys = await redis.redis.keys(pattern)
+        keys = await redis_connection.redis.keys(pattern)
         all_data = []
         for key in keys:
             key_str = str(key)[len("<Future finished result='") : -2].strip()
-            data_json = await redis.redis.get(key_str)
+            data_json = await redis_connection.redis.get(key_str)
             if data_json:
                 data = json.loads(data_json)
                 all_data.append(data)
