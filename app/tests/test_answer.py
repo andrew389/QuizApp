@@ -35,7 +35,9 @@ async def test_create_answer_success():
         )
 
     assert result == created_answer
-    mock_uow.answer.add_one.assert_called_once_with(answer_data.dict(exclude={"id"}))
+    mock_uow.answer.add_one.assert_called_once_with(
+        answer_data.model_dump(exclude={"id"})
+    )
 
 
 @pytest.mark.asyncio
@@ -65,7 +67,9 @@ async def test_update_answer_success():
         )
 
     assert result == updated_answer
-    mock_uow.answer.edit_one.assert_called_once_with(answer_id, answer_data.dict())
+    mock_uow.answer.edit_one.assert_called_once_with(
+        answer_id, answer_data.model_dump()
+    )
 
 
 @pytest.mark.asyncio

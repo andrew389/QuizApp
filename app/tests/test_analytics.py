@@ -22,7 +22,7 @@ async def test_calculate_average_score_within_company():
         mock_uow, user_id=1, company_id=1
     )
 
-    assert average_score == (2 / 3)
+    assert average_score == 0.67
 
 
 @pytest.mark.asyncio
@@ -40,7 +40,7 @@ async def test_calculate_average_score_across_system():
     average_score = await AnalyticsService.calculate_average_score_across_system(
         mock_uow, user_id=1
     )
-    assert average_score == (2 / 3)
+    assert average_score == 0.67
 
 
 @pytest.mark.asyncio

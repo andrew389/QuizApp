@@ -219,4 +219,4 @@ class AnalyticsService:
         if total_answers == 0:
             return 0.0
 
-        return correct_answers / total_answers
+        return round(correct_answers / total_answers, 2)
