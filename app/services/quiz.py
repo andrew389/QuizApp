@@ -49,7 +49,9 @@ class QuizService:
                 )
                 raise UnAuthorizedException()
 
-            new_quiz = await uow.quiz.add_one(quiz.dict(exclude={"questions", "id"}))
+            new_quiz = await uow.quiz.add_one(
+                quiz.model_dump(exclude={"questions", "id"})
+            )
 
             for question_id in quiz.questions:
                 existing_question = await uow.question.find_one(

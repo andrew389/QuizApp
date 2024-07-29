@@ -110,7 +110,9 @@ class QuestionService:
                 )
                 raise UnAuthorizedException()
 
-            updated_question = await uow.question.edit_one(question_id, question.dict())
+            updated_question = await uow.question.edit_one(
+                question_id, question.model_dump()
+            )
 
             question_data = filter_data(updated_question)
 

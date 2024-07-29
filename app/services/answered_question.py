@@ -106,7 +106,9 @@ class AnsweredQuestionService:
             answer_text=answer_text,
             is_correct=is_correct,
         )
-        await uow.answered_question.add_one(answered_question_data.dict(exclude={"id"}))
+        await uow.answered_question.add_one(
+            answered_question_data.model_dump(exclude={"id"})
+        )
 
     @staticmethod
     async def _increment_quiz_frequency(uow: UnitOfWork, quiz_id: int):
@@ -205,4 +207,4 @@ class AnsweredQuestionService:
         if total_answers == 0:
             return 0.0
 
-        return correct_answers / total_answers
+        return round(correct_answers / total_answers, 2)
