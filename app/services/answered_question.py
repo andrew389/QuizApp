@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 from app.core.logger import logger
-from app.db.redis_db import redis
+from app.db.redis_db import redis_connection
 from app.exceptions.base import NotFoundException
 from app.schemas.answered_question import SendAnsweredQuiz, AnsweredQuestionBase
 from app.uow.unitofwork import UnitOfWork
@@ -27,7 +27,9 @@ class AnsweredQuestionService:
         redis_data_json = await AnsweredQuestionService._prepare_redis_data(
             uow, quiz_data, user_id, quiz_id, quiz.company_id
         )
-        await redis.write_with_ttl(redis_key, redis_data_json, ttl=48 * 60 * 60)
+        await redis_connection.write_with_ttl(
+            redis_key, redis_data_json, ttl=48 * 60 * 60
+        )
 
     @staticmethod
     async def _process_quiz_answers(
