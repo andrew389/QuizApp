@@ -18,7 +18,7 @@ services:
   redis:
     image: redis:latest
     env_file:
-      - .env
+      - .env.sample
     ports:
       - "6379:6379"
 
