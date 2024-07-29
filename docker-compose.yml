@@ -4,7 +4,7 @@ services:
   test_db:
     image: postgres:latest
     env_file:
-      - .env
+      - .env.sample
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_DB: "test"
@@ -37,7 +37,7 @@ services:
       - test_db
       - redis
     env_file:
-      - .env
+      - .env.sample
 
   celery_worker:
     build:
@@ -53,7 +53,7 @@ services:
       - test_db
       - redis
     env_file:
-      - .env
+      - .env.sample
 
   celery_beat:
     build:
@@ -70,7 +70,7 @@ services:
       - test_db
       - celery_worker
     env_file:
-      - .env
+      - .env.sample
 
   flower:
     build:
@@ -87,7 +87,7 @@ services:
       - test_db
       - celery_worker
     env_file:
-      - .env
+      - .env.sample
     ports:
       - "5555:5555"
 volumes:
