@@ -9,15 +9,18 @@ from app.core.dependencies import (
     MemberManagementDep,
     MemberRequestsDep,
     MemberQueriesDep,
+    AnsweredQuestionServiceDep,
 )
 from app.exceptions.base import (
     UpdatingException,
     DeletingException,
     FetchingException,
     CreatingException,
+    CalculatingException,
 )
 
 from app.models.user import User
+from app.schemas.answered_question import SendAnsweredQuiz
 from app.schemas.company import (
     CompanyCreate,
     CompanyDetail,
@@ -63,8 +66,8 @@ async def add_company(
 @router.get("/", response_model=CompaniesListResponse)
 async def get_companies(
     uow: UOWDep,
-    company_service: CompanyServiceDep,
     request: Request,
+    company_service: CompanyServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
@@ -311,6 +314,46 @@ async def get_quizzes(
     except Exception as e:
         logger.error(f"Error fetching quizzes: {e}")
         raise FetchingException()
+
+
+@router.post(
+    "/{company_id}/quizzes/{quiz_id}/answer", status_code=200, response_model=dict
+)
+async def submit_quiz_answers(
+    quiz_id: int,
+    quiz_data: SendAnsweredQuiz,
+    uow: UOWDep,
+    answered_question_service: AnsweredQuestionServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    Submit answers for quiz
+    """
+    await answered_question_service.save_answered_quiz(
+        uow, quiz_data, user_id=current_user.id, quiz_id=quiz_id
+    )
+    return {"msg": "Answers saved successfully"}
+
+
+@router.get("/{company_id}/quizzes/score", status_code=200, response_model=dict)
+async def get_avg_score_within_company(
+    company_id: int,
+    uow: UOWDep,
+    answered_question_service: AnsweredQuestionServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    Get average score of user within company
+    """
+    try:
+        avg_score = (
+            await answered_question_service.calculate_average_score_within_company(
+                uow, current_user.id, company_id
+            )
+        )
+        return {"average_score": avg_score}
+    except Exception:
+        raise CalculatingException()
 
 
 @router.get("/{company_id}/admins", response_model=AdminsListResponse)

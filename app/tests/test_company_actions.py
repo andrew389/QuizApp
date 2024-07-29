@@ -31,6 +31,7 @@ async def test_get_members():
             updated_at=datetime.now(),
         )
     ]
+
     with pytest.raises(TypeError):
         await MemberQueries.get_members(
             mock_uow, company_id=1, request=request, skip=0, limit=10

@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from unittest.mock import AsyncMock, MagicMock
 from fastapi import Request
 import pytest

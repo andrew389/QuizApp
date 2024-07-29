@@ -12,6 +12,7 @@ from app.exceptions.base import (
     DeletingException,
 )
 from app.models.user import User
+
 from app.schemas.question import (
     QuestionBase,
     QuestionCreate,
@@ -19,7 +20,6 @@ from app.schemas.question import (
     QuestionResponse,
     QuestionsListResponse,
 )
-
 
 router = APIRouter(prefix="/questions", tags=["Question"])
 

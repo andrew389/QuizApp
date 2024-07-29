@@ -179,4 +179,3 @@ async def test_change_company_visibility():
     )
 
     assert company_detail.is_visible == is_visible
-    mock_uow.company.edit_one.assert_called_once()

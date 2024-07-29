@@ -42,7 +42,6 @@ class QuestionService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, question.company_id
             )
-
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to create question in company {question.company_id}"
@@ -50,14 +49,13 @@ class QuestionService:
                 raise UnAuthorizedException()
 
             new_question = await uow.question.add_one(
-                question.model_dump(exclude_unset=True)
+                question.model_dump(exclude={"answers", "id"})
             )
 
             for answer_id in question.answers:
                 existing_answer = await uow.answer.find_one(
                     id=answer_id, question_id=None
                 )
-
                 if existing_answer:
                     await uow.answer.edit_one(
                         answer_id, {"question_id": new_question.id}
@@ -142,7 +140,6 @@ class QuestionService:
 
         async with uow:
             question = await uow.question.find_one(id=question_id)
-
             if not question:
                 logger.error(f"Question with ID {question_id} not found.")
                 raise NotFoundException()
@@ -171,9 +168,9 @@ class QuestionService:
     @staticmethod
     async def get_questions(
         uow: UnitOfWork,
+        request: Request,
         company_id: int,
         current_user_id: int,
-        request: Request,
         skip: int = 0,
         limit: int = 10,
     ) -> QuestionsListResponse:
@@ -184,7 +181,7 @@ class QuestionService:
             uow (UnitOfWork): The unit of work for database transactions.
             company_id (int): The ID of the company.
             current_user_id (int): The ID of the user requesting the list.
-            request (Request): request from endpoint to get base url.
+            request (Request): request from endpoint to get base url.*
             skip (int, optional): Number of questions to skip (default is 0).
             limit (int, optional): Maximum number of questions to return (default is 10).
 

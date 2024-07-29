@@ -42,7 +42,6 @@ class InvitationService:
         """
         async with uow:
             await InvitationService._validate_sender(uow, sender_id, company_id)
-
             await InvitationService._check_existing_member(
                 uow, invitation_data.receiver_id, company_id
             )
@@ -82,7 +81,6 @@ class InvitationService:
             invitations = await uow.invitation.find_all_by_receiver(
                 receiver_id=user_id, skip=skip, limit=limit
             )
-
             total_invitations = await uow.invitation.count_all_by_receiver(
                 receiver_id=user_id
             )
@@ -152,11 +150,9 @@ class InvitationService:
         """
         async with uow:
             invitation = await InvitationService._get_invitation(uow, invitation_id)
-
             await InvitationService._validate_sender(
                 uow, sender_id, invitation.company_id
             )
-
             InvitationService._validate_pending_status(invitation)
 
             cancelled_invitation = await uow.invitation.delete_one(invitation_id)
@@ -192,7 +188,7 @@ class InvitationService:
                 company_id=invitation.company_id,
                 role=Role.MEMBER.value,
             )
-            await uow.member.add_one(member_data.model_dump(exclude_unset=True))
+            await uow.member.add_one(member_data.model_dump(exclude={"id"}))
             await uow.invitation.edit_one(invitation_id, {"status": "accepted"})
 
             return await InvitationService._build_invitation_response(
@@ -224,6 +220,7 @@ class InvitationService:
             InvitationService._validate_pending_status(invitation)
 
             await uow.invitation.edit_one(invitation_id, {"status": "declined"})
+            await uow.commit()
 
             return await InvitationService._build_invitation_response(
                 uow, invitation, receiver_id, "declined"

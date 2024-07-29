@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Depends, status, Query, Request
 
-from app.core.dependencies import UOWDep, AuthServiceDep, InvitationServiceDep
+from app.core.dependencies import (
+    UOWDep,
+    AuthServiceDep,
+    InvitationServiceDep,
+    AnsweredQuestionServiceDep,
+)
 from app.core.logger import logger
-from app.exceptions.base import FetchingException
+from app.exceptions.base import FetchingException, CalculatingException
 from app.models.user import User
 from app.schemas.invitation import InvitationsListResponse
 from app.schemas.token import Token
@@ -78,3 +83,23 @@ async def get_sent_invitations(
     except Exception as e:
         logger.error(f"Error fetching invitations for owner: {e}")
         raise FetchingException()
+
+
+@router.get("/quizzes/score", status_code=200, response_model=dict)
+async def get_avg_score_across_system(
+    uow: UOWDep,
+    answered_question_service: AnsweredQuestionServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    Get average score of user across system
+    """
+    try:
+        avg_score = (
+            await answered_question_service.calculate_average_score_across_system(
+                uow, current_user.id
+            )
+        )
+        return {"average_score": avg_score}
+    except Exception:
+        raise CalculatingException()

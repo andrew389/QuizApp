@@ -146,6 +146,7 @@ async def get_answers(
     Args:
         company_id (int): The ID of the company to retrieve answers for.
         uow (UOWDep): Unit of Work dependency.
+        request (Request): Request to get base URL.
         answer_service (AnswerServiceDep): Answer service dependency.
         current_user (User): The currently authenticated user.
         skip (int): The number of items to skip (pagination).

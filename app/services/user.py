@@ -62,6 +62,7 @@ class UserService:
         """
         async with uow:
             users = await uow.user.find_all(skip=skip, limit=limit)
+
             total_users = await uow.user.count()
 
             links = get_pagination_urls(request, skip, limit, total_users)
@@ -71,8 +72,7 @@ class UserService:
                 users=[UserBase.model_validate(user) for user in users],
                 total=total_users,
             )
-
-            return user_list
+            return UsersListResponse.model_validate(user_list)
 
     @staticmethod
     async def get_user_by_id(uow: IUnitOfWork, user_id: int) -> UserBase:
@@ -206,7 +206,6 @@ class UserService:
             user_update = await UserService.validate_user_update(
                 uow, user_id, user_update
             )
-
             user_dict = user_update.model_dump()
             user_dict["id"] = user_id
 
@@ -243,7 +242,6 @@ class UserService:
                 raise UnAuthorizedException()
 
             user_model = await uow.user.find_one(id=user_id)
-
             if not user_model:
                 logger.error(f"User with ID {user_id} not found.")
                 raise NotFoundException()

@@ -43,7 +43,6 @@ class QuizService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, quiz.company_id
             )
-
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to create quiz in company {quiz.company_id}."
@@ -56,7 +55,6 @@ class QuizService:
                 existing_question = await uow.question.find_one(
                     id=question_id, quiz_id=None
                 )
-
                 if existing_question:
                     await uow.question.edit_one(question_id, {"quiz_id": new_quiz.id})
                 else:
@@ -91,7 +89,6 @@ class QuizService:
 
         async with uow:
             quiz_to_update = await uow.quiz.find_one(id=quiz_id)
-
             if not quiz_to_update:
                 logger.error(f"Quiz with ID {quiz_id} not found.")
                 raise NotFoundException()
@@ -99,14 +96,13 @@ class QuizService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, quiz_to_update.company_id
             )
-
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to update quiz {quiz_id}."
                 )
                 raise UnAuthorizedException()
 
-            updated_quiz = await uow.quiz.edit_one(quiz_id, quiz.dict())
+            updated_quiz = await uow.quiz.edit_one(quiz_id, quiz.model_dump())
 
             quiz_data = filter_data(updated_quiz)
 
@@ -186,7 +182,7 @@ class QuizService:
             uow (UnitOfWork): The unit of work for database transactions.
             company_id (int): The ID of the company.
             current_user_id (int): The ID of the user requesting the list.
-            request (Request): request from endpoint to get base url.
+            request (Request): request from endpoint to get base url./
             skip (int, optional): Number of quizzes to skip (default is 0).
             limit (int, optional): Maximum number of quizzes to return (default is 10).
 
@@ -202,7 +198,6 @@ class QuizService:
             has_permission = await MemberManagement.check_is_user_member_or_higher(
                 uow, current_user_id, company_id
             )
-
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to view quizzes for company {company_id}."
@@ -245,7 +240,6 @@ class QuizService:
 
         async with uow:
             quiz_to_delete = await uow.quiz.find_one(id=quiz_id)
-
             if not quiz_to_delete:
                 logger.error(f"Quiz with ID {quiz_id} not found.")
                 raise NotFoundException()
@@ -253,7 +247,6 @@ class QuizService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, quiz_to_delete.company_id
             )
-
             if not has_permission:
                 logger.error(
                     f"User {current_user_id} lacks permission to delete quiz {quiz_id}."
@@ -261,7 +254,6 @@ class QuizService:
                 raise UnAuthorizedException()
 
             questions = await uow.question.find_all_by_quiz_id(quiz_id=quiz_id)
-
             for question in questions:
                 await uow.question.edit_one(
                     question.id, {"quiz_id": None, "company_id": None}

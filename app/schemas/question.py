@@ -10,13 +10,13 @@ class QuestionBase(BaseModel):
     id: Optional[int] = None
     title: str
     quiz_id: Optional[int] = None
-    answers: List[int] = []
+    answers: Optional[Set[int]] = None
     company_id: int
 
 
 class QuestionCreate(BaseModel):
     title: str
-    answers: Set[int] = []
+    answers: Set[int]
     company_id: int
 
     @field_validator("answers", mode="before")
@@ -24,6 +24,9 @@ class QuestionCreate(BaseModel):
         if len(answers) < 2 or len(answers) > 4:
             raise ValueError("The list of answers must contain between 2 and 4 items.")
         return answers
+
+    class Config:
+        from_attributes = True
 
 
 class QuestionUpdate(BaseModel):

@@ -37,11 +37,10 @@ class AnswerService:
             has_permission = await MemberManagement.check_is_user_have_permission(
                 uow, current_user_id, answer.company_id
             )
-
             if not has_permission:
                 raise UnAuthorizedException()
 
-            new_answer = await uow.answer.add_one(answer.model_dump(exclude_unset=True))
+            new_answer = await uow.answer.add_one(answer.model_dump(exclude={"id"}))
 
             answer_data = filter_data(new_answer)
 

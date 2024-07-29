@@ -50,8 +50,7 @@ async def get_users(
     Retrieve a list of users.
     """
     try:
-        base_url = str(request.url).split("?")[0]
-        users = await user_service.get_users(uow, base_url, skip=skip, limit=limit)
+        users = await user_service.get_users(uow, request, skip=skip, limit=limit)
         return users
     except Exception as e:
         logger.error(f"Error fetching users: {e}")

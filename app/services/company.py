@@ -146,8 +146,8 @@ class CompanyService:
         """
         async with uow:
             await CompanyService._ensure_ownership(uow, company_id, current_user_id)
-
             await uow.company.edit_one(company_id, company_update.model_dump())
+            await uow.commit()
 
             updated_company = await uow.company.find_one(id=company_id)
 
@@ -175,7 +175,6 @@ class CompanyService:
         """
         async with uow:
             await CompanyService._ensure_ownership(uow, company_id, current_user_id)
-
             deleted_company = await uow.company.delete_one(company_id)
 
             return deleted_company.id
@@ -202,7 +201,6 @@ class CompanyService:
         """
         async with uow:
             await CompanyService._ensure_ownership(uow, company_id, current_user_id)
-
             company_model = await uow.company.find_one(id=company_id)
 
             if not company_model:
@@ -212,7 +210,6 @@ class CompanyService:
             company_model.is_visible = is_visible
 
             await uow.company.edit_one(company_id, {"is_visible": is_visible})
-
             updated_company = await uow.company.find_one(id=company_id)
 
             company_data = filter_data(updated_company)
@@ -238,7 +235,6 @@ class CompanyService:
                 company.id: company for company in (visible_companies + user_companies)
             }.values()
         )
-
         paginated_companies = combined_companies[skip : skip + limit]
 
         return {"paginated": paginated_companies, "total": len(combined_companies)}
@@ -298,5 +294,4 @@ class CompanyService:
             company_id (int): The ID of the company.
         """
         member_data = MemberCreate(user_id=owner_id, company_id=company_id, role=1)
-
         await uow.member.add_one(member_data.model_dump(exclude_unset=True))
