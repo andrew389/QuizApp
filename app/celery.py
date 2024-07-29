@@ -9,7 +9,9 @@ from app.core.tasks import notification_task
 
 nest_asyncio.apply()
 
-celery = Celery("tasks", broker=settings.redis.url)
+celery = Celery(
+    "tasks", broker=f"redis://{settings.redis.host}:{settings.redis.port}/0"
+)
 
 
 @celery.task
