@@ -13,7 +13,7 @@ services:
       - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_PASSWORD=123handrushka123
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com:6379
+      - REDIS_DB_HOST=redisfastapi-gtlhnu.serverless.eun1.cache.amazonaws.com
     env_file:
       - .env.sample
 
