@@ -1,15 +1,18 @@
+from fastapi import Request
+
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
 from app.schemas.user import (
-    UserCreate,
-    UsersListResponse,
     UserBase,
+    UserCreate,
     UserDetail,
+    UsersListResponse,
     UserUpdate,
 )
-from app.utils.hasher import Hasher
 from app.uow.unitofwork import IUnitOfWork
+from app.utils.hasher import Hasher
+from app.utils.user import get_pagination_urls
 
 
 class UserService:
@@ -17,96 +20,161 @@ class UserService:
     async def add_user(uow: IUnitOfWork, user: UserCreate) -> UserBase:
         """
         Add a new user to the system.
+
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            user (UserCreate): The user data to create.
+
+        Returns:
+            UserBase: The created user.
+
+        Raises:
+            ValueError: If a user with the same email already exists.
         """
         async with uow:
             existing_user = await uow.user.find_one(email=user.email)
             if existing_user:
-                logger.error("User with this email already exists")
-                raise ValueError("User with this email already exists")
+                logger.error(f"User with email {user.email} already exists.")
+                raise ValueError("User with this email already exists.")
 
             user_dict = user.model_dump()
             user_dict["password"] = Hasher.hash_password(user_dict.pop("password"))
 
             user_model = await uow.user.add_one(user_dict)
-            await uow.commit()
 
-        return UserBase(**user_model.__dict__)
+        return UserBase.model_validate(user_model)
 
     @staticmethod
     async def get_users(
-        uow: IUnitOfWork, skip: int = 0, limit: int = 10
+        uow: IUnitOfWork, request: Request, skip: int = 0, limit: int = 10
     ) -> UsersListResponse:
         """
-        Retrieve a list of users with pagination.
+        Retrieve a list of users.
+
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            request (Request): request from endpoint to get base url.
+            skip (int, optional): Number of users to skip (default is 0).
+            limit (int, optional): Maximum number of users to return (default is 10).
+
+        Returns:
+            UsersListResponse: A list of users and the total count.
         """
         async with uow:
             users = await uow.user.find_all(skip=skip, limit=limit)
+            total_users = await uow.user.count()
+
+            links = get_pagination_urls(request, skip, limit, total_users)
+
             user_list = UsersListResponse(
-                users=[UserBase(**user.__dict__) for user in users], total=len(users)
+                links=links,
+                users=[UserBase.model_validate(user) for user in users],
+                total=total_users,
             )
+
             return user_list
 
     @staticmethod
     async def get_user_by_id(uow: IUnitOfWork, user_id: int) -> UserBase:
         """
-        Retrieve user details by user ID.
+        Retrieve a user by their ID.
+
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            user_id (int): The ID of the user to retrieve.
+
+        Returns:
+            UserBase: The user data.
+
+        Raises:
+            NotFoundException: If the user is not found.
         """
         async with uow:
             user_model = await uow.user.find_one(id=user_id)
-            if not user_model:
-                logger.error("User not found")
+            if user_model:
+                return UserBase.model_validate(user_model)
+            else:
+                logger.error(f"User with ID {user_id} not found.")
                 raise NotFoundException()
-
-            return UserBase(**user_model.__dict__)
 
     @staticmethod
     async def get_user_by_username(uow: IUnitOfWork, username: str) -> UserDetail:
         """
-        Retrieve user details by username.
+        Retrieve a user by their username.
+
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            username (str): The username of the user to retrieve.
+
+        Returns:
+            UserDetail: The user details.
+
+        Raises:
+            NotFoundException: If the user is not found.
         """
         async with uow:
             user_model = await uow.user.find_one(username=username)
-            if not user_model:
-                logger.error("User not found")
+            if user_model:
+                return UserDetail.model_validate(user_model)
+            else:
+                logger.error(f"User with username {username} not found.")
                 raise NotFoundException()
-
-            return UserDetail(**user_model.__dict__)
 
     @staticmethod
     async def get_user_by_email(uow: IUnitOfWork, email: str) -> UserDetail:
         """
-        Retrieve user details by email.
+        Retrieve a user by their email.
+
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            email (str): The email of the user to retrieve.
+
+        Returns:
+            UserDetail: The user details.
+
+        Raises:
+            NotFoundException: If the user is not found.
         """
         async with uow:
             user_model = await uow.user.find_one(email=email)
-            if not user_model:
-                logger.error("User not found")
+            if user_model:
+                return UserDetail.model_validate(user_model)
+            else:
+                logger.error(f"User with email {email} not found.")
                 raise NotFoundException()
-
-            return UserDetail(**user_model.__dict__)
 
     @staticmethod
     async def validate_user_update(
         uow: IUnitOfWork, user_id: int, user_update: UserUpdate
     ) -> UserUpdate:
         """
-        Validate user update data, replacing default values with current values from the database.
+        Validate and update user data, replacing default or empty values with current data.
+
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            user_id (int): The ID of the user to update.
+            user_update (UserUpdate): The updated user data.
+
+        Returns:
+            UserUpdate: The validated and updated user data.
+
+        Raises:
+            NotFoundException: If the user to update is not found.
         """
         current_user = await uow.user.find_one(id=user_id)
         if not current_user:
-            logger.error("User not found")
+            logger.error(f"User with ID {user_id} not found.")
             raise NotFoundException()
 
         user_data = user_update.model_dump()
         fields_to_check = user_data.keys()
-        default_values = ["string"]
 
         for field_name in fields_to_check:
             field_value = user_data[field_name]
-            if field_value in [None, *default_values]:
+            if field_value in [None, ""]:
                 setattr(user_update, field_name, getattr(current_user, field_name))
 
-        return user_update
+        return UserUpdate.model_validate(user_update)
 
     @staticmethod
     async def update_user(
@@ -114,22 +182,39 @@ class UserService:
     ) -> UserDetail:
         """
         Update user details.
+
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            current_user_id (int): The ID of the current user making the update.
+            user_id (int): The ID of the user to update.
+            user_update (UserUpdate): The updated user data.
+
+        Returns:
+            UserDetail: The updated user details.
+
+        Raises:
+            UnAuthorizedException: If the current user is not authorized to update the user.
+            NotFoundException: If the user to update is not found.
         """
         async with uow:
             if current_user_id != user_id:
-                logger.error("Unauthorized to update user")
+                logger.error(
+                    f"User {current_user_id} is not authorized to update user {user_id}."
+                )
                 raise UnAuthorizedException()
 
             user_update = await UserService.validate_user_update(
                 uow, user_id, user_update
             )
+
             user_dict = user_update.model_dump()
             user_dict["id"] = user_id
 
             await uow.user.edit_one(user_id, user_dict)
-            await uow.commit()
+
             updated_user = await uow.user.find_one(id=user_id)
-            return UserDetail(**updated_user.__dict__)
+
+            return UserDetail.model_validate(updated_user)
 
     @staticmethod
     async def deactivate_user(
@@ -137,18 +222,34 @@ class UserService:
     ) -> UserDetail:
         """
         Deactivate a user.
+
+        Args:
+            uow (IUnitOfWork): The unit of work for database transactions.
+            user_id (int): The ID of the user to deactivate.
+            current_user_id (int): The ID of the current user making the request.
+
+        Returns:
+            UserDetail: The deactivated user details.
+
+        Raises:
+            UnAuthorizedException: If the current user is not authorized to deactivate the user.
+            NotFoundException: If the user to deactivate is not found.
         """
         async with uow:
             if current_user_id != user_id:
-                logger.error("Unauthorized to deactivate user")
+                logger.error(
+                    f"User {current_user_id} is not authorized to deactivate user {user_id}."
+                )
                 raise UnAuthorizedException()
 
             user_model = await uow.user.find_one(id=user_id)
+
             if not user_model:
-                logger.error("User not found")
+                logger.error(f"User with ID {user_id} not found.")
                 raise NotFoundException()
 
             user_model.is_active = False
+
             await uow.user.edit_one(user_id, {"is_active": False})
-            await uow.commit()
-            return UserDetail(**user_model.__dict__)
+
+            return UserDetail.model_validate(user_model)

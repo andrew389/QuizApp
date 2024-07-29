@@ -1,5 +1,8 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
-from typing import Optional, List
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+
+from app.schemas.pagination import PaginationLinks
 
 
 class UserBase(BaseModel):
@@ -56,5 +59,6 @@ class SignUpRequest(UserCreate):
 
 
 class UsersListResponse(BaseModel):
+    links: PaginationLinks
     users: List[UserBase]
     total: int

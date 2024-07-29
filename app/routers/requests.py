@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from app.core.dependencies import UOWDep, AuthServiceDep, MemberRequestsDep
+from app.core.dependencies import UOWDep, MemberRequestsDep, AuthServiceDep
 from app.core.logger import logger
 from app.exceptions.base import (
     DeletingException,
@@ -42,7 +42,7 @@ async def accept_request_for_owner(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Accept a join request.
+    Accept a request to join a company.
     """
     try:
         invitation = await member_service.accept_request(
@@ -62,7 +62,7 @@ async def decline_request_for_owner(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Decline a join request.
+    Decline a request to join a company.
     """
     try:
         response = await member_service.decline_request(

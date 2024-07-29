@@ -1,10 +1,12 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from fastapi.testclient import TestClient
+
+import pytest
 from fastapi import status
+from fastapi.testclient import TestClient
+
 from app.main import app
-from app.services.auth import AuthService
 from app.models.user import User
+from app.services.auth import AuthService
 from app.uow.unitofwork import IUnitOfWork
 
 client = TestClient(app)

@@ -3,21 +3,12 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Path to the .env file
 env_file = Path(__file__).resolve().parents[2] / ".env"
 
 
 class DatabaseSettings(BaseSettings):
     """
-    Configuration settings for the PostgreSQL database.
-
-    Attributes:
-        user (str): The username for the PostgreSQL database.
-        password (str): The password for the PostgreSQL database.
-        host (str): The host of the PostgreSQL database.
-        port (str): The port of the PostgreSQL database.
-        name (str): The name of the PostgreSQL database.
-        test_name (str): The name of the test PostgreSQL database.
+    Configuration settings for PostgreSQL database.
     """
 
     model_config = SettingsConfigDict(
@@ -34,43 +25,30 @@ class DatabaseSettings(BaseSettings):
     test_name: str = Field(alias="POSTGRES_DB_TEST_NAME")
 
     @property
-    def url(self) -> str:
+    def url(self):
         """
-        Get the database connection URL for synchronous PostgreSQL.
-
-        Returns:
-            str: The connection URL.
+        Returns the PostgreSQL connection URL.
         """
         return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
     @property
-    def async_url(self) -> str:
+    def async_url(self):
         """
-        Get the database connection URL for asynchronous PostgreSQL.
-
-        Returns:
-            str: The connection URL.
+        Returns the asynchronous PostgreSQL connection URL.
         """
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
     @property
-    def test_async_url(self) -> str:
+    def test_async_url(self):
         """
-        Get the database connection URL for the test asynchronous PostgreSQL database.
-
-        Returns:
-            str: The connection URL.
+        Returns the asynchronous PostgreSQL connection URL for testing.
         """
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.test_name}"
 
 
 class RedisSettings(BaseSettings):
     """
-    Configuration settings for the Redis database.
-
-    Attributes:
-        host (str): The host of the Redis database.
-        port (int): The port of the Redis database.
+    Configuration settings for Redis.
     """
 
     model_config = SettingsConfigDict(
@@ -84,12 +62,9 @@ class RedisSettings(BaseSettings):
     port: int = Field(alias="REDIS_DB_PORT")
 
     @property
-    def url(self) -> str:
+    def url(self):
         """
-        Get the Redis connection URL.
-
-        Returns:
-            str: The connection URL.
+        Returns the Redis connection URL.
         """
         return f"redis://{self.host}:{self.port}"
 
@@ -97,14 +72,6 @@ class RedisSettings(BaseSettings):
 class AuthSettings(BaseSettings):
     """
     Configuration settings for authentication.
-
-    Attributes:
-        secret_key (str): The secret key for encoding JWT tokens.
-        algorithm (str): The algorithm used for encoding JWT tokens.
-        access_token_expire_minutes (int): The expiration time in minutes for access tokens.
-        domain (str): The Auth0 domain.
-        audience (str): The Auth0 audience.
-        signing_key (str): The key used to sign JWT tokens.
     """
 
     model_config = SettingsConfigDict(
@@ -123,25 +90,16 @@ class AuthSettings(BaseSettings):
     signing_key: str = Field(alias="SIGNING_KEY")
 
     @property
-    def issuer(self) -> str:
+    def issuer(self):
         """
-        Get the issuer URL for JWT tokens.
-
-        Returns:
-            str: The issuer URL.
+        Returns the issuer URL for authentication.
         """
         return f"https://{self.domain}/"
 
 
 class Settings(BaseSettings):
     """
-    Main settings class that aggregates other configuration settings.
-
-    Attributes:
-        api_v1_prefix (str): The API version prefix.
-        database (DatabaseSettings): Database configuration settings.
-        redis (RedisSettings): Redis configuration settings.
-        auth (AuthSettings): Authentication configuration settings.
+    Main settings class to aggregate database, Redis, and authentication configurations.
     """
 
     api_v1_prefix: str = "/api/v1"
@@ -151,5 +109,4 @@ class Settings(BaseSettings):
     auth: AuthSettings = AuthSettings()
 
 
-# Instantiate the settings object
 settings = Settings()

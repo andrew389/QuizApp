@@ -1,6 +1,8 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
+
+from app.schemas.pagination import PaginationLinks
 
 
 class CompanyBase(BaseModel):
@@ -29,5 +31,6 @@ class CompanyUpdate(BaseModel):
 
 
 class CompaniesListResponse(BaseModel):
+    links: PaginationLinks
     companies: List[CompanyBase]
     total: int

@@ -6,15 +6,14 @@ from sqlalchemy.orm import relationship
 from app.db.pg_db import Base
 
 
-class Member(Base):
-    __tablename__ = "member"
+class Quiz(Base):
+    __tablename__ = "quiz"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    company_id = Column(
-        Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True
-    )
-    role = Column(Integer, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    frequency = Column(Integer, default=0)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
     updated_at = Column(
         DateTime(timezone=True),
@@ -23,5 +22,7 @@ class Member(Base):
         onupdate=datetime.now,
     )
 
-    user = relationship("User", back_populates="memberships")
-    company = relationship("Company", back_populates="members")
+    company = relationship("Company", back_populates="quizzes")
+    questions = relationship(
+        "Question", back_populates="quiz", cascade="all, delete-orphan"
+    )

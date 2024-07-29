@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, Request
 
 from app.core.dependencies import UOWDep, AuthServiceDep, InvitationServiceDep
 from app.core.logger import logger
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/me", tags=["Me"])
 @router.post("/login", response_model=Token)
 async def login(uow: UOWDep, form_data: SignInRequest, auth_service: AuthServiceDep):
     """
-    Authenticate and return a token.
+    Authenticate user and return access token.
     """
     user = await auth_service.authenticate_user(
         uow, form_data.email, form_data.password
@@ -31,7 +31,7 @@ async def login(uow: UOWDep, form_data: SignInRequest, auth_service: AuthService
 @router.get("/", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def get_info(current_user: User = Depends(AuthServiceDep.get_current_user)):
     """
-    Get current user info.
+    Get the current user's information.
     """
     return UserResponse(user=current_user)
 
@@ -39,17 +39,18 @@ async def get_info(current_user: User = Depends(AuthServiceDep.get_current_user)
 @router.get("/invites", response_model=InvitationsListResponse)
 async def get_new_invitations(
     uow: UOWDep,
+    request: Request,
     invitation_service: InvitationServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
     """
-    Get new invitations.
+    Get new invitations for the current user.
     """
     try:
         invitations = await invitation_service.get_invitations(
-            uow, current_user.id, skip=skip, limit=limit
+            uow, current_user.id, request, skip=skip, limit=limit
         )
         return invitations
     except Exception as e:
@@ -60,19 +61,20 @@ async def get_new_invitations(
 @router.get("/requests", response_model=InvitationsListResponse)
 async def get_sent_invitations(
     uow: UOWDep,
+    request: Request,
     invitation_service: InvitationServiceDep,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
     """
-    Get sent invitations.
+    Get sent invitations by the current user.
     """
     try:
         invitations = await invitation_service.get_sent_invitations(
-            uow, current_user.id, skip=skip, limit=limit
+            uow, current_user.id, request, skip=skip, limit=limit
         )
         return invitations
     except Exception as e:
-        logger.error(f"Error fetching sent invitations: {e}")
+        logger.error(f"Error fetching invitations for owner: {e}")
         raise FetchingException()

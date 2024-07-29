@@ -1,28 +1,16 @@
 import asyncio_redis
+
 from app.core.config import settings
 from app.core.logger import logger
 
 
 class AsyncRedisConnection:
-    """
-    Handles asynchronous connections to a Redis database using asyncio_redis.
-
-    Attributes:
-        redis: The Redis connection instance.
-    """
-
     def __init__(self):
-        """
-        Initializes the AsyncRedisConnection instance.
-        """
         self.redis = None
 
     async def connect(self):
         """
-        Establishes a connection to the Redis database.
-
-        Raises:
-            ConnectionError: If the connection to Redis fails.
+        Connects to the Redis server and checks the connection.
         """
         try:
             self.redis = await asyncio_redis.Connection.create(
@@ -37,9 +25,7 @@ class AsyncRedisConnection:
 
     async def disconnect(self):
         """
-        Closes the connection to the Redis database.
-
-        If there is no active connection, this method does nothing.
+        Closes the connection to the Redis server.
         """
         if self.redis:
             self.redis.close()
@@ -50,11 +36,8 @@ class AsyncRedisConnection:
         Writes a value to Redis with the specified key.
 
         Args:
-            key (str): The key under which the value will be stored.
-            value (int): The value to be stored in Redis.
-
-        Raises:
-            ConnectionError: If the Redis connection is not established.
+            key (str): The key under which to store the value.
+            value (int): The value to store.
         """
         if self.redis:
             await self.redis.set(key, value)
@@ -63,16 +46,13 @@ class AsyncRedisConnection:
 
     async def read(self, key: str):
         """
-        Reads a value from Redis using the specified key.
+        Reads a value from Redis with the specified key.
 
         Args:
-            key (str): The key of the value to be retrieved.
+            key (str): The key to read the value for.
 
         Returns:
-            The value associated with the specified key.
-
-        Raises:
-            ConnectionError: If the Redis connection is not established.
+            The value stored in Redis.
         """
         if self.redis:
             return await self.redis.get(key)
@@ -81,13 +61,10 @@ class AsyncRedisConnection:
 
     async def ping(self):
         """
-        Pings the Redis server to check if it is responsive.
+        Sends a ping to the Redis server to check if the connection is alive.
 
         Returns:
-            The response from the Redis server.
-
-        Raises:
-            ConnectionError: If the Redis connection is not established.
+            The result of the ping operation.
         """
         if self.redis:
             return await self.redis.ping()
@@ -95,5 +72,4 @@ class AsyncRedisConnection:
             raise ConnectionError("Redis connection is not established.")
 
 
-# Instantiate the Redis connection object
 redis = AsyncRedisConnection()

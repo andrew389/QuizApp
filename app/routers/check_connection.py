@@ -2,11 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logger import logger
 from app.db.pg_db import get_async_session
 from app.db.redis_db import redis
-
-from app.core.logger import logger
-from app.exceptions.db import BadConnectRedis, BadConnectPostgres
+from app.exceptions.db import BadConnectPostgres, BadConnectRedis
 
 router = APIRouter(tags=["Health Check"])
 
@@ -14,10 +13,10 @@ router = APIRouter(tags=["Health Check"])
 @router.get("/")
 async def health_check():
     """
-    Health check endpoint to verify that the service is running.
+    Checks the health of the application.
 
     Returns:
-        dict: A dictionary containing the status code, detail, and result of the health check.
+        dict: Status code, detail, and result message.
     """
     logger.debug("Health check endpoint accessed.")
     return {"status_code": 200, "detail": "ok", "result": "working"}
@@ -26,10 +25,10 @@ async def health_check():
 @router.get("/redis")
 async def ping_redis():
     """
-    Checks the connectivity to the Redis server by sending a ping command.
+    Checks the connection to the Redis server.
 
     Returns:
-        dict: A dictionary containing the status of the Redis connection.
+        dict: Status of Redis connection.
 
     Raises:
         BadConnectRedis: If there is a connection error with Redis.
@@ -45,16 +44,16 @@ async def ping_redis():
 @router.get("/db")
 async def ping_db(session: AsyncSession = Depends(get_async_session)):
     """
-    Checks the connectivity to the PostgreSQL database by executing a simple query.
+    Checks the connection to the PostgreSQL database.
 
     Args:
-        session (AsyncSession): The database session used to execute the query.
+        session (AsyncSession): The SQLAlchemy async session.
 
     Returns:
-        dict: A dictionary containing the status code, detail, and result of the database connection check.
+        dict: Status code, detail, and result message.
 
     Raises:
-        BadConnectPostgres: If there is a connection error with the PostgreSQL database.
+        BadConnectPostgres: If there is a connection error with PostgreSQL.
     """
     try:
         await session.execute(select(1))

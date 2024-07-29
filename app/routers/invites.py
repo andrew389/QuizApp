@@ -24,7 +24,7 @@ async def cancel_invitation_to_user(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Cancel an invitation.
+    Cancel an invitation by its ID.
     """
     try:
         canceled_invitation_id = await invitation_service.cancel_invitation(
@@ -32,7 +32,7 @@ async def cancel_invitation_to_user(
         )
         return {"canceled_invitation_id": canceled_invitation_id}
     except Exception as e:
-        logger.error(f"Error canceling invitation: {e}")
+        logger.error(f"Error canceling request to join company: {e}")
         raise DeletingException()
 
 
@@ -44,7 +44,7 @@ async def accept_invitation_for_user(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Accept an invitation.
+    Accept an invitation by its ID.
     """
     try:
         response = await invitation_service.accept_invitation(
@@ -64,7 +64,7 @@ async def decline_invitation_for_user(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Decline an invitation.
+    Decline an invitation by its ID.
     """
     try:
         response = await invitation_service.decline_invitation(

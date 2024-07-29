@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Query, Depends, status
+from fastapi import APIRouter, Query, Depends, Request
 
 from app.core.dependencies import (
     UOWDep,
     CompanyServiceDep,
     AuthServiceDep,
     InvitationServiceDep,
-    MemberQueriesDep,
-    MemberRequestsDep,
+    QuizServiceDep,
     MemberManagementDep,
+    MemberRequestsDep,
+    MemberQueriesDep,
 )
 from app.exceptions.base import (
     UpdatingException,
@@ -15,6 +16,7 @@ from app.exceptions.base import (
     FetchingException,
     CreatingException,
 )
+
 from app.models.user import User
 from app.schemas.company import (
     CompanyCreate,
@@ -30,6 +32,7 @@ from app.schemas.member import (
     MemberRequest,
     AdminsListResponse,
 )
+from app.schemas.quiz import QuizzesListResponse
 
 router = APIRouter(prefix="/company", tags=["Company"])
 
@@ -42,13 +45,14 @@ async def add_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Create a new company.
+    Adds a new company.
     """
     try:
         logger.info(f"Received company data: {company}")
         new_company = await company_service.add_company(
             uow, company, owner_id=current_user.id
         )
+
         logger.info(f"Company created with ID: {new_company.id}")
         return new_company
     except Exception as e:
@@ -60,16 +64,21 @@ async def add_company(
 async def get_companies(
     uow: UOWDep,
     company_service: CompanyServiceDep,
+    request: Request,
     current_user: User = Depends(AuthServiceDep.get_current_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
     """
-    Retrieve a list of companies for the current user.
+    Retrieves a list of companies.
     """
     try:
         companies = await company_service.get_companies(
-            uow, current_user_id=current_user.id, skip=skip, limit=limit
+            uow,
+            current_user_id=current_user.id,
+            request=request,
+            skip=skip,
+            limit=limit,
         )
         return companies
     except Exception as e:
@@ -84,7 +93,7 @@ async def get_company_by_id(
     company_service: CompanyServiceDep,
 ):
     """
-    Get company details by ID.
+    Retrieves a company by its ID.
     """
     try:
         company = await company_service.get_company_by_id(uow, company_id)
@@ -104,7 +113,7 @@ async def update_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Update company details by ID.
+    Updates a company by its ID.
     """
     try:
         updated_company = await company_service.update_company(
@@ -125,7 +134,7 @@ async def delete_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Delete a company by ID.
+    Deletes a company by its ID.
     """
     try:
         deleted_company_id = await company_service.delete_company(
@@ -147,7 +156,7 @@ async def appoint_admin(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Appoint a member as admin in a company.
+    Appoints a member as an admin in a company.
     """
     return await member_service.appoint_admin(
         uow, current_user.id, company_id, member_id
@@ -163,7 +172,7 @@ async def remove_admin(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Remove an admin from a company.
+    Removes a member's admin status in a company.
     """
     return await member_service.remove_admin(
         uow, current_user.id, company_id, member_id
@@ -179,7 +188,7 @@ async def change_company_visibility(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Change the visibility status of a company.
+    Changes the visibility of a company.
     """
     try:
         updated_company = await company_service.change_company_visibility(
@@ -201,7 +210,7 @@ async def request_to_join_company_to_owner(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Request to join a company.
+    Requests to join a company.
     """
     try:
         invitation = await member_service.request_to_join_company(
@@ -222,7 +231,7 @@ async def send_invitation_to_user(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Send an invitation to a user for a company.
+    Sends an invitation to a user to join a company.
     """
     try:
         invitation = await invitation_service.send_invitation(
@@ -238,16 +247,17 @@ async def send_invitation_to_user(
 async def get_members(
     company_id: int,
     uow: UOWDep,
+    request: Request,
     member_service: MemberQueriesDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
     """
-    Get a list of company members.
+    Retrieves a list of members in a company.
     """
     try:
         members = await member_service.get_members(
-            uow, company_id=company_id, skip=skip, limit=limit
+            uow, company_id=company_id, request=request, skip=skip, limit=limit
         )
         return members
     except Exception as e:
@@ -263,7 +273,7 @@ async def get_member_by_id(
     member_service: MemberQueriesDep,
 ):
     """
-    Get a member by id.
+    Retrieves a member by their ID.
     """
     try:
         member = await member_service.get_member_by_id(
@@ -275,18 +285,47 @@ async def get_member_by_id(
         raise FetchingException()
 
 
+@router.get("/{company_id}/quizzes", response_model=QuizzesListResponse)
+async def get_quizzes(
+    company_id: int,
+    uow: UOWDep,
+    request: Request,
+    quiz_service: QuizServiceDep,
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1),
+):
+    """
+    Retrieves a list of quizzes for a company.
+    """
+    try:
+        quizzes_list = await quiz_service.get_quizzes(
+            uow,
+            company_id=company_id,
+            current_user_id=current_user.id,
+            request=request,
+            skip=skip,
+            limit=limit,
+        )
+        return quizzes_list
+    except Exception as e:
+        logger.error(f"Error fetching quizzes: {e}")
+        raise FetchingException()
+
+
 @router.get("/{company_id}/admins", response_model=AdminsListResponse)
 async def get_admins(
     uow: UOWDep,
-    member_service: MemberManagementDep,
+    request: Request,
+    member_service: MemberQueriesDep,
     company_id: int,
     skip: int = 0,
     limit: int = 10,
 ):
     """
-    Get a list of company admins.
+    Retrieves a list of admins for a company.
     """
-    return await member_service.get_admins(uow, company_id, skip, limit)
+    return await member_service.get_admins(uow, company_id, request, skip, limit)
 
 
 @router.post("/{member_id}/remove", response_model=MemberBase)
@@ -297,7 +336,7 @@ async def remove_member(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Remove a member from a company.
+    Removes a member from the company.
     """
     try:
         result = await member_service.remove_member(uow, current_user.id, member_id)
@@ -315,7 +354,7 @@ async def leave_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Leave a company.
+    Allows a member to leave a company.
     """
     try:
         result = await member_service.leave_company(uow, current_user.id, company_id)
