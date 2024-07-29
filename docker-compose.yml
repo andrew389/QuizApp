@@ -1,6 +1,27 @@
 version: '3.8'
 
 services:
+  test_db:
+    image: postgres:latest
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: "test"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  redis:
+    image: redis:latest
+    env_file:
+      - .env
+    ports:
+      - "6379:6379"
+
   app:
     build:
       context: .
@@ -10,27 +31,29 @@ services:
     ports:
       - "8010:8000"
     environment:
-      - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
-      - POSTGRES_DB_PASSWORD=123handrushka123
-      - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redisfastapi-gtlhnu.serverless.eun1.cache.amazonaws.com
+      - POSTGRES_DB_HOST=test_db
+      - REDIS_DB_HOST=redis
+    depends_on:
+      - test_db
+      - redis
     env_file:
-      - .env.sample
+      - .env
 
   celery_worker:
     build:
       context: .
       dockerfile: Dockerfile
-    command: celery -A app.celery:celery worker --loglevel=info
+    command: celery -A app.celery:celery worker --config=celery
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
-      - POSTGRES_DB_PASSWORD=123handrushka123
-      - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
+      - POSTGRES_DB_HOST=main_db
+      - REDIS_DB_HOST=redis
+    depends_on:
+      - test_db
+      - redis
     env_file:
-      - .env.sample
+      - .env
 
   celery_beat:
     build:
@@ -40,14 +63,14 @@ services:
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
-      - POSTGRES_DB_PASSWORD=123handrushka123
-      - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
+      - POSTGRES_DB_HOST=main_db
+      - REDIS_DB_HOST=redis
     depends_on:
+      - redis
+      - test_db
       - celery_worker
     env_file:
-      - .env.sample
+      - .env
 
   flower:
     build:
@@ -57,16 +80,15 @@ services:
     volumes:
       - .:/code
     environment:
-      - POSTGRES_DB_HOST=database-1.c1cquyec4scf.eu-north-1.rds.amazonaws.com
-      - POSTGRES_DB_PASSWORD=123handrushka123
-      - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis-gtlhnu.serverless.eun1.cache.amazonaws.com
+      - POSTGRES_DB_HOST=main_db
+      - REDIS_DB_HOST=redis
     depends_on:
+      - redis
+      - test_db
       - celery_worker
     env_file:
-      - .env.sample
+      - .env
     ports:
       - "5555:5555"
-
 volumes:
-  postgres_data:
+  postgres_test_data:
