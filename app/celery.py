@@ -9,7 +9,7 @@ from app.core.tasks import notification_task
 
 nest_asyncio.apply()
 
-celery = Celery("tasks", broker="redis://:6379")
+celery = Celery("tasks", broker=settings.redis.url)
 
 
 @celery.task
