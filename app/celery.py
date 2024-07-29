@@ -8,7 +8,7 @@ from app.core.tasks import notification_task
 nest_asyncio.apply()
 
 broker_use_ssl = {
-    "ssl_cert_reqs": "CERT_NONE",
+    "ssl_cert_reqs": None,
 }
 
 celery = Celery(
