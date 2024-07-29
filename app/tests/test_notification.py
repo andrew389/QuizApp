@@ -39,7 +39,7 @@ async def test_send_notifications():
 
     for notification in notifications:
         mock_notification_repo.add_one.assert_any_call(
-            notification.dict(exclude={"id"})
+            notification.model_dump(exclude={"id"})
         )
 
 
