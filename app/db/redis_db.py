@@ -1,6 +1,4 @@
-import aioredis
-import asyncio
-import ssl
+import redis.asyncio as redis
 from app.core.config import settings
 from app.core.logger import logger
 
@@ -14,17 +12,13 @@ class AsyncRedisConnection:
         Connects to the Redis server with TLS encryption and checks the connection.
         """
         try:
-            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-
-            self.redis = await aioredis.from_url(
-                f"rediss://{settings.redis.host}:{settings.redis.port}",
-                password=settings.redis.password,
-                ssl=ssl_context,
+            self.redis = redis.Redis(
+                host=settings.redis.host,
+                port=int(settings.redis.port),
+                ssl=True,
             )
             await self.redis.ping()
-        except aioredis.RedisError as e:
+        except redis.ConnectionError as e:
             logger.error("Connection to Redis failed: %s", e)
             raise ConnectionError("Connection to Redis failed") from e
         else:
@@ -35,8 +29,7 @@ class AsyncRedisConnection:
         Closes the connection to the Redis server.
         """
         if self.redis:
-            self.redis.close()
-            await self.redis.wait_closed()
+            await self.redis.close()
             logger.info("Disconnected from Redis.")
 
     async def write(self, key: str, value: int):
@@ -62,8 +55,7 @@ class AsyncRedisConnection:
             ttl (int): The time-to-live in seconds for the stored value.
         """
         if self.redis:
-            await self.redis.set(key, value)
-            await self.redis.expire(key, ttl)
+            await self.redis.set(key, value, ex=ttl)
             logger.info("The data was saved in redis")
         else:
             raise ConnectionError("Redis connection is not established.")
