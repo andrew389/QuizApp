@@ -42,7 +42,7 @@ from app.schemas.member import (
 )
 from app.schemas.quiz import QuizzesListResponse
 
-router = APIRouter(prefix="/company", tags=["Company"])
+router = APIRouter(prefix="/companies", tags=["Company"])
 
 
 @router.post("/", response_model=CompanyDetail)
