@@ -1,8 +1,6 @@
-import json
-from typing import Optional, List
-
-import asyncio_redis
-
+import aioredis
+import asyncio
+import ssl
 from app.core.config import settings
 from app.core.logger import logger
 
@@ -13,14 +11,20 @@ class AsyncRedisConnection:
 
     async def connect(self):
         """
-        Connects to the Redis server and checks the connection.
+        Connects to the Redis server with TLS encryption and checks the connection.
         """
         try:
-            self.redis = await asyncio_redis.Connection.create(
-                host=settings.redis.host, port=int(settings.redis.port)
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
+            self.redis = await aioredis.from_url(
+                f"rediss://{settings.redis.host}:{settings.redis.port}",
+                password=settings.redis.password,
+                ssl=ssl_context,
             )
             await self.redis.ping()
-        except ConnectionError as e:
+        except aioredis.RedisError as e:
             logger.error("Connection to Redis failed: %s", e)
             raise ConnectionError("Connection to Redis failed") from e
         else:
@@ -32,6 +36,7 @@ class AsyncRedisConnection:
         """
         if self.redis:
             self.redis.close()
+            await self.redis.wait_closed()
             logger.info("Disconnected from Redis.")
 
     async def write(self, key: str, value: int):
@@ -59,7 +64,7 @@ class AsyncRedisConnection:
         if self.redis:
             await self.redis.set(key, value)
             await self.redis.expire(key, ttl)
-            logger.info(f"The data was saved in redis")
+            logger.info("The data was saved in redis")
         else:
             raise ConnectionError("Redis connection is not established.")
 
