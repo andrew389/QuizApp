@@ -50,7 +50,11 @@ class DataExportService:
         Returns:
             StreamingResponse: A StreamingResponse containing the exported data.
         """
-        file_path = os.path.join("exported_data", file_name)
+        directory = "exported_data"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        file_path = os.path.join(directory, file_name)
 
         if is_csv:
             return await DataExportService.export_data_as_csv(all_data, file_path)
