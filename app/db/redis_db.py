@@ -1,5 +1,7 @@
-import redis.asyncio as redis
-import ssl
+import json
+from typing import Optional, List
+
+import asyncio_redis
 
 from app.core.config import settings
 from app.core.logger import logger
@@ -14,25 +16,22 @@ class AsyncRedisConnection:
         Connects to the Redis server and checks the connection.
         """
         try:
-            self.redis = redis.Redis(
-                host=settings.redis.host,
-                port=int(settings.redis.port),
-                ssl=True,
-                decode_responses=True,
+            self.redis = await asyncio_redis.Connection.create(
+                host=settings.redis.host, port=int(settings.redis.port)
             )
             await self.redis.ping()
-        except redis.ConnectionError as e:
+        except ConnectionError as e:
             logger.error("Connection to Redis failed: %s", e)
             raise ConnectionError("Connection to Redis failed") from e
         else:
-            logger.info("Connected to Redis with TLS.")
+            logger.info("Connected to Redis.")
 
     async def disconnect(self):
         """
         Closes the connection to the Redis server.
         """
         if self.redis:
-            await self.redis.close()
+            self.redis.close()
             logger.info("Disconnected from Redis.")
 
     async def write(self, key: str, value: int):
@@ -60,7 +59,7 @@ class AsyncRedisConnection:
         if self.redis:
             await self.redis.set(key, value)
             await self.redis.expire(key, ttl)
-            logger.info("The data was saved in redis")
+            logger.info(f"The data was saved in redis")
         else:
             raise ConnectionError("Redis connection is not established.")
 

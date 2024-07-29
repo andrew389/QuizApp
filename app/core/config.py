@@ -60,7 +60,6 @@ class RedisSettings(BaseSettings):
 
     host: str = Field(alias="REDIS_DB_HOST")
     port: int = Field(alias="REDIS_DB_PORT")
-    use_tsl: bool = Field(alias="REDIS_TSL")
 
     @property
     def url(self):
