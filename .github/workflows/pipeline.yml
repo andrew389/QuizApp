@@ -42,7 +42,24 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-          docker run -d --name app -p 8010:8000 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker run -d --name celery_worker $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery worker --loglevel=info
-          docker run -d --name celery_beat $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery beat --loglevel=info
-          docker run -d --name flower -p 5555:5555 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery flower --port=5555
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ steps.get-commit-hash.outputs.commit-hash }}-${{ steps.get-timestamp.outputs.timestamp }}
+        run: |
+          echo "$EC2_SSH_KEY" > /tmp/ec2-key.pem
+          chmod 600 /tmp/ec2-key.pem
+
+          ssh -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem $EC2_USER@$EC2_HOST <<EOF
+            docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker stop app celery_worker celery_beat flower || true
+            docker rm app celery_worker celery_beat flower || true
+            docker run -d --name app -p 8010:8000 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker run -d --name celery_worker $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery worker --loglevel=info
+            docker run -d --name celery_beat $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery beat --loglevel=info
+            docker run -d --name flower -p 5555:5555 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery flower --port=5555
+          EOF
