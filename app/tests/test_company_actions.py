@@ -1,6 +1,6 @@
 import pytest
-from fastapi import Request
 from unittest.mock import AsyncMock, MagicMock
+from fastapi import Request
 from datetime import datetime
 
 from app.exceptions.auth import UnAuthorizedException

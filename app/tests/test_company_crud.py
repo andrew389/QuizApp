@@ -131,6 +131,9 @@ async def test_update_company():
         mock_uow, company_id, 1, company_update
     )
 
+    mock_uow.company.edit_one.assert_called_once()
+    mock_uow.commit.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_delete_company():
@@ -179,3 +182,4 @@ async def test_change_company_visibility():
     )
 
     assert company_detail.is_visible == is_visible
+    mock_uow.company.edit_one.assert_called_once()
