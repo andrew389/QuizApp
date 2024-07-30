@@ -1,4 +1,5 @@
-import redis.asyncio as redis
+import asyncio_redis
+
 from app.core.config import settings
 from app.core.logger import logger
 
@@ -9,16 +10,14 @@ class AsyncRedisConnection:
 
     async def connect(self):
         """
-        Connects to the Redis server with TLS encryption and checks the connection.
+        Connects to the Redis server and checks the connection.
         """
         try:
-            self.redis = redis.Redis(
-                host=settings.redis.host,
-                port=int(settings.redis.port),
-                ssl=True,
+            self.redis = await asyncio_redis.Connection.create(
+                host=settings.redis.host, port=int(settings.redis.port)
             )
             await self.redis.ping()
-        except redis.ConnectionError as e:
+        except ConnectionError as e:
             logger.error("Connection to Redis failed: %s", e)
             raise ConnectionError("Connection to Redis failed") from e
         else:
@@ -29,7 +28,7 @@ class AsyncRedisConnection:
         Closes the connection to the Redis server.
         """
         if self.redis:
-            await self.redis.close()
+            self.redis.close()
             logger.info("Disconnected from Redis.")
 
     async def write(self, key: str, value: int):
@@ -55,8 +54,9 @@ class AsyncRedisConnection:
             ttl (int): The time-to-live in seconds for the stored value.
         """
         if self.redis:
-            await self.redis.set(key, value, ex=ttl)
-            logger.info("The data was saved in redis")
+            await self.redis.set(key, value)
+            await self.redis.expire(key, ttl)
+            logger.info(f"The data was saved in redis")
         else:
             raise ConnectionError("Redis connection is not established.")
 
@@ -88,4 +88,4 @@ class AsyncRedisConnection:
             raise ConnectionError("Redis connection is not established.")
 
 
-redis_connection = AsyncRedisConnection()
+redis = AsyncRedisConnection()

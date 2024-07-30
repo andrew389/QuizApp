@@ -7,14 +7,9 @@ from app.core.tasks import notification_task
 
 nest_asyncio.apply()
 
-broker_use_ssl = {
-    "ssl_cert_reqs": None,
-}
-
 celery = Celery(
     "tasks",
-    broker=f"rediss://{settings.redis.host}:{settings.redis.port}/0",
-    broker_use_ssl=broker_use_ssl,
+    broker=f"redis://{settings.redis.host}:{settings.redis.port}/0",
 )
 
 
