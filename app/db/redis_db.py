@@ -44,6 +44,22 @@ class AsyncRedisConnection:
         else:
             raise ConnectionError("Redis connection is not established.")
 
+    async def write_with_ttl(self, key: str, value: int, ttl: int):
+        """
+        Write a value to Redis with a specified time-to-live (TTL).
+
+        Args:
+            key (str): The key under which the value is stored.
+            value (int): The value to store.
+            ttl (int): The time-to-live in seconds for the stored value.
+        """
+        if self.redis:
+            await self.redis.set(key, value)
+            await self.redis.expire(key, ttl)
+            logger.info(f"The data was saved in redis")
+        else:
+            raise ConnectionError("Redis connection is not established.")
+
     async def read(self, key: str):
         """
         Reads a value from Redis with the specified key.

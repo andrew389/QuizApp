@@ -15,7 +15,7 @@ from app.models.user import User
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger
 
-router = APIRouter(prefix="/user", tags=["User"])
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.post("/", response_model=UserResponse)

@@ -21,7 +21,7 @@ from app.schemas.question import (
     QuestionsListResponse,
 )
 
-router = APIRouter(prefix="/questions", tags=["Question"])
+router = APIRouter(prefix="/questions", tags=["Questions"])
 
 
 @router.post("/", response_model=QuestionBase)
