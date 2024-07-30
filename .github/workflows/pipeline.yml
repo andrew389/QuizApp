@@ -1,0 +1,42 @@
+name: Build and Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          region: ${{ secrets.AWS_REGION }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ SSH_PRIVATE_KEY }} .
+          docker tag ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ SSH_PRIVATE_KEY }} ${{ secrets.AWS_ECR_REGISTRY }}/my-app:latest
+
+      - name: Push Docker image to Amazon ECR
+        run: |
+          docker push ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ SSH_PRIVATE_KE }}
+          docker push ${{ secrets.AWS_ECR_REGISTRY }}/my-app:latest
+
+      - name: SSH into EC2 and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull ${{ secrets.AWS_ECR_REGISTRY }}/my-app:latest
+            docker stop my-app || true
+            docker rm my-app || true
+            docker run -d -p 80:8000 --name my-app ${{ secrets.AWS_ECR_REGISTRY }}/my-app:latest
