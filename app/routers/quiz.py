@@ -19,7 +19,7 @@ from app.schemas.quiz import (
     QuizUpdate,
 )
 
-router = APIRouter(prefix="/quizzes", tags=["Quiz"])
+router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
 
 @router.post("/", response_model=QuizBase)
