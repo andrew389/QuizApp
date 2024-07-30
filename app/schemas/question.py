@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Set
 
 from pydantic import BaseModel, field_validator
 
@@ -10,13 +10,13 @@ class QuestionBase(BaseModel):
     id: Optional[int] = None
     title: str
     quiz_id: Optional[int] = None
-    answers: List[int] = []
+    answers: Set[int] = []
     company_id: int
 
 
 class QuestionCreate(BaseModel):
     title: str
-    answers: List[int] = []
+    answers: Set[int] = []
     company_id: int
 
     @field_validator("answers", mode="before")
