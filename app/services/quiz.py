@@ -1,7 +1,7 @@
 from fastapi import Request
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException, FetchingException
+from app.exceptions.base import NotFoundException
 from app.schemas.question import QuestionResponse
 from app.schemas.quiz import (
     QuizCreate,
