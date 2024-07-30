@@ -294,4 +294,4 @@ class CompanyService:
             company_id (int): The ID of the company.
         """
         member_data = MemberCreate(user_id=owner_id, company_id=company_id, role=1)
-        await uow.member.add_one(member_data.model_dump(exclude_unset=True))
+        await uow.member.add_one(member_data.model_dump(exclude={"id"}))

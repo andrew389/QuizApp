@@ -28,6 +28,7 @@ pyjwt = "^2.8.0"
 python-jose = "^3.3.0"
 cryptography = "^42.0.8"
 anyio = "^4.4.0"
+aiofiles = "^24.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

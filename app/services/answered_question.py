@@ -136,6 +136,9 @@ class AnsweredQuestionService:
         quiz_id: int,
         company_id: int,
     ) -> str:
+        """
+        Prepares the data for storing in Redis.
+        """
         redis_data = {
             "user_id": user_id,
             "quiz_id": quiz_id,
@@ -150,6 +153,9 @@ class AnsweredQuestionService:
     async def _fetch_answer_details(
         uow: UnitOfWork, quiz_data: SendAnsweredQuiz
     ) -> list:
+        """
+        Fetches detailed information about each answer from the provided quiz data.
+        """
         return [
             {
                 "question_id": question_id,
@@ -167,13 +173,18 @@ class AnsweredQuestionService:
 
     @staticmethod
     async def _get_answer_text(uow: UnitOfWork, answer_id: int) -> str:
+        """
+        Get answer text from answer
+        """
         async with uow:
             answer = await uow.answer.find_one(id=answer_id)
-
             return answer.text if answer else None
 
     @staticmethod
     async def _is_correct_answer(uow: UnitOfWork, answer_id: int) -> bool:
+        """
+        Check is user_answer is correct
+        """
         async with uow:
             answer = await uow.answer.find_one(id=answer_id)
             return answer.is_correct if answer else False

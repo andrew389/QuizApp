@@ -29,7 +29,9 @@ class MemberManagement:
             user_id=user_id, company_id=company_id, role=Role.MEMBER.value
         )
         try:
-            member = await uow.member.add_one(member_data.model_dump(exclude={"id"}))
+            member = await uow.member.add_one(
+                member_data.model_dump(exclude_unset=True)
+            )
 
             member_data = filter_data(member)
 
@@ -89,9 +91,9 @@ class MemberManagement:
             UnAuthorizedException: If the user does not have permission to remove the member.
             NotFoundException: If the member is not found.
         """
-        owner_or_admin = await uow.member.find_one(user_id=user_id)
+        owner = await uow.member.find_one(user_id=user_id)
 
-        if owner_or_admin.role not in [Role.OWNER.value, Role.ADMIN.value]:
+        if owner.role not in [Role.OWNER.value]:
             logger.error(
                 f"User {user_id} is not authorized to remove member {member_id}"
             )
@@ -179,7 +181,9 @@ class MemberManagement:
 
         async with uow:
             await MemberRequests.validate_owner(uow, owner_id, company_id)
+
             member = await uow.member.find_one(user_id=member_id)
+
             if not member or member.role != Role.MEMBER.value:
                 logger.error(
                     f"Member with ID {member_id} not found or not eligible to be an admin"
@@ -217,6 +221,7 @@ class MemberManagement:
 
         async with uow:
             await MemberRequests.validate_owner(uow, owner_id, company_id)
+
             member = await uow.member.find_one(user_id=member_id)
 
             if not member or member.role != Role.ADMIN.value:
@@ -287,4 +292,5 @@ class MemberManagement:
             if not member:
                 logger.error(f"User {user_id} is not a member of company {company_id}")
                 raise UnAuthorizedException()
+
             return True
