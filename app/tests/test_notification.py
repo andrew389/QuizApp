@@ -5,8 +5,6 @@ from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException, UpdatingException
 from app.schemas.notification import (
     NotificationCreate,
-    NotificationResponse,
-    NotificationsListResponse,
     NotificationBase,
 )
 from app.services.notification import NotificationService

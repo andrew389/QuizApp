@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi import Request
+from pydantic import ValidationError
 
 from app.schemas.question import QuestionResponse
 from app.schemas.quiz import (
