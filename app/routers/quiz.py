@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from app.core.dependencies import (
     UOWDep,
     QuizServiceDep,
     AuthServiceDep,
+    DataImportServiceDep,
 )
 from app.core.logger import logger
 from app.exceptions.base import (
@@ -10,6 +11,7 @@ from app.exceptions.base import (
     CreatingException,
     UpdatingException,
     DeletingException,
+    ImportingException,
 )
 from app.models.user import User
 from app.schemas.quiz import (
@@ -89,3 +91,21 @@ async def delete_quiz(
     except Exception as e:
         logger.error(f"Error deleting quiz: {e}")
         raise DeletingException()
+
+
+@router.post("/import", response_model=dict)
+async def import_quizzes(
+    uow: UOWDep,
+    data_import_service: DataImportServiceDep,
+    file: UploadFile = File(...),
+    current_user: User = Depends(AuthServiceDep.get_current_user),
+):
+    """
+    Import quiz data
+    """
+    try:
+        await data_import_service.import_quizzes(uow, current_user.id, file)
+        return {"message": "Quizzes imported successfully"}
+    except Exception as e:
+        logger.error(f"{e}")
+        raise ImportingException()

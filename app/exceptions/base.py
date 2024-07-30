@@ -32,3 +32,11 @@ class DeletingException(HTTPException):
             status_code=403,
             detail="Error deleting",
         )
+
+
+class ImportingException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=403,
+            detail="Error importing",
+        )

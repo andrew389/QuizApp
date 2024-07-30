@@ -8,6 +8,7 @@ from app.services.answered_question import AnsweredQuestionService
 from app.services.auth import AuthService
 from app.services.company import CompanyService
 from app.services.data_export import DataExportService
+from app.services.data_import import DataImportService
 from app.services.invitation import InvitationService
 from app.services.member_management import MemberManagement
 from app.services.member_queries import MemberQueries
@@ -37,6 +38,7 @@ AnswerServiceDep = Annotated[AnswerService, Depends()]
 AnsweredQuestionServiceDep = Annotated[AnsweredQuestionService, Depends()]
 
 DataExportServiceDep = Annotated[DataExportService, Depends()]
+DataImportServiceDep = Annotated[DataImportService, Depends()]
 
 AnalyticsServiceDep = Annotated[AnalyticsService, Depends()]
 
