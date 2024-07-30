@@ -357,7 +357,7 @@ async def get_quiz_results_by_user_id_company_id(
         raise FetchingException()
 
 
-@router.get("/{company_id/results/{quiz_id}")
+@router.get("/{company_id}/results/{quiz_id}")
 async def get_results_by_company_id_quiz_id(
     company_id: int,
     quiz_id: int,
