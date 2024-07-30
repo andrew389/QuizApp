@@ -10,7 +10,7 @@ class QuestionBase(BaseModel):
     id: Optional[int] = None
     title: str
     quiz_id: Optional[int] = None
-    answers: Set[int] = []
+    answers: Optional[Set[int]] = None
     company_id: int
 
 
