@@ -16,7 +16,7 @@ class QuestionBase(BaseModel):
 
 class QuestionCreate(BaseModel):
     title: str
-    answers: Set[int]
+    answers: Set[int] = []
     company_id: int
 
     @field_validator("answers", mode="before")
