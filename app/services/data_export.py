@@ -1,7 +1,6 @@
 import json
 import csv
 import os
-
 import aiofiles
 from fastapi.responses import StreamingResponse
 
@@ -23,11 +22,9 @@ class DataExportService:
             list: A list of data retrieved from Redis.
         """
         all_data = []
-        cursor = "0"
+        cursor = 0
         while cursor != 0:
-            cursor, keys = await redis_connection.redis.scan(
-                cursor=cursor, match=pattern
-            )
+            cursor, keys = await redis_connection.redis.scan(match=pattern)
             for key in keys:
                 data_json = await redis_connection.redis.get(key)
                 if data_json:
