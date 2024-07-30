@@ -3,7 +3,7 @@ name: Build and Deploy to AWS EC2
 on:
   push:
     branches:
-      - main
+      - BE-20-add-github-actions
 
 jobs:
   build-and-deploy:
