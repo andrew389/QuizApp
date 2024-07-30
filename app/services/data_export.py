@@ -1,11 +1,10 @@
 import json
 import csv
 import os
-
 import aiofiles
 from fastapi.responses import StreamingResponse
 
-from app.db.redis_db import redis
+from app.db.redis_db import redis_connection
 from app.services.member_management import MemberManagement
 from app.uow.unitofwork import UnitOfWork
 
@@ -14,7 +13,7 @@ class DataExportService:
     @staticmethod
     async def fetch_data(pattern: str) -> list:
         """
-        Fetches data from Redis based on the given pattern.
+        Fetches data from Redis based on the given pattern using SCAN.
 
         Args:
             pattern (str): The pattern to match Redis keys.
@@ -22,15 +21,15 @@ class DataExportService:
         Returns:
             list: A list of data retrieved from Redis.
         """
-
-        keys = await redis.redis.keys(pattern)
         all_data = []
-        for key in keys:
-            key_str = str(key)[len("<Future finished result='") : -2].strip()
-            data_json = await redis.redis.get(key_str)
-            if data_json:
-                data = json.loads(data_json)
-                all_data.append(data)
+        cursor = 0
+        while cursor != 0:
+            cursor, keys = await redis_connection.redis.scan(match=pattern)
+            for key in keys:
+                data_json = await redis_connection.redis.get(key)
+                if data_json:
+                    data = json.loads(data_json)
+                    all_data.append(data)
         return all_data
 
     @staticmethod
@@ -48,7 +47,11 @@ class DataExportService:
         Returns:
             StreamingResponse: A StreamingResponse containing the exported data.
         """
-        file_path = os.path.join("exported_data", file_name)
+        directory = "exported_data"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        file_path = os.path.join(directory, file_name)
 
         if is_csv:
             return await DataExportService.export_data_as_csv(all_data, file_path)

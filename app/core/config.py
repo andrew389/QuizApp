@@ -3,7 +3,7 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-env_file = Path(__file__).resolve().parents[2] / ".env"
+env_file = Path(__file__).resolve().parents[2] / ".env.sample"
 
 
 class DatabaseSettings(BaseSettings):
@@ -22,7 +22,6 @@ class DatabaseSettings(BaseSettings):
     host: str = Field(alias="POSTGRES_DB_HOST")
     port: str = Field(alias="POSTGRES_DB_PORT")
     name: str = Field(alias="POSTGRES_DB_NAME")
-    test_name: str = Field(alias="POSTGRES_DB_TEST_NAME")
 
     @property
     def url(self):
@@ -43,7 +42,7 @@ class DatabaseSettings(BaseSettings):
         """
         Returns the asynchronous PostgreSQL connection URL for testing.
         """
-        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.test_name}"
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
 
 class RedisSettings(BaseSettings):

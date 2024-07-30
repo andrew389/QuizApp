@@ -88,4 +88,4 @@ class AsyncRedisConnection:
             raise ConnectionError("Redis connection is not established.")
 
 
-redis = AsyncRedisConnection()
+redis_connection = AsyncRedisConnection()

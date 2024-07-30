@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logger import logger
 from app.db.pg_db import get_async_session
-from app.db.redis_db import redis
+from app.db.redis_db import redis_connection
 from app.exceptions.db import BadConnectPostgres, BadConnectRedis
 
 router = APIRouter(tags=["Health Check"])
@@ -34,7 +34,7 @@ async def ping_redis():
         BadConnectRedis: If there is a connection error with Redis.
     """
     try:
-        await redis.ping()
+        await redis_connection.ping()
         return {"status": "PONG"}
     except ConnectionError as e:
         logger.error("Redis connection error: %s", e)

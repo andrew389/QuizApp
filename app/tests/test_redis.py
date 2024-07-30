@@ -8,7 +8,7 @@ from app.uow.unitofwork import UnitOfWork
 
 @pytest.fixture
 def mock_redis():
-    with patch("app.services.data_export.redis.redis") as mock_redis:
+    with patch("app.services.data_export.redis_connection.redis") as mock_redis:
         mock_redis.keys = AsyncMock()
         mock_redis.get = AsyncMock()
         yield mock_redis
