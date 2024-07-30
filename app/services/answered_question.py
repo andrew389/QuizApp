@@ -17,19 +17,20 @@ class AnsweredQuestionService:
         """
         Saves the user's answers to a db and redis, also increments the quiz frequency.
         """
-        await AnsweredQuestionService._process_quiz_answers(
-            uow, quiz_data, user_id, quiz_id
-        )
+        async with uow:
+            await AnsweredQuestionService._process_quiz_answers(
+                uow, quiz_data, user_id, quiz_id
+            )
 
-        quiz = await uow.quiz.find_one(id=quiz_id)
+            quiz = await uow.quiz.find_one(id=quiz_id)
 
-        redis_key = f"answered_quiz_{user_id}_{quiz.company_id}_{quiz_id}"
-        redis_data_json = await AnsweredQuestionService._prepare_redis_data(
-            uow, quiz_data, user_id, quiz_id, quiz.company_id
-        )
-        await redis_connection.write_with_ttl(
-            redis_key, redis_data_json, ttl=48 * 60 * 60
-        )
+            redis_key = f"answered_quiz_{user_id}_{quiz.company_id}_{quiz_id}"
+            redis_data_json = await AnsweredQuestionService._prepare_redis_data(
+                uow, quiz_data, user_id, quiz_id, quiz.company_id
+            )
+            await redis_connection.write_with_ttl(
+                redis_key, redis_data_json, ttl=48 * 60 * 60
+            )
 
     @staticmethod
     async def _process_quiz_answers(
@@ -43,7 +44,6 @@ class AnsweredQuestionService:
                 await AnsweredQuestionService._process_answer(
                     uow, question_id, answer_id, quiz_id, user_id
                 )
-            await uow.commit()
 
     @staticmethod
     async def _process_answer(
@@ -52,38 +52,41 @@ class AnsweredQuestionService:
         """
         Processes a single answer to a quiz question and saves or updates the answer record.
         """
-        question = await uow.question.find_one(id=question_id)
-        answer = await uow.answer.find_one(id=answer_id)
+        async with uow:
+            question = await uow.question.find_one(id=question_id)
+            answer = await uow.answer.find_one(id=answer_id)
 
-        if not question and not answer:
-            logger.error(f"Not found: question_id={question_id}, answer_id={answer_id}")
-        elif not question:
-            logger.error(f"Question not found: question_id={question_id}")
-        elif not answer:
-            logger.error(f"Answer not found: answer_id={answer_id}")
+            if not question and not answer:
+                logger.error(
+                    f"Not found: question_id={question_id}, answer_id={answer_id}"
+                )
+            elif not question:
+                logger.error(f"Question not found: question_id={question_id}")
+            elif not answer:
+                logger.error(f"Answer not found: answer_id={answer_id}")
 
-        if not question or not answer:
-            raise NotFoundException()
+            if not question or not answer:
+                raise NotFoundException()
 
-        if question.quiz_id != quiz_id:
-            logger.error(f"Quiz not found: quiz_id={quiz_id}")
-            raise NotFoundException()
+            if question.quiz_id != quiz_id:
+                logger.error(f"Quiz not found: quiz_id={quiz_id}")
+                raise NotFoundException()
 
-        is_correct = answer.is_correct
-        answer_text = answer.text
+            is_correct = answer.is_correct
+            answer_text = answer.text
 
-        quiz = await uow.quiz.find_one(id=quiz_id)
+            quiz = await uow.quiz.find_one(id=quiz_id)
 
-        await AnsweredQuestionService._add_answered_question(
-            uow,
-            quiz.company_id,
-            quiz_id,
-            question_id,
-            answer_id,
-            answer_text,
-            is_correct,
-            user_id,
-        )
+            await AnsweredQuestionService._add_answered_question(
+                uow,
+                quiz.company_id,
+                quiz_id,
+                question_id,
+                answer_id,
+                answer_text,
+                is_correct,
+                user_id,
+            )
 
     @staticmethod
     async def _add_answered_question(
@@ -99,31 +102,33 @@ class AnsweredQuestionService:
         """
         Adds a new answered question record to the database.
         """
-        answered_question_data = AnsweredQuestionBase(
-            user_id=user_id,
-            company_id=company_id,
-            quiz_id=quiz_id,
-            question_id=question_id,
-            answer_id=answer_id,
-            answer_text=answer_text,
-            is_correct=is_correct,
-        )
-        await uow.answered_question.add_one(
-            answered_question_data.model_dump(exclude={"id"})
-        )
+        async with uow:
+            answered_question_data = AnsweredQuestionBase(
+                user_id=user_id,
+                company_id=company_id,
+                quiz_id=quiz_id,
+                question_id=question_id,
+                answer_id=answer_id,
+                answer_text=answer_text,
+                is_correct=is_correct,
+            )
+            await uow.answered_question.add_one(
+                answered_question_data.model_dump(exclude={"id"})
+            )
 
     @staticmethod
     async def _increment_quiz_frequency(uow: UnitOfWork, quiz_id: int):
         """
         Increments the frequency count of a quiz.
         """
-        try:
-            quiz = await uow.quiz.find_one(id=quiz_id)
-            if quiz:
-                quiz.frequency += 1
-                await uow.quiz.edit_one(quiz_id, {"frequency": quiz.frequency})
-        except NoResultFound:
-            raise NotFoundException()
+        async with uow:
+            try:
+                quiz = await uow.quiz.find_one(id=quiz_id)
+                if quiz:
+                    quiz.frequency += 1
+                    await uow.quiz.edit_one(quiz_id, {"frequency": quiz.frequency})
+            except NoResultFound:
+                raise NotFoundException()
 
     @staticmethod
     async def _prepare_redis_data(
@@ -173,13 +178,15 @@ class AnsweredQuestionService:
         """
         Get answer text from answer
         """
-        answer = await uow.answer.find_one(id=answer_id)
-        return answer.text if answer else None
+        async with uow:
+            answer = await uow.answer.find_one(id=answer_id)
+            return answer.text if answer else None
 
     @staticmethod
     async def _is_correct_answer(uow: UnitOfWork, answer_id: int) -> bool:
         """
         Check is user_answer is correct
         """
-        answer = await uow.answer.find_one(id=answer_id)
-        return answer.is_correct if answer else False
+        async with uow:
+            answer = await uow.answer.find_one(id=answer_id)
+            return answer.is_correct if answer else False
