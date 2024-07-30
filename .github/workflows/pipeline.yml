@@ -42,14 +42,24 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: SSH into EC2 and deploy
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.AWS_EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker pull ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ steps.get-commit-hash.outputs.commit-hash }}-${{ steps.get-timestamp.outputs.timestamp }}
-            docker stop my-app || true
-            docker rm my-app || true
-            docker run -d --name my-app ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ steps.get-commit-hash.outputs.commit-hash }}-${{ steps.get-timestamp.outputs.timestamp }}
+            # Log in to ECR
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+            # Pull the latest image
+            docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+            # Stop and remove old containers
+            docker rm -f $(docker ps -a -q --filter "ancestor=$ECR_REGISTRY/$ECR_REPOSITORY") || true
+
+            # Run the containers with the required ports
+            docker run -d --name app -p 8010:8000 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker run -d --name celery_worker $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery worker --loglevel=info
+            docker run -d --name celery_beat $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery beat --loglevel=info
+            docker run -d --name flower -p 5555:5555 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery flower --port=5555
