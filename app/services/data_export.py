@@ -4,6 +4,7 @@ import os
 
 import aiofiles
 from fastapi.responses import StreamingResponse
+
 from app.db.redis_db import redis
 from app.services.member_management import MemberManagement
 from app.uow.unitofwork import UnitOfWork
@@ -11,7 +12,7 @@ from app.uow.unitofwork import UnitOfWork
 
 class DataExportService:
     @staticmethod
-    async def _fetch_data(pattern: str) -> list:
+    async def fetch_data(pattern: str) -> list:
         """
         Fetches data from Redis based on the given pattern.
 
@@ -21,18 +22,15 @@ class DataExportService:
         Returns:
             list: A list of data retrieved from Redis.
         """
+
         keys = await redis.redis.keys(pattern)
-
         all_data = []
-
         for key in keys:
             key_str = str(key)[len("<Future finished result='") : -2].strip()
             data_json = await redis.redis.get(key_str)
-
             if data_json:
                 data = json.loads(data_json)
                 all_data.append(data)
-
         return all_data
 
     @staticmethod
@@ -72,9 +70,7 @@ class DataExportService:
             StreamingResponse: A StreamingResponse containing the exported data.
         """
         pattern = f"answered_quiz_{current_user_id}_*_*"
-
-        all_data = await DataExportService._fetch_data(pattern)
-
+        all_data = await DataExportService.fetch_data(pattern)
         return await DataExportService._export_data(
             all_data,
             (
@@ -111,9 +107,7 @@ class DataExportService:
         )
 
         pattern = f"answered_quiz_{user_id}_{company_id}_*"
-
-        all_data = await DataExportService._fetch_data(pattern)
-
+        all_data = await DataExportService.fetch_data(pattern)
         return await DataExportService._export_data(
             all_data,
             (
@@ -145,9 +139,7 @@ class DataExportService:
         )
 
         pattern = f"answered_quiz_*_{company_id}_*"
-
-        all_data = await DataExportService._fetch_data(pattern)
-
+        all_data = await DataExportService.fetch_data(pattern)
         return await DataExportService._export_data(
             all_data,
             (
@@ -184,9 +176,7 @@ class DataExportService:
         )
 
         pattern = f"answered_quiz_*_{company_id}_{quiz_id}"
-
-        all_data = await DataExportService._fetch_data(pattern)
-
+        all_data = await DataExportService.fetch_data(pattern)
         return await DataExportService._export_data(
             all_data,
             (
@@ -210,7 +200,6 @@ class DataExportService:
             StreamingResponse: A StreamingResponse containing the exported data.
         """
         json_data = json.dumps(all_data, indent=4)
-
         async with aiofiles.open(file_name, mode="w") as file:
             await file.write(json_data)
 

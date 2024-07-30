@@ -21,6 +21,7 @@ from app.models import (
     Answer,
     Quiz,
     AnsweredQuestion,
+    Notification,
 )
 
 # this is the Alembic Config object, which provides

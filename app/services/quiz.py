@@ -1,5 +1,4 @@
 from fastapi import Request
-
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
@@ -12,6 +11,7 @@ from app.schemas.quiz import (
     QuizzesListResponse,
     QuizResponseForList,
 )
+from app.services.notification import NotificationService
 from app.services.question import QuestionService
 from app.uow.unitofwork import UnitOfWork
 from app.utils.user import get_pagination_urls, filter_data
@@ -62,6 +62,10 @@ class QuizService:
                 else:
                     logger.error(f"Question with ID {question_id} not found.")
                     raise NotFoundException()
+
+            await NotificationService.send_notifications(
+                uow, quiz.company_id, f"A new quiz has been created: {quiz.title}"
+            )
 
             quiz_data = filter_data(new_quiz)
 

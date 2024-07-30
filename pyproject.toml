@@ -29,6 +29,9 @@ python-jose = "^3.3.0"
 cryptography = "^42.0.8"
 anyio = "^4.4.0"
 aiofiles = "^24.1.0"
+celery = "^5.4.0"
+flower = "^2.0.1"
+nest-asyncio = "^1.6.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

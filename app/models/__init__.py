@@ -6,3 +6,4 @@ from .question import Question
 from .answer import Answer
 from .quiz import Quiz
 from .answered_question import AnsweredQuestion
+from .notification import Notification

@@ -29,6 +29,9 @@ class Company(Base):
     invitations = relationship(
         "Invitation", back_populates="company", cascade="all, delete-orphan"
     )
+    notifications = relationship(
+        "Notification", back_populates="company", cascade="all, delete-orphan"
+    )
     quizzes = relationship(
         "Quiz", back_populates="company", cascade="all, delete-orphan"
     )
