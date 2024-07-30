@@ -22,7 +22,8 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
 
       - name: Get commit hash
         id: get-commit-hash
@@ -42,7 +43,7 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Deploy to EC2)
+      - name: Deploy to EC2
         env:
           EC2_HOST: ${{ secrets.AWS_EC2_HOST }}
           EC2_USER: ubuntu
@@ -55,6 +56,7 @@ jobs:
           chmod 600 /tmp/ec2-key.pem
 
           ssh -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem $EC2_USER@$EC2_HOST <<EOF
+            cd /path/to/meduzzen_internship
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
             docker stop app celery_worker celery_beat flower || true
             docker rm app celery_worker celery_beat flower || true
