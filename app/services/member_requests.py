@@ -94,6 +94,7 @@ class MemberRequests:
             receiver_id=receiver_id,
             company_id=company_id,
         )
+
         invitation_dict = invitation_data.model_dump()
 
         invitation_dict.update(
