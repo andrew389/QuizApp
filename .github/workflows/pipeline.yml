@@ -49,9 +49,6 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Log in to ECR
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
-
             # Pull the latest image
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
