@@ -21,12 +21,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ SSH_PRIVATE_KEY }} .
-          docker tag ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ SSH_PRIVATE_KEY }} ${{ secrets.AWS_ECR_REGISTRY }}/my-app:latest
+          docker build -t ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ secrets.SSH_PRIVATE_KEY }} .
+          docker tag ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.AWS_ECR_REGISTRY }}/my-app:latest
 
       - name: Push Docker image to Amazon ECR
         run: |
-          docker push ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ SSH_PRIVATE_KE }}
+          docker push ${{ secrets.AWS_ECR_REGISTRY }}/my-app:${{ secrets.SSH_PRIVATE_KE }}
           docker push ${{ secrets.AWS_ECR_REGISTRY }}/my-app:latest
 
       - name: SSH into EC2 and deploy
