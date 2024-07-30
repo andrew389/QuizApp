@@ -22,8 +22,7 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Get commit hash
         id: get-commit-hash
@@ -33,7 +32,7 @@ jobs:
         id: get-timestamp
         run: echo "::set-output name=timestamp::$(date +'%Y-%m-%d-%H-%M')"
 
-      - name: Build and push the image to Amazon ECR
+      - name: Build, tag, and push the image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -42,26 +41,3 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-      - name: Deploy to EC2
-        env:
-          EC2_HOST: ${{ secrets.AWS_EC2_HOST }}
-          EC2_USER: ubuntu
-          EC2_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ steps.get-commit-hash.outputs.commit-hash }}-${{ steps.get-timestamp.outputs.timestamp }}
-        run: |
-          echo "$EC2_SSH_KEY" > /tmp/ec2-key.pem
-          chmod 600 /tmp/ec2-key.pem
-
-          ssh -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem $EC2_USER@$EC2_HOST <<EOF
-            cd /path/to/meduzzen_internship
-            docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-            docker stop app celery_worker celery_beat flower || true
-            docker rm app celery_worker celery_beat flower || true
-            docker run -d --name app -p 8010:8000 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-            docker run -d --name celery_worker $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery worker --loglevel=info
-            docker run -d --name celery_beat $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery beat --loglevel=info
-            docker run -d --name flower -p 5555:5555 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG celery -A app.celery:celery flower --port=5555
-          EOF
