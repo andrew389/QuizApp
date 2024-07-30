@@ -78,6 +78,6 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
             cd /home/ubuntu/meduzzen_internship
-            docker-compose exec meduzzen_internship-app-1
+            docker-compose exec meduzzen_internship-app-1 bash
             pytest
           EOF
