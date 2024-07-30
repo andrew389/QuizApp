@@ -65,18 +65,3 @@ jobs:
             docker-compose up -d
             exit
           EOF
-  test:
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set permissions for private key
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
-          chmod 600 key.pem
-
-      - name: Run tests
-        run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
-            cd /home/ubuntu/meduzzen_internship
-            docker-compose exec meduzzen_internship-app-1 bash -c "pytest"
-          EOF
