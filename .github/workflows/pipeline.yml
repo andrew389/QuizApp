@@ -1,17 +1,19 @@
 name: Build on DockerHub and Deploy to AWS
+
 on:
   push:
     branches:
       - BE-21-add-import-data
+
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKER_PASSWORD }}
   AWS_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -28,8 +30,29 @@ jobs:
         run: |
           docker-compose -f ./docker-compose.yml build
           docker-compose -f ./docker-compose.yml push
-  deploy:
+
+  test:
     needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Run tests in Docker container
+        run: |
+          docker-compose -f ./docker-compose.yml run --rm app pytest
+
+  deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
