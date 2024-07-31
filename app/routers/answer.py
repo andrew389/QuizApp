@@ -19,7 +19,7 @@ from app.schemas.answer import (
     AnswersListResponse,
 )
 
-router = APIRouter(prefix="/answers", tags=["Answers"])
+router = APIRouter(prefix="/answers", tags=["Answers№№№№"])
 
 
 @router.post("/", response_model=AnswerBase)
