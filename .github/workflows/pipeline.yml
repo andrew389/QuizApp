@@ -39,47 +39,8 @@ jobs:
           docker-compose -f ./docker-compose.yml build --cache-from type=local,src=/tmp/.buildx-cache
           docker-compose -f ./docker-compose.yml push
 
-  setup-and-test:
-    runs-on: ubuntu-latest
-    env:
-      BRANCH_NAME: BE-21-add-import-data
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run setup and tests on EC2 instance
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/key.pem
-          chmod 600 /tmp/key.pem
-
-          ssh -o StrictHostKeyChecking=no -i /tmp/key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
-            cd /home/ubuntu/meduzzen_internship
-
-            echo "Switching to the correct branch..."
-            git fetch origin
-            git checkout $BRANCH_NAME
-            git pull origin $BRANCH_NAME
-
-            echo "Stopping and removing existing containers..."
-            docker-compose down
-
-            echo "Building and running Docker Compose with the latest images..."
-            docker-compose up -d --build
-
-            if docker-compose exec -T app poetry run pytest --maxfail=1 --disable-warnings -q; then
-              echo "Tests passed."
-            else
-              echo "Tests failed."
-              exit 1
-            fi
-
-            echo "Stopping test environment..."
-            docker-compose down
-          EOF
-
   deploy:
-    needs: setup-and-test
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
