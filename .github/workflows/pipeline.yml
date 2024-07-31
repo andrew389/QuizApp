@@ -61,8 +61,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
             cd /home/ubuntu/meduzzen_internship
-            git config --global user.name "${{ secrets.GIT_USERNAME }}"
-            git config --global user.password "${{ secrets.GIT_PASSWORD }}"
+            git remote set-url origin https://${{ secrets.GIT_USERNAME }}:${{ secrets.GIT_PASSWORD }}@github.com/GIT_USERNAME/meduzzen_internship.git
             git fetch
             git pull origin BE-21-add-import-data
           EOF
