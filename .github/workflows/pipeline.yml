@@ -2,7 +2,7 @@ name: Build on DockerHub and Deploy to AWS
 on:
   push:
     branches:
-      - BE-21-add-import-data
+      - main
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKER_PASSWORD }}
