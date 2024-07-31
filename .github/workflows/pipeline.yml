@@ -2,7 +2,7 @@ name: Build on DockerHub and Deploy to AWS
 on:
   push:
     branches:
-      - develop
+      - BE-21-add-import-data
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKER_PASSWORD }}
@@ -55,6 +55,16 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
             docker ps -a
+          EOF
+
+      - name: Update code on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
+            cd /home/ubuntu/meduzzen_internship
+            git config --global user.name "${{ secrets.GIT_USERNAME }}"
+            git config --global user.password "${{ secrets.GIT_PASSWORD }}"
+            git fetch
+            git pull origin BE-21-add-import-data
           EOF
 
       - name: Pull Docker image and run containers using Docker Compose

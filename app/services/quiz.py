@@ -1,7 +1,10 @@
+from typing import List
+
 from fastapi import Request
 from app.core.logger import logger
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
+from app.models import Quiz
 from app.schemas.question import QuestionResponse
 from app.schemas.quiz import (
     QuizCreate,
@@ -53,15 +56,7 @@ class QuizService:
                 quiz.model_dump(exclude={"questions", "id"})
             )
 
-            for question_id in quiz.questions:
-                existing_question = await uow.question.find_one(
-                    id=question_id, quiz_id=None
-                )
-                if existing_question:
-                    await uow.question.edit_one(question_id, {"quiz_id": new_quiz.id})
-                else:
-                    logger.error(f"Question with ID {question_id} not found.")
-                    raise NotFoundException()
+            await QuizService.process_creating_quiz(uow, quiz.questions, new_quiz)
 
             await NotificationService.send_notifications(
                 uow, quiz.company_id, f"A new quiz has been created: {quiz.title}"
@@ -70,6 +65,19 @@ class QuizService:
             quiz_data = filter_data(new_quiz)
 
             return QuizBase.model_validate(quiz_data)
+
+    @staticmethod
+    async def process_creating_quiz(uow: UnitOfWork, questions: List, new_quiz: Quiz):
+        async with uow:
+            for question_id in questions:
+                existing_question = await uow.question.find_one(
+                    id=question_id, quiz_id=None
+                )
+                if existing_question:
+                    await uow.question.edit_one(question_id, {"quiz_id": new_quiz.id})
+                else:
+                    logger.error(f"Question with ID {question_id} not found.")
+                    raise NotFoundException()
 
     @staticmethod
     async def update_quiz(
