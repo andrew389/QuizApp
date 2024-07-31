@@ -1,9 +1,7 @@
 import pandas as pd
 from fastapi import UploadFile
 from app.core.logger import logger
-from app.schemas.answer import AnswerCreate
-from app.schemas.question import QuestionCreate
-from app.schemas.quiz import QuizCreate
+from app.schemas.quiz import QuizBase, AnswerCreate, QuestionCreate, QuizCreate
 from app.services.member_management import MemberManagement
 from app.uow.unitofwork import UnitOfWork
 from app.services.answer import AnswerService
@@ -40,41 +38,38 @@ class DataImportService:
             answers_mapping = {}
             for index, row in df_answers.iterrows():
                 answer_data = AnswerCreate(
-                    text=str(row["Text"]),
+                    text=row["Text"],
                     is_correct=bool(row["Is Correct"]),
                     company_id=int(row["Company ID"]),
                 )
                 answer = await AnswerService.create_answer(
                     uow, answer_data, current_user_id
                 )
-                answers_mapping[row["Answer ID"]] = answer.id
+                answers_mapping[int(row["Answer ID"])] = answer.id
 
             # Create questions
             questions_mapping = {}
             for index, row in df_questions.iterrows():
+                answer_ids = str(row["Answers"]).split(",")
                 question_data = QuestionCreate(
-                    title=str(row["Title"]),
+                    title=row["Title"],
                     company_id=int(row["Company ID"]),
-                    answers={
-                        answers_mapping[int(aid)] for aid in row["Answers"].split(",")
-                    },
+                    answers={answers_mapping[int(aid)] for aid in answer_ids},
                 )
                 question = await QuestionService.create_question(
                     uow, question_data, current_user_id
                 )
-                questions_mapping[row["Question ID"]] = question.id
+                questions_mapping[int(row["Question ID"])] = question.id
 
             # Create quizzes
             for index, row in df_quizzes.iterrows():
+                question_ids = str(row["Questions"]).split(",")
                 quiz_data = QuizCreate(
-                    title=str(row["Title"]),
-                    description=str(row["Description"]),
+                    title=row["Title"],
+                    description=row["Description"],
                     frequency=int(row["Frequency"]),
                     company_id=int(row["Company ID"]),
-                    questions=[
-                        questions_mapping[int(qid)]
-                        for qid in row["Questions"].split(",")
-                    ],
+                    questions=[questions_mapping[int(qid)] for qid in question_ids],
                 )
                 await QuizService.create_quiz(uow, quiz_data, current_user_id)
 
