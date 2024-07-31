@@ -53,7 +53,19 @@ async def add_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Adds a new company.
+    Creates a new company.
+
+    Args:
+        company (CompanyCreate): The company data to create.
+        uow (UOWDep): Unit of Work dependency.
+        company_service (CompanyServiceDep): Company service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        CompanyDetail: The details of the newly created company.
+
+    Raises:
+        CreatingException: If there is an error during the creation process.
     """
     try:
         logger.info(f"Received company data: {company}")
@@ -79,6 +91,20 @@ async def get_companies(
 ):
     """
     Retrieves a list of companies.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency.
+        request (Request): Request to get base URL.
+        company_service (CompanyServiceDep): Company service dependency.
+        current_user (User): The currently authenticated user.
+        skip (int): The number of items to skip (pagination).
+        limit (int): The maximum number of items to return.
+
+    Returns:
+        CompaniesListResponse: The list of companies.
+
+    Raises:
+        FetchingException: If there is an error during the retrieval process.
     """
     try:
         companies = await company_service.get_companies(
@@ -102,7 +128,19 @@ async def get_company_by_id(
 ):
     """
     Retrieves a company by its ID.
+
+    Args:
+        company_id (int): The ID of the company to retrieve.
+        uow (UOWDep): Unit of Work dependency.
+        company_service (CompanyServiceDep): Company service dependency.
+
+    Returns:
+        CompanyDetail: The details of the retrieved company.
+
+    Raises:
+        FetchingException: If there is an error during the retrieval process.
     """
+
     try:
         company = await company_service.get_company_by_id(uow, company_id)
         logger.info(f"Fetched company with ID: {company_id}")
@@ -122,6 +160,19 @@ async def update_company(
 ):
     """
     Updates a company by its ID.
+
+    Args:
+        company_id (int): The ID of the company to update.
+        company_update (CompanyUpdate): The updated company data.
+        uow (UOWDep): Unit of Work dependency.
+        company_service (CompanyServiceDep): Company service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        CompanyDetail: The updated company details.
+
+    Raises:
+        UpdatingException: If there is an error during the update process.
     """
     try:
         updated_company = await company_service.update_company(
@@ -143,6 +194,18 @@ async def delete_company(
 ):
     """
     Deletes a company by its ID.
+
+    Args:
+        company_id (int): The ID of the company to delete.
+        uow (UOWDep): Unit of Work dependency.
+        company_service (CompanyServiceDep): Company service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary with a status code indicating success.
+
+    Raises:
+        DeletingException: If there is an error during the deletion process.
     """
     try:
         deleted_company_id = await company_service.delete_company(
@@ -165,6 +228,19 @@ async def appoint_admin(
 ):
     """
     Appoints a member as an admin in a company.
+
+    Args:
+        company_id (int): The ID of the company where the admin is to be appointed.
+        member_id (int): The ID of the member to be appointed as an admin.
+        uow (UOWDep): Unit of Work dependency.
+        member_service (MemberManagementDep): Member management service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        MemberBase: The details of the appointed admin.
+
+    Raises:
+        CreatingException: If there is an error during the appointment process.
     """
     return await member_service.appoint_admin(
         uow, current_user.id, company_id, member_id
@@ -181,6 +257,19 @@ async def remove_admin(
 ):
     """
     Removes a member's admin status in a company.
+
+    Args:
+        company_id (int): The ID of the company where the admin status is to be removed.
+        member_id (int): The ID of the member whose admin status is to be removed.
+        uow (UOWDep): Unit of Work dependency.
+        member_service (MemberManagementDep): Member management service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        MemberBase: The details of the member after removing admin status.
+
+    Raises:
+        UpdatingException: If there is an error during the removal process.
     """
     return await member_service.remove_admin(
         uow, current_user.id, company_id, member_id
@@ -197,6 +286,19 @@ async def change_company_visibility(
 ):
     """
     Changes the visibility of a company.
+
+    Args:
+        company_id (int): The ID of the company whose visibility is to be changed.
+        is_visible (bool): The new visibility status of the company.
+        uow (UOWDep): Unit of Work dependency.
+        company_service (CompanyServiceDep): Company service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        CompanyDetail: The updated company details.
+
+    Raises:
+        UpdatingException: If there is an error during the visibility change process.
     """
     try:
         updated_company = await company_service.change_company_visibility(
@@ -219,6 +321,19 @@ async def request_to_join_company_to_owner(
 ):
     """
     Requests to join a company.
+
+    Args:
+        company_id (int): The ID of the company to join.
+        request (MemberRequest): The details of the member request.
+        uow (UOWDep): Unit of Work dependency.
+        member_service (MemberRequestsDep): Member requests service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        InvitationBase: The details of the created invitation.
+
+    Raises:
+        CreatingException: If there is an error during the request process.
     """
     try:
         invitation = await member_service.request_to_join_company(
@@ -240,6 +355,19 @@ async def send_invitation_to_user(
 ):
     """
     Sends an invitation to a user to join a company.
+
+    Args:
+        company_id (int): The ID of the company sending the invitation.
+        invitation_data (SendInvitation): The details of the invitation.
+        uow (UOWDep): Unit of Work dependency.
+        invitation_service (InvitationServiceDep): Invitation service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        InvitationBase: The details of the sent invitation.
+
+    Raises:
+        CreatingException: If there is an error during the invitation process.
     """
     try:
         invitation = await invitation_service.send_invitation(
@@ -262,6 +390,20 @@ async def get_members(
 ):
     """
     Retrieves a list of members in a company.
+
+    Args:
+        company_id (int): The ID of the company whose members are to be retrieved.
+        uow (UOWDep): Unit of Work dependency.
+        request (Request): The HTTP request object to get base URL.
+        member_service (MemberQueriesDep): Member queries service dependency.
+        skip (int): The number of items to skip (pagination).
+        limit (int): The maximum number of items to return.
+
+    Returns:
+        MembersListResponse: The list of members in the company.
+
+    Raises:
+        FetchingException: If there is an error during the retrieval process.
     """
     try:
         members = await member_service.get_members(
@@ -282,6 +424,18 @@ async def get_member_by_id(
 ):
     """
     Retrieves a member by their ID.
+
+    Args:
+        company_id (int): The ID of the company the member belongs to.
+        member_id (int): The ID of the member to retrieve.
+        uow (UOWDep): Unit of Work dependency.
+        member_service (MemberQueriesDep): Member queries service dependency.
+
+    Returns:
+        MemberBase: The details of the member.
+
+    Raises:
+        FetchingException: If there is an error during the retrieval process.
     """
     try:
         member = await member_service.get_member_by_id(
@@ -305,6 +459,21 @@ async def get_quizzes(
 ):
     """
     Retrieves a list of quizzes for a company.
+
+    Args:
+        company_id (int): The ID of the company whose quizzes are to be retrieved.
+        uow (UOWDep): Unit of Work dependency.
+        request (Request): The HTTP request object to get base URL.
+        quiz_service (QuizServiceDep): Quiz service dependency.
+        current_user (User): The currently authenticated user.
+        skip (int): The number of items to skip (pagination).
+        limit (int): The maximum number of items to return.
+
+    Returns:
+        QuizzesListResponse: The list of quizzes for the company.
+
+    Raises:
+        FetchingException: If there is an error during the retrieval process.
     """
     try:
         quizzes_list = await quiz_service.get_quizzes(
@@ -332,7 +501,20 @@ async def submit_quiz_answers(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Submit answers for quiz
+    Submits answers for a quiz.
+
+    Args:
+        quiz_id (int): The ID of the quiz for which answers are being submitted.
+        quiz_data (SendAnsweredQuiz): The submitted quiz answers.
+        uow (UOWDep): Unit of Work dependency.
+        answered_question_service (AnsweredQuestionServiceDep): Answered question service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A message indicating the successful saving of answers.
+
+    Raises:
+        CreatingException: If there is an error during the answer submission process.
     """
     await answered_question_service.save_answered_quiz(
         uow, quiz_data, user_id=current_user.id, quiz_id=quiz_id
@@ -351,6 +533,20 @@ async def get_quiz_results_by_user_id_company_id(
 ):
     """
     Get quiz results for a specific user and company.
+
+    Args:
+        user_id (int): The ID of the user whose results are to be retrieved.
+        company_id (int): The ID of the company where the quiz results are recorded.
+        is_csv (bool): Flag indicating whether the results should be exported as a CSV file.
+        data_export_service (DataExportServiceDep): Data export service dependency.
+        uow (UOWDep): Unit of Work dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        The quiz results for the specified user and company, either as JSON or CSV.
+
+    Raises:
+        FetchingException: If there is an error during the retrieval process.
     """
     try:
         return await data_export_service.read_data_by_user_id_and_company_id(
@@ -372,6 +568,20 @@ async def get_results_by_company_id_quiz_id(
 ):
     """
     Get quiz results for a specific company and quiz.
+
+    Args:
+        company_id (int): The ID of the company where the quiz results are recorded.
+        quiz_id (int): The ID of the quiz whose results are to be retrieved.
+        is_csv (bool): Flag indicating whether the results should be exported as a CSV file.
+        data_export_service (DataExportServiceDep): Data export service dependency.
+        uow (UOWDep): Unit of Work dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        The quiz results for the specified company and quiz, either as JSON or CSV.
+
+    Raises:
+        FetchingException: If there is an error during the retrieval process.
     """
     try:
         return await data_export_service.read_data_by_company_id_and_quiz_id(
@@ -392,6 +602,19 @@ async def get_results_by_company_id(
 ):
     """
     Export quiz results for a specific company.
+
+    Args:
+        company_id (int): The ID of the company whose quiz results are to be exported.
+        is_csv (bool): Flag indicating whether the results should be exported as a CSV file.
+        data_export_service (DataExportServiceDep): Data export service dependency.
+        uow (UOWDep): Unit of Work dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        The quiz results for the specified company, either as JSON or CSV.
+
+    Raises:
+        FetchingException: If there is an error during the export process.
     """
     try:
         return await data_export_service.read_data_by_company_id(
@@ -410,7 +633,19 @@ async def get_avg_score_within_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Get average score of user within company
+    Get average score of users within a company.
+
+    Args:
+        company_id (int): The ID of the company for which the average score is calculated.
+        uow (UOWDep): Unit of Work dependency.
+        analytics_service (AnalyticsServiceDep): Analytics service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary containing the average score of users within the company.
+
+    Raises:
+        CalculatingException: If there is an error during the calculation process.
     """
     try:
         avg_score = await analytics_service.calculate_average_score_within_company(
@@ -432,6 +667,20 @@ async def get_company_members_average_scores(
 ):
     """
     Get average scores for all members of a specified company within the given time range.
+
+    Args:
+        company_id (int): The ID of the company for which member average scores are calculated.
+        uow (UOWDep): Unit of Work dependency.
+        analytics_service (AnalyticsServiceDep): Analytics service dependency.
+        current_user (User): The currently authenticated user.
+        start_date (datetime): The start date for the time range.
+        end_date (datetime): The end date for the time range.
+
+    Returns:
+        Dict[int, float]: A dictionary where keys are member IDs and values are their average scores.
+
+    Raises:
+        CalculatingException: If there is an error during the calculation process.
     """
     try:
         average_scores = (
@@ -457,6 +706,18 @@ async def get_users_last_quiz_attempts(
 ):
     """
     List all users in a company with the timestamp of their last quiz attempt.
+
+    Args:
+        company_id (int): The ID of the company to fetch users' last quiz attempts for.
+        uow (UOWDep): Unit of Work dependency.
+        analytics_service (AnalyticsServiceDep): Analytics service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        Dict[int, datetime]: A dictionary where keys are user IDs and values are timestamps of their last quiz attempt.
+
+    Raises:
+        FetchingException: If there is an error during the retrieval process.
     """
     try:
         last_attempts = await analytics_service.list_users_last_quiz_attempts(
@@ -482,6 +743,21 @@ async def get_detailed_average_scores(
 ):
     """
     Get detailed average scores for each quiz taken by the user within the specified time range.
+
+    Args:
+        member_id (int): The ID of the member whose detailed average scores are to be retrieved.
+        company_id (int): The ID of the company for which the average scores are calculated.
+        uow (UOWDep): Unit of Work dependency.
+        analytics_service (AnalyticsServiceDep): Analytics service dependency.
+        current_user (User): The currently authenticated user.
+        start_date (datetime): The start date for the time range.
+        end_date (datetime): The end date for the time range.
+
+    Returns:
+        Dict[int, float]: A dictionary where keys are quiz IDs and values are the average scores.
+
+    Raises:
+        CalculatingException: If there is an error during the calculation process.
     """
     try:
         detailed_average_scores = (
@@ -506,6 +782,17 @@ async def get_admins(
 ):
     """
     Retrieves a list of admins for a company.
+
+    Args:
+        company_id (int): The ID of the company to retrieve admins for.
+        uow (UOWDep): Unit of Work dependency.
+        request (Request): The HTTP request object.
+        member_service (MemberQueriesDep): Member queries service dependency.
+        skip (int): Number of records to skip (for pagination).
+        limit (int): Maximum number of records to return (for pagination).
+
+    Returns:
+        AdminsListResponse: A response object containing the list of admins.
     """
     return await member_service.get_admins(uow, company_id, request, skip, limit)
 
@@ -519,6 +806,18 @@ async def remove_member(
 ):
     """
     Removes a member from the company.
+
+    Args:
+        member_id (int): The ID of the member to be removed.
+        uow (UOWDep): Unit of Work dependency.
+        member_service (MemberManagementDep): Member management service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        MemberBase: The details of the removed member.
+
+    Raises:
+        DeletingException: If there is an error during the removal process.
     """
     try:
         result = await member_service.remove_member(uow, current_user.id, member_id)
@@ -537,6 +836,18 @@ async def leave_company(
 ):
     """
     Allows a member to leave a company.
+
+    Args:
+        company_id (int): The ID of the company from which the member wants to leave.
+        uow (UOWDep): Unit of Work dependency.
+        member_service (MemberManagementDep): Member management service dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        MemberBase: The details of the member leaving the company.
+
+    Raises:
+        DeletingException: If there is an error during the leaving process.
     """
     try:
         result = await member_service.leave_company(uow, current_user.id, company_id)

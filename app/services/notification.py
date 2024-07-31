@@ -18,7 +18,12 @@ class NotificationService:
     @staticmethod
     async def send_notifications(uow: UnitOfWork, company_id: int, message: str):
         """
-        Send notifications to all members of the specified company.
+        Sends notifications to all members of the specified company.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            company_id (int): The ID of the company to send notifications to.
+            message (str): The message to send in the notifications.
         """
         members = await uow.member.find_all_by_company_and_role(
             company_id=company_id, role=3
@@ -42,9 +47,14 @@ class NotificationService:
         uow: UnitOfWork, user_id: int, company_id: int, message: str
     ):
         """
-        Send notification from to a specific member of the company.
-        """
+        Sends a notification to a specific member of the company.
 
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            user_id (int): The ID of the user to receive the notification.
+            company_id (int): The ID of the company.
+            message (str): The message to send in the notification.
+        """
         notification = NotificationCreate(
             message=message,
             receiver_id=user_id,
@@ -58,7 +68,17 @@ class NotificationService:
     @staticmethod
     async def mark_as_read(uow: UnitOfWork, user_id: int, notification_id: int) -> None:
         """
-        Mark a notification as read.
+        Marks a specific notification as read.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            user_id (int): The ID of the user marking the notification as read.
+            notification_id (int): The ID of the notification to mark as read.
+
+        Raises:
+            NotFoundException: If the notification is not found.
+            UnAuthorizedException: If the user does not have permissions.
+            UpdatingException: If the notification has already been marked as read.
         """
         notification = await NotificationService._validate_notification(
             uow, user_id, notification_id
@@ -70,7 +90,20 @@ class NotificationService:
         uow: UnitOfWork, user_id: int, notification_id: int
     ) -> Notification:
         """
-        Validate notification
+        Validates the existence and permissions for a notification.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            user_id (int): The ID of the user.
+            notification_id (int): The ID of the notification to validate.
+
+        Returns:
+            Notification: The validated notification object.
+
+        Raises:
+            NotFoundException: If the notification is not found.
+            UnAuthorizedException: If the user does not have permissions.
+            UpdatingException: If the notification is already marked as read.
         """
         notification = await uow.notification.find_one(id=notification_id)
 
@@ -91,7 +124,11 @@ class NotificationService:
     @staticmethod
     async def mark_all_as_read(uow: UnitOfWork, user_id: int) -> None:
         """
-        Mark all notifications as read.
+        Marks all notifications for a specific user as read.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            user_id (int): The ID of the user whose notifications will be marked as read.
         """
         notifications = await uow.notification.find_all_by_receiver(receiver_id=user_id)
 
@@ -104,6 +141,16 @@ class NotificationService:
     ) -> NotificationsListResponse:
         """
         Retrieves a list of notifications for a specific user with pagination.
+
+        Args:
+            uow (IUnitOfWork): The UnitOfWork instance for database operations.
+            request (Request): The FastAPI request object for pagination.
+            user_id (int): The ID of the user to retrieve notifications for.
+            skip (int): The number of notifications to skip (pagination).
+            limit (int): The maximum number of notifications to retrieve (pagination).
+
+        Returns:
+            NotificationsListResponse: The response containing the list of notifications and pagination links.
         """
         async with uow:
             notifications = await uow.notification.find_all_by_receiver(
@@ -130,6 +177,17 @@ class NotificationService:
     ) -> NotificationResponse:
         """
         Retrieves a specific notification by its ID for a specific user.
+
+        Args:
+            uow (IUnitOfWork): The UnitOfWork instance for database operations.
+            user_id (int): The ID of the user retrieving the notification.
+            notification_id (int): The ID of the notification to retrieve.
+
+        Returns:
+            NotificationResponse: The response containing the notification details.
+
+        Raises:
+            NotFoundException: If the notification is not found or does not belong to the user.
         """
         async with uow:
             notification = await uow.notification.find_one(

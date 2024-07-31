@@ -25,7 +25,18 @@ async def add_user(
     user_service: UserServiceDep,
 ):
     """
-    Create a new user.
+    Creates a new user.
+
+    Args:
+        user (UserCreate): Data to create a new user.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        user_service (UserServiceDep): Service for managing users.
+
+    Returns:
+        UserResponse: The created user details.
+
+    Raises:
+        CreatingException: If an error occurs during user creation.
     """
     try:
         logger.info(f"Received user data: {user}")
@@ -47,7 +58,20 @@ async def get_users(
     limit: int = Query(10, ge=1),
 ):
     """
-    Retrieve a list of users.
+    Retrieves a list of users.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        request (Request): The request object to get base URL.
+        user_service (UserServiceDep): Service for managing users.
+        skip (int): Number of users to skip (pagination).
+        limit (int): Maximum number of users to return.
+
+    Returns:
+        UsersListResponse: The list of users.
+
+    Raises:
+        FetchingException: If an error occurs during fetching users.
     """
     try:
         users = await user_service.get_users(uow, request, skip=skip, limit=limit)
@@ -64,7 +88,19 @@ async def get_user_by_id(
     user_service: UserServiceDep,
 ):
     """
-    Retrieve a user by their ID.
+    Retrieves a user by their ID.
+
+    Args:
+        user_id (int): The ID of the user to retrieve.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        user_service (UserServiceDep): Service for managing users.
+
+    Returns:
+        UserResponse: The details of the retrieved user.
+
+    Raises:
+        NotFoundException: If the user with the specified ID is not found.
+        FetchingException: If an error occurs during fetching the user.
     """
     try:
         user = await user_service.get_user_by_id(uow, user_id)
@@ -87,7 +123,20 @@ async def update_user(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Update an existing user.
+    Updates an existing user.
+
+    Args:
+        user_update (UserUpdate): Data to update the user.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        user_id (int): The ID of the user to update.
+        user_service (UserServiceDep): Service for managing users.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        UserResponse: The updated user details.
+
+    Raises:
+        UpdatingException: If an error occurs during user update.
     """
     try:
         updated_user = await user_service.update_user(
@@ -108,7 +157,19 @@ async def deactivate_user(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Deactivate a user by their ID.
+    Deactivates a user by their ID.
+
+    Args:
+        user_id (int): The ID of the user to deactivate.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        user_service (UserServiceDep): Service for managing users.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary with a status code indicating success.
+
+    Raises:
+        DeletingException: If an error occurs during user deactivation.
     """
     try:
         deactivated_user_id = await user_service.deactivate_user(

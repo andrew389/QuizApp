@@ -15,7 +15,16 @@ class AnsweredQuestionService:
         uow: UnitOfWork, quiz_data: SendAnsweredQuiz, user_id: int, quiz_id: int
     ):
         """
-        Saves the user's answers to a db and redis, also increments the quiz frequency.
+        Saves the user's answers to a quiz in the database and cache, and increments the quiz frequency.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            quiz_data (SendAnsweredQuiz): The quiz answers to be saved.
+            user_id (int): The ID of the user.
+            quiz_id (int): The ID of the quiz.
+
+        Raises:
+            NotFoundException: If the quiz or any required data is not found.
         """
         async with uow:
             await AnsweredQuestionService._process_quiz_answers(
@@ -37,7 +46,13 @@ class AnsweredQuestionService:
         uow: UnitOfWork, quiz_data: SendAnsweredQuiz, user_id: int, quiz_id: int
     ):
         """
-        Process and save the answers provided for a quiz.
+        Processes and saves the answers provided for a quiz.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            quiz_data (SendAnsweredQuiz): The quiz answers to be processed.
+            user_id (int): The ID of the user.
+            quiz_id (int): The ID of the quiz.
         """
         async with uow:
             for question_id, answer_id in quiz_data.answers.items():
@@ -51,6 +66,16 @@ class AnsweredQuestionService:
     ):
         """
         Processes a single answer to a quiz question and saves or updates the answer record.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            question_id (int): The ID of the question.
+            answer_id (int): The ID of the answer.
+            quiz_id (int): The ID of the quiz.
+            user_id (int): The ID of the user.
+
+        Raises:
+            NotFoundException: If the question, answer, or quiz is not found.
         """
         async with uow:
             question = await uow.question.find_one(id=question_id)
@@ -101,6 +126,16 @@ class AnsweredQuestionService:
     ):
         """
         Adds a new answered question record to the database.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            company_id (int): The ID of the company.
+            quiz_id (int): The ID of the quiz.
+            question_id (int): The ID of the question.
+            answer_id (int): The ID of the answer.
+            answer_text (str): The text of the answer.
+            is_correct (bool): Whether the answer is correct.
+            user_id (int): The ID of the user.
         """
         async with uow:
             answered_question_data = AnsweredQuestionBase(
@@ -120,6 +155,10 @@ class AnsweredQuestionService:
     async def _increment_quiz_frequency(uow: UnitOfWork, quiz_id: int):
         """
         Increments the frequency count of a quiz.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            quiz_id (int): The ID of the quiz to be incremented.
         """
         async with uow:
             try:
@@ -140,6 +179,16 @@ class AnsweredQuestionService:
     ) -> str:
         """
         Prepares the data for storing in Redis.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            quiz_data (SendAnsweredQuiz): The quiz answers to be stored.
+            user_id (int): The ID of the user.
+            quiz_id (int): The ID of the quiz.
+            company_id (int): The ID of the company.
+
+        Returns:
+            str: JSON string of the Redis data.
         """
         redis_data = {
             "user_id": user_id,
@@ -157,6 +206,13 @@ class AnsweredQuestionService:
     ) -> list:
         """
         Fetches detailed information about each answer from the provided quiz data.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            quiz_data (SendAnsweredQuiz): The quiz answers to be processed.
+
+        Returns:
+            list: List of dictionaries containing details about each answer.
         """
         return [
             {
@@ -176,7 +232,14 @@ class AnsweredQuestionService:
     @staticmethod
     async def _get_answer_text(uow: UnitOfWork, answer_id: int) -> str:
         """
-        Get answer text from answer
+        Get the text of an answer from the database.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            answer_id (int): The ID of the answer.
+
+        Returns:
+            str: The text of the answer.
         """
         async with uow:
             answer = await uow.answer.find_one(id=answer_id)
@@ -185,7 +248,14 @@ class AnsweredQuestionService:
     @staticmethod
     async def _is_correct_answer(uow: UnitOfWork, answer_id: int) -> bool:
         """
-        Check is user_answer is correct
+        Check if the provided answer ID corresponds to a correct answer.
+
+        Args:
+            uow (UnitOfWork): The UnitOfWork instance for database operations.
+            answer_id (int): The ID of the answer.
+
+        Returns:
+            bool: True if the answer is correct, False otherwise.
         """
         async with uow:
             answer = await uow.answer.find_one(id=answer_id)

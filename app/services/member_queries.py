@@ -66,12 +66,14 @@ class MemberQueries:
     ) -> AdminsListResponse:
         """
         Get a list of admins for a company.
+
         Args:
             uow (IUnitOfWork): The unit of work for database transactions.
             company_id (int): The ID of the company.
             request (Request): request from endpoint to get base url.
             skip (int): Number of admins to skip (pagination).
             limit (int): Maximum number of admins to return (pagination).
+
         Returns:
             AdminsListResponse: The list of admins and total count.
         """

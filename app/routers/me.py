@@ -30,7 +30,18 @@ router = APIRouter(prefix="/me", tags=["Me"])
 @router.post("/login", response_model=Token)
 async def login(uow: UOWDep, form_data: SignInRequest, auth_service: AuthServiceDep):
     """
-    Authenticate user and return access token.
+    Authenticate user and return an access token.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        form_data (SignInRequest): The email and password for authentication.
+        auth_service (AuthServiceDep): Service for authentication operations.
+
+    Returns:
+        Token: An access token and its expiration details.
+
+    Raises:
+        AuthenticationException: If authentication fails.
     """
     user = await auth_service.authenticate_user(
         uow, form_data.email, form_data.password
@@ -46,7 +57,13 @@ async def login(uow: UOWDep, form_data: SignInRequest, auth_service: AuthService
 @router.get("/", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def get_info(current_user: User = Depends(AuthServiceDep.get_current_user)):
     """
-    Get the current user's information.
+    Retrieve the current user's information.
+
+    Args:
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        UserResponse: The details of the current user.
     """
     return UserResponse(user=current_user)
 
@@ -61,7 +78,21 @@ async def get_new_invitations(
     limit: int = Query(10, ge=1),
 ):
     """
-    Get new invitations for the current user.
+    Retrieve new invitations for the current user.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        request (Request): The HTTP request object.
+        invitation_service (InvitationServiceDep): Service for invitation operations.
+        current_user (User): The currently authenticated user.
+        skip (int): Number of invitations to skip (default is 0).
+        limit (int): Maximum number of invitations to return (default is 10).
+
+    Returns:
+        InvitationsListResponse: A list of new invitations.
+
+    Raises:
+        FetchingException: If an error occurs while fetching invitations.
     """
     try:
         invitations = await invitation_service.get_invitations(
@@ -83,7 +114,21 @@ async def get_sent_invitations(
     limit: int = Query(10, ge=1),
 ):
     """
-    Get sent invitations by the current user.
+    Retrieve sent invitations by the current user.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        request (Request): The HTTP request object.
+        invitation_service (InvitationServiceDep): Service for invitation operations.
+        current_user (User): The currently authenticated user.
+        skip (int): Number of invitations to skip (default is 0).
+        limit (int): Maximum number of invitations to return (default is 10).
+
+    Returns:
+        InvitationsListResponse: A list of sent invitations.
+
+    Raises:
+        FetchingException: If an error occurs while fetching sent invitations.
     """
     try:
         invitations = await invitation_service.get_sent_invitations(
@@ -102,7 +147,18 @@ async def get_avg_score_across_system(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Get average score of user across system
+    Retrieve the average score of the user across the system.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        analytics_service (AnalyticsServiceDep): Service for analytics operations.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary with the average score.
+
+    Raises:
+        CalculatingException: If an error occurs while calculating the average score.
     """
     try:
         avg_score = await analytics_service.calculate_average_score_across_system(
@@ -120,7 +176,18 @@ async def get_quiz_results_for_last_48h(
     is_csv: bool = Query(),
 ):
     """
-    Get quiz results for the current user for the last 48 hours.
+    Retrieve quiz results for the current user for the last 48 hours.
+
+    Args:
+        data_export_service (DataExportServiceDep): Service for data export operations.
+        current_user (User): The currently authenticated user.
+        is_csv (bool): Whether to export results as a CSV file (default is False).
+
+    Returns:
+        Response: The quiz results in the requested format.
+
+    Raises:
+        FetchingException: If an error occurs while fetching quiz results.
     """
     try:
         return await data_export_service.read_data_by_user_id(is_csv, current_user.id)
@@ -136,7 +203,18 @@ async def get_quiz_completion_timestamps(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Get a list of quizzes with the timestamps of their last completion by the current user.
+    Retrieve timestamps of the last completion of quizzes by the current user.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        analytics_service (AnalyticsServiceDep): Service for analytics operations.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        Dict[int, datetime]: A dictionary with quiz IDs and their last completion timestamps.
+
+    Raises:
+        FetchingException: If an error occurs while fetching completion timestamps.
     """
     try:
         timestamps = await analytics_service.get_last_completion_timestamps(
@@ -157,7 +235,20 @@ async def get_average_scores_by_quiz(
     end_date: datetime = Query(..., alias="end_date"),
 ):
     """
-    Get average scores for each quiz taken by the current user within the specified time range.
+    Retrieve average scores for each quiz taken by the current user within the specified time range.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        analytics_service (AnalyticsServiceDep): Service for analytics operations.
+        current_user (User): The currently authenticated user.
+        start_date (datetime): The start date of the time range.
+        end_date (datetime): The end date of the time range.
+
+    Returns:
+        Dict[int, float]: A dictionary with quiz IDs and their average scores.
+
+    Raises:
+        CalculatingException: If an error occurs while calculating average scores.
     """
     try:
         average_scores = await analytics_service.calculate_average_scores_by_quiz(
@@ -177,7 +268,19 @@ async def mark_notification_as_read(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Marks a specific notification as read for the current user.
+    Mark a specific notification as read for the current user.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        notification_id (int): The ID of the notification to mark as read.
+        notification_service (NotificationServiceDep): Service for notification operations.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A confirmation message.
+
+    Raises:
+        UpdatingException: If an error occurs while marking the notification as read.
     """
     try:
         await notification_service.mark_as_read(uow, current_user.id, notification_id)
@@ -194,7 +297,18 @@ async def mark_all_notifications_as_read(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Marks all notifications as read for the current user.
+    Mark all notifications as read for the current user.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        notification_service (NotificationServiceDep): Service for notification operations.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A confirmation message.
+
+    Raises:
+        UpdatingException: If an error occurs while marking all notifications as read.
     """
     try:
         await notification_service.mark_all_as_read(uow, current_user.id)
@@ -214,7 +328,21 @@ async def get_notifications(
     limit: int = 10,
 ):
     """
-    Retrieves a list of notifications for the current user.
+    Retrieve a list of notifications for the current user.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        request (Request): The HTTP request object.
+        notification_service (NotificationServiceDep): Service for notification operations.
+        current_user (User): The currently authenticated user.
+        skip (int): Number of notifications to skip (default is 0).
+        limit (int): Maximum number of notifications to return (default is 10).
+
+    Returns:
+        NotificationsListResponse: A list of notifications.
+
+    Raises:
+        FetchingException: If an error occurs while fetching notifications.
     """
     try:
         return await notification_service.get_notifications(
@@ -233,7 +361,19 @@ async def get_notification_by_id(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Retrieves a specific notification by its ID for the current user.
+    Retrieve a specific notification by its ID for the current user.
+
+    Args:
+        notification_id (int): The ID of the notification to retrieve.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        notification_service (NotificationServiceDep): Service for notification operations.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        NotificationResponse: The details of the notification.
+
+    Raises:
+        FetchingException: If an error occurs while fetching the notification.
     """
     try:
         notification = await notification_service.get_notification_by_id(

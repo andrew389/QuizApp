@@ -32,7 +32,19 @@ async def create_quiz(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Create a new quiz.
+    Creates a new quiz.
+
+    Args:
+        quiz (QuizCreate): Data to create a new quiz.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        quiz_service (QuizServiceDep): Service for managing quizzes.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        QuizBase: The created quiz details.
+
+    Raises:
+        CreatingException: If an error occurs during quiz creation.
     """
     try:
         return await quiz_service.create_quiz(uow, quiz, current_user.id)
@@ -50,7 +62,20 @@ async def update_quiz(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Update an existing quiz.
+    Updates an existing quiz.
+
+    Args:
+        quiz_id (int): The ID of the quiz to update.
+        quiz (QuizUpdate): Data to update the quiz.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        quiz_service (QuizServiceDep): Service for managing quizzes.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        QuizBase: The updated quiz details.
+
+    Raises:
+        UpdatingException: If an error occurs during quiz update.
     """
     try:
         return await quiz_service.update_quiz(uow, quiz_id, quiz, current_user.id)
@@ -67,7 +92,19 @@ async def get_quiz_by_id(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Retrieve a quiz by its ID.
+    Retrieves a quiz by its ID.
+
+    Args:
+        quiz_id (int): The ID of the quiz to retrieve.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        quiz_service (QuizServiceDep): Service for managing quizzes.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        QuizResponse: The details of the retrieved quiz.
+
+    Raises:
+        FetchingException: If an error occurs during fetching the quiz.
     """
     try:
         return await quiz_service.get_quiz_by_id(uow, quiz_id, current_user.id)
@@ -84,7 +121,19 @@ async def delete_quiz(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Delete a quiz by its ID.
+    Deletes a quiz by its ID.
+
+    Args:
+        quiz_id (int): The ID of the quiz to delete.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        quiz_service (QuizServiceDep): Service for managing quizzes.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        QuizBase: The details of the deleted quiz.
+
+    Raises:
+        DeletingException: If an error occurs during quiz deletion.
     """
     try:
         return await quiz_service.delete_quiz(uow, quiz_id, current_user.id)
@@ -101,7 +150,19 @@ async def import_quizzes(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Import quiz data
+    Imports quiz data from an Excel file.
+
+    Args:
+        uow (UOWDep): Unit of Work dependency for database operations.
+        data_import_service (DataImportServiceDep): Service for importing quiz data.
+        file (UploadFile): The Excel file containing quiz data.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary with a message indicating success.
+
+    Raises:
+        ImportingException: If an error occurs during importing quizzes.
     """
     try:
         await data_import_service.parse_excel(file, uow, current_user.id)

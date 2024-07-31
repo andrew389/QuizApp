@@ -2,6 +2,14 @@ from fastapi import HTTPException, status
 
 
 class AuthenticationException(HTTPException):
+    """
+    Exception raised for incorrect username or password during authentication.
+
+    Status code: 401 Unauthorized
+    Detail: "Incorrect username or password"
+    Headers: {"WWW-Authenticate": "Bearer"}
+    """
+
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -11,6 +19,14 @@ class AuthenticationException(HTTPException):
 
 
 class NotAuthenticatedException(HTTPException):
+    """
+    Exception raised when a user is not authenticated.
+
+    Status code: 401 Unauthorized
+    Detail: "Not authenticated"
+    Headers: {"WWW-Authenticate": "Bearer"}
+    """
+
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -20,6 +36,13 @@ class NotAuthenticatedException(HTTPException):
 
 
 class UnAuthorizedException(HTTPException):
+    """
+    Exception raised when a user is unauthorized to perform an action.
+
+    Status code: 401 Unauthorized
+    Detail: "You are unauthorized"
+    """
+
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -28,6 +51,14 @@ class UnAuthorizedException(HTTPException):
 
 
 class ValidateCredentialsException(HTTPException):
+    """
+    Exception raised when credentials could not be validated.
+
+    Status code: 401 Unauthorized
+    Detail: "Could not validate credentials"
+    Headers: {"WWW-Authenticate": "Bearer"}
+    """
+
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,

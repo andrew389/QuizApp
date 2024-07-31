@@ -25,6 +25,18 @@ async def cancel_invitation_to_user(
 ):
     """
     Cancel an invitation by its ID.
+
+    Args:
+        invitation_id (int): The ID of the invitation to cancel.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        invitation_service (InvitationServiceDep): Service for invitation operations.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary with the ID of the canceled invitation.
+
+    Raises:
+        DeletingException: If an error occurs while canceling the invitation.
     """
     try:
         canceled_invitation_id = await invitation_service.cancel_invitation(
@@ -45,6 +57,18 @@ async def accept_invitation_for_user(
 ):
     """
     Accept an invitation by its ID.
+
+    Args:
+        invitation_id (int): The ID of the invitation to accept.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        invitation_service (InvitationServiceDep): Service for invitation operations.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        InvitationResponse: The details of the accepted invitation.
+
+    Raises:
+        Exception: If an error occurs while accepting the invitation.
     """
     try:
         response = await invitation_service.accept_invitation(
@@ -65,6 +89,18 @@ async def decline_invitation_for_user(
 ):
     """
     Decline an invitation by its ID.
+
+    Args:
+        invitation_id (int): The ID of the invitation to decline.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        invitation_service (InvitationServiceDep): Service for invitation operations.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        InvitationResponse: The details of the declined invitation.
+
+    Raises:
+        NotFoundException: If an error occurs while declining the invitation.
     """
     try:
         response = await invitation_service.decline_invitation(

@@ -22,7 +22,19 @@ async def cancel_request_to_join_to_company(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Cancel a join request.
+    Cancels a request to join a company.
+
+    Args:
+        request_id (int): The ID of the join request to cancel.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        member_service (MemberRequestsDep): Service for managing member requests.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary with the ID of the canceled request.
+
+    Raises:
+        DeletingException: If an error occurs during request cancellation.
     """
     try:
         request_id = await member_service.cancel_request_to_join(
@@ -42,7 +54,19 @@ async def accept_request_for_owner(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Accept a request to join a company.
+    Accepts a request to join a company.
+
+    Args:
+        request_id (int): The ID of the join request to accept.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        member_service (MemberRequestsDep): Service for managing member requests.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        InvitationResponse: Details of the accepted request.
+
+    Raises:
+        UpdatingException: If an error occurs during request acceptance.
     """
     try:
         invitation = await member_service.accept_request(
@@ -62,7 +86,19 @@ async def decline_request_for_owner(
     current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
-    Decline a request to join a company.
+    Declines a request to join a company.
+
+    Args:
+        request_id (int): The ID of the join request to decline.
+        uow (UOWDep): Unit of Work dependency for database operations.
+        member_service (MemberRequestsDep): Service for managing member requests.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        InvitationResponse: Details of the declined request.
+
+    Raises:
+        UpdatingException: If an error occurs during request decline.
     """
     try:
         response = await member_service.decline_request(

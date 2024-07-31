@@ -15,11 +15,24 @@ class AnalyticsService:
     ) -> float:
         """
         Calculates the average score of a user within a specific company.
+
+        Args:
+            uow (UnitOfWork): An instance of UnitOfWork for database operations.
+            user_id (int): The ID of the user whose average score is to be calculated.
+            company_id (int): The ID of the company within which the average score is calculated.
+
+        Returns:
+            float: The average score of the user within the specified company.
+
+        Raises:
+            Exception: If there is an error during the database operations.
         """
         async with uow:
+            # Fetch answered questions for the specified user and company
             answered_questions = await uow.answered_question.find_by_user_and_company(
                 user_id=user_id, company_id=company_id
             )
+            # Calculate and return the average score
             return AnalyticsService._calculate_average_score(answered_questions)
 
     @staticmethod
@@ -28,11 +41,23 @@ class AnalyticsService:
     ) -> float:
         """
         Calculates the average score of a user across the entire system.
+
+        Args:
+            uow (UnitOfWork): An instance of UnitOfWork for database operations.
+            user_id (int): The ID of the user whose average score is to be calculated.
+
+        Returns:
+            float: The average score of the user across the entire system.
+
+        Raises:
+            Exception: If there is an error during the database operations.
         """
         async with uow:
+            # Fetch answered questions for the specified user across the entire system
             answered_questions = await uow.answered_question.find_by_user(
                 user_id=user_id
             )
+            # Calculate and return the average score
             return AnalyticsService._calculate_average_score(answered_questions)
 
     @staticmethod
@@ -69,6 +94,13 @@ class AnalyticsService:
     ) -> Dict[int, datetime]:
         """
         Retrieves the last completion timestamp for each quiz taken by a user.
+
+        Args:
+            uow (UnitOfWork): An instance of UnitOfWork for database operations.
+            user_id (int): The ID of the user whose last completion timestamps are to be retrieved.
+
+        Returns:
+            Dict[int, datetime]: A dictionary where keys are quiz IDs and values are last completion timestamps.
         """
         async with uow:
             answered_questions = await uow.answered_question.find_by_user(
@@ -97,6 +129,16 @@ class AnalyticsService:
         """
         Calculates average scores for all members of a company within a specified time range.
         Returns a dictionary with member IDs as keys and their average scores as values.
+
+        Args:
+            uow (UnitOfWork): An instance of UnitOfWork for database operations.
+            current_user_id (int): The ID of the current user requesting the data.
+            company_id (int): The ID of the company.
+            start_date (datetime): The start date of the time range.
+            end_date (datetime): The end date of the time range.
+
+        Returns:
+            Dict[int, float]: A dictionary where keys are member IDs and values are average scores.
         """
         async with uow:
             member = await uow.member.find_one(user_id=current_user_id)
@@ -112,7 +154,6 @@ class AnalyticsService:
             )
 
             member_scores = {}
-
             for member in members:
                 user_id = member.user_id
                 answered_questions = (
@@ -120,11 +161,9 @@ class AnalyticsService:
                         user_id=user_id, start_date=start_date, end_date=end_date
                     )
                 )
-
                 average_score = AnalyticsService._calculate_average_score(
                     answered_questions
                 )
-
                 member_scores[user_id] = average_score
 
             return member_scores
@@ -136,6 +175,14 @@ class AnalyticsService:
         """
         Lists all users in a company with the timestamp of their last quiz attempt.
         Returns a dictionary with user IDs as keys and timestamps as values.
+
+        Args:
+            uow (UnitOfWork): An instance of UnitOfWork for database operations.
+            current_user_id (int): The ID of the current user requesting the data.
+            company_id (int): The ID of the company.
+
+        Returns:
+            Dict[int, datetime]: A dictionary where keys are user IDs and values are last quiz attempt timestamps.
         """
         async with uow:
             member = await uow.member.find_one(user_id=current_user_id)
@@ -147,18 +194,15 @@ class AnalyticsService:
                 raise UnAuthorizedException()
 
             members = await uow.member.find_all_by_company_and_role(
-                company_id=company_id, role=3
+                company_id=company_id, role=Role.MEMBER.value
             )
 
             last_attempts = {}
-
             for member in members:
                 user_id = member.user_id
-
                 last_attempt = await uow.answered_question.find_last_attempt(
                     user_id=user_id
                 )
-
                 if last_attempt:
                     last_attempts[user_id] = last_attempt.created_at
 
@@ -176,6 +220,17 @@ class AnalyticsService:
         """
         Provides detailed average scores for each quiz taken by a user within a specified time range and company.
         Returns a dictionary with quiz IDs as keys and average scores as values.
+
+        Args:
+            uow (UnitOfWork): An instance of UnitOfWork for database operations.
+            current_user_id (int): The ID of the current user requesting the data.
+            user_id (int): The ID of the user whose scores are to be calculated.
+            company_id (int): The ID of the company.
+            start_date (datetime): The start date of the time range.
+            end_date (datetime): The end date of the time range.
+
+        Returns:
+            Dict[int, float]: A dictionary where keys are quiz IDs and values are average scores.
         """
         async with uow:
             member = await uow.member.find_one(user_id=current_user_id)
@@ -196,10 +251,8 @@ class AnalyticsService:
             )
 
             quiz_scores = defaultdict(list)
-
             for question in answered_questions:
-                quiz_id = question.quiz_id
-                quiz_scores[quiz_id].append(question)
+                quiz_scores[question.quiz_id].append(question)
 
             detailed_average_scores = {
                 quiz_id: AnalyticsService._calculate_average_score(questions)
@@ -212,6 +265,12 @@ class AnalyticsService:
     def _calculate_average_score(answered_questions):
         """
         Calculates the average score based on a list of answered questions.
+
+        Args:
+            answered_questions (List[AnsweredQuestion]): A list of answered questions.
+
+        Returns:
+            float: The average score, rounded to two decimal places.
         """
         correct_answers = sum(1 for q in answered_questions if q.is_correct)
         total_answers = len(answered_questions)
