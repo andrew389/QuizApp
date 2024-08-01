@@ -16,6 +16,23 @@ from app.utils.user import create_user
 
 
 class AuthService:
+    """
+    Service for handling authentication and token management.
+
+    This service provides functionality for user authentication, token creation, and validation. It includes methods
+    to authenticate users, create access tokens, verify token credentials, and retrieve user information from tokens.
+    It also supports creating a new user if one does not exist and obtaining the current authenticated user.
+
+    Methods:
+        - authenticate_user: Authenticates a user by email and password.
+        - create_access_token: Creates an access token with an expiration time.
+        - verify_token_credentials: Verifies if the token is provided and valid.
+        - get_payload_from_token: Extracts and verifies the payload from the token.
+        - get_email_from_payload: Extracts email from the token payload.
+        - get_user_by_email_or_create: Gets a user by email or creates a new user if not found.
+        - get_current_user: Gets the current user from the provided token.
+    """
+
     @staticmethod
     async def authenticate_user(
         uow: IUnitOfWork, email: str, password: str

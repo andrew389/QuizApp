@@ -7,6 +7,22 @@ from app.db.pg_db import Base
 
 
 class Notification(Base):
+    """
+    Represents a notification sent to a user within a company.
+
+    Attributes:
+        id (int): The unique identifier for the notification.
+        message (str): The content of the notification message. This field is required.
+        receiver_id (int): The identifier of the user who receives the notification. This field is required.
+        company_id (int): The identifier of the company associated with the notification. This field is required.
+        status (str): The current status of the notification (e.g., "pending"). Defaults to "pending".
+        created_at (datetime): The timestamp when the notification was created. Defaults to the current time.
+
+    Relationships:
+        receiver (relationship): The user who receives the notification.
+        company (relationship): The company associated with the notification.
+    """
+
     __tablename__ = "notification"
 
     id = Column(Integer, primary_key=True, index=True)

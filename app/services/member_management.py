@@ -8,6 +8,25 @@ from app.utils.user import filter_data
 
 
 class MemberManagement:
+    """
+    Service for managing company members, including adding, removing, and updating member roles.
+
+    This service provides operations for handling members within a company, including:
+    - Adding new members to the company
+    - Removing existing members
+    - Allowing members to leave the company
+    - Appointing and removing admins
+    - Checking user permissions within a company
+
+    Methods:
+        - add_member: Adds a new member to the company.
+        - remove_member: Removes a member from the company.
+        - leave_company: Allows a member to leave the company.
+        - appoint_admin: Promotes a member to an admin role.
+        - remove_admin: Demotes an admin role from a member.
+        - check_is_user_have_permission: Checks if a user has permission to perform actions in the company.
+        - check_is_user_member_or_higher: Checks if a user is a member or has a higher role in the company.
+    """
 
     @staticmethod
     async def add_member(uow: IUnitOfWork, user_id: int, company_id: int) -> MemberBase:

@@ -9,6 +9,19 @@ from app.utils.user import get_pagination_urls, filter_data
 
 
 class MemberQueries:
+    """
+    Service for querying member information within a company.
+
+    This service provides methods to retrieve information about company members, including:
+    - A paginated list of all members in a company
+    - A paginated list of admins in a company
+    - Detailed information about a specific member by their ID
+
+    Methods:
+        - get_members: Retrieves a paginated list of members in a company.
+        - get_admins: Retrieves a paginated list of admins in a company.
+        - get_member_by_id: Retrieves detailed information about a specific member by their ID.
+    """
 
     @staticmethod
     async def get_members(

@@ -18,6 +18,25 @@ from app.utils.user import get_pagination_urls, filter_data
 
 
 class QuizService:
+    """
+    Service for handling quizzes within a company.
+
+    This service provides functionalities for creating, updating, retrieving, and deleting quizzes. It also manages
+    the association of quizzes with questions and handles permission checks to ensure that users have appropriate
+    rights to perform these operations.
+
+    Methods:
+        - create_quiz: Creates a new quiz and associates it with the provided questions. Notifies the company members
+          about the new quiz.
+        - update_quiz: Updates an existing quiz with new details. Checks for user permissions before applying updates.
+        - get_quiz_by_id: Retrieves a quiz by its ID along with its associated questions. Ensures that the user has
+          the necessary permissions to view the quiz.
+        - get_quizzes: Retrieves a list of quizzes for a specific company, with pagination support. Checks user
+          permissions for accessing the list of quizzes.
+        - delete_quiz: Deletes a quiz and disassociates its questions. Ensures that the user has permission to delete
+          the quiz and handles the removal of questions associated with the quiz.
+    """
+
     @staticmethod
     async def create_quiz(
         uow: UnitOfWork, quiz: QuizCreate, current_user_id: int

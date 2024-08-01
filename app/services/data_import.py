@@ -11,6 +11,27 @@ from app.uow.unitofwork import UnitOfWork
 
 
 class DataImportService:
+    """
+    Service for importing quiz data from an Excel file.
+
+    This service handles the parsing of an Excel file containing data for answers, questions, quizzes, and updates.
+    It processes each sheet to create or update answers, questions, and quizzes in the database. The service also
+    handles updates based on a mapping provided in the 'Updates' sheet to ensure data consistency.
+
+    Methods:
+        - import_data: Parses the Excel file and processes answers, questions, and quizzes.
+        - parse_excel: Reads and returns the required sheets from the Excel file.
+        - parse_updates: Extracts updates mapping from the updates DataFrame.
+        - process_answers: Processes the answers DataFrame and creates or updates answers.
+        - handle_answer_row: Handles the creation or update of a single answer.
+        - get_answer_ids: Retrieves the IDs of answers from their texts.
+        - process_questions: Processes the questions DataFrame and creates or updates questions.
+        - handle_question_row: Handles the creation or update of a single question.
+        - get_question_ids: Retrieves the IDs of questions from their titles.
+        - process_quizzes: Processes the quizzes DataFrame and creates or updates quizzes.
+        - handle_quiz_row: Handles the creation or update of a single quiz.
+    """
+
     @staticmethod
     async def import_data(file: UploadFile, uow: UnitOfWork, current_user_id: int):
         """

@@ -10,6 +10,24 @@ from app.uow.unitofwork import UnitOfWork
 
 
 class DataExportService:
+    """
+    Service for exporting data from Redis to CSV or JSON files.
+
+    This service handles the retrieval of data from Redis based on specified patterns and exports it to either
+    CSV or JSON files. It supports various export scenarios including data by user, company, and quiz, with
+    permission checks to ensure users are authorized to access the data.
+
+    Methods:
+        - fetch_data: Fetches data from Redis based on a key pattern using SCAN.
+        - _export_data: Exports the provided data to a CSV or JSON file and returns a StreamingResponse.
+        - read_data_by_user_id: Reads and exports data for a specific user.
+        - read_data_by_user_id_and_company_id: Reads and exports data for a specific user and company.
+        - read_data_by_company_id: Reads and exports data for a specific company.
+        - read_data_by_company_id_and_quiz_id: Reads and exports data for a specific company and quiz.
+        - export_data_as_json: Exports data as a JSON file and returns a StreamingResponse.
+        - export_data_as_csv: Exports data as a CSV file and returns a StreamingResponse.
+    """
+
     @staticmethod
     async def fetch_data(pattern: str) -> list:
         """

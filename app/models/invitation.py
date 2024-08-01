@@ -1,12 +1,32 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db.pg_db import Base
 
 
 class Invitation(Base):
+    """
+    Represents an invitation sent from one user to another within a company.
+
+    Attributes:
+        id (int): The unique identifier for the invitation.
+        title (str): The title of the invitation. This field is required.
+        description (str): A description of the invitation. This field is required.
+        sender_id (int): The identifier of the user who sent the invitation. This field is required.
+        receiver_id (int): The identifier of the user who is the recipient of the invitation. This field is required.
+        company_id (int): The identifier of the company associated with the invitation. This field is required.
+        created_at (datetime): The timestamp when the invitation was created. Defaults to the current time.
+        updated_at (datetime): The timestamp when the invitation was last updated. Updates automatically on modification.
+        status (str): The current status of the invitation (e.g., "pending"). Defaults to "pending".
+
+    Relationships:
+        sender (relationship): The user who sent the invitation.
+        receiver (relationship): The user who received the invitation.
+        company (relationship): The company associated with the invitation.
+    """
+
     __tablename__ = "invitation"
 
     id = Column(Integer, primary_key=True, index=True)

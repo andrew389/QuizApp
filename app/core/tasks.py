@@ -6,6 +6,13 @@ from app.uow.unitofwork import UnitOfWork
 
 
 async def notification_task():
+    """
+    Task to send notifications to users who haven't completed quizzes in the last 24 hours.
+
+    This function retrieves all companies, and for each company, it finds users and quizzes.
+    It then checks if the user has completed the quizzes by fetching relevant data.
+    If no data is found or the data is outdated, a notification is sent to the user.
+    """
     uow = UnitOfWork()
     async with uow:
 
@@ -42,6 +49,15 @@ async def notification_task():
 async def send_notification(
     uow: UnitOfWork, user_id: int, quiz_id: int, company_id: int
 ):
+    """
+    Sends a notification to a user about an incomplete quiz.
+
+    Args:
+        uow (UnitOfWork): The unit of work instance used for database operations.
+        user_id (int): The identifier of the user to notify.
+        quiz_id (int): The identifier of the quiz related to the notification.
+        company_id (int): The identifier of the company associated with the notification.
+    """
     message = f"You didn't complete available quiz: {quiz_id}. Please complete it in next 24h!"
 
     await NotificationService.send_one_notification(uow, user_id, company_id, message)

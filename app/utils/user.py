@@ -52,6 +52,15 @@ def get_pagination_urls(
 ) -> PaginationLinks:
     """
     Generate pagination URLs for navigating through a list of users.
+
+    Args:
+        request (Request): The FastAPI request object.
+        skip (int): The number of items to skip (used for pagination).
+        limit (int): The number of items to retrieve per page.
+        total_users (int): The total number of users available.
+
+    Returns:
+        PaginationLinks: An object containing the next and previous pagination URLs.
     """
     base_url = str(request.url).split("?")[0]
 
@@ -69,5 +78,11 @@ def get_pagination_urls(
 def filter_data(data) -> dict:
     """
     Filter out SQLAlchemy instance state from the data dictionary.
+
+    Args:
+        data: The SQLAlchemy instance whose state is to be filtered out.
+
+    Returns:
+        dict: A dictionary representation of the instance excluding the internal state.
     """
     return {k: v for k, v in data.__dict__.items() if k != "_sa_instance_state"}

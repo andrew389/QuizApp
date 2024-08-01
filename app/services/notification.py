@@ -15,6 +15,22 @@ from app.utils.user import get_pagination_urls
 
 
 class NotificationService:
+    """
+    Service for handling notifications within a company.
+
+    This service provides functionalities for sending, receiving, and managing notifications for company members.
+    It supports sending notifications to all members or individual members, marking notifications as read, and
+    retrieving notifications with pagination.
+
+    Methods:
+        - send_notifications: Sends notifications to all members of the specified company.
+        - send_one_notification: Sends a notification to a specific member of the company.
+        - mark_as_read: Marks a specific notification as read.
+        - mark_all_as_read: Marks all notifications for a specific user as read.
+        - get_notifications: Retrieves a list of notifications for a specific user with pagination.
+        - get_notification_by_id: Retrieves a specific notification by its ID for a specific user.
+    """
+
     @staticmethod
     async def send_notifications(uow: UnitOfWork, company_id: int, message: str):
         """

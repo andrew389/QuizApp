@@ -17,6 +17,20 @@ from app.utils.user import get_pagination_urls, filter_data
 
 
 class QuestionService:
+    """
+    Service for managing questions and their associated answers within a company.
+
+    This service provides functionalities for creating, updating, retrieving, listing, and deleting questions.
+    It also manages permissions to ensure that only authorized users can perform these actions.
+
+    Methods:
+        - create_question: Creates a new question and associates it with existing answers.
+        - update_question: Updates an existing question's details.
+        - get_question_by_id: Retrieves a specific question by its ID, including associated answers.
+        - get_questions: Retrieves a paginated list of questions for a specific company.
+        - delete_question: Deletes a question and disassociates its answers.
+    """
+
     @staticmethod
     async def create_question(
         uow: UnitOfWork, question: QuestionCreate, current_user_id: int

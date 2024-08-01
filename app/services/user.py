@@ -16,6 +16,23 @@ from app.utils.user import get_pagination_urls
 
 
 class UserService:
+    """
+    Service for managing user accounts within the system.
+
+    This service provides functionalities for adding, retrieving, updating, and deactivating users. It includes
+    operations for validating user data, handling permissions, and managing user-related details.
+
+    Methods:
+        - add_user: Adds a new user to the system. Ensures that no duplicate email addresses are used.
+        - get_users: Retrieves a list of users with pagination support. Returns a list of users and the total count.
+        - get_user_by_id: Retrieves a user by their unique ID.
+        - get_user_by_username: Retrieves a user by their username.
+        - get_user_by_email: Retrieves a user by their email address.
+        - validate_user_update: Validates and updates user data, replacing default or empty values with current data.
+        - update_user: Updates user details. Ensures that the current user is authorized to perform the update.
+        - deactivate_user: Deactivates a user account. Ensures that the current user is authorized to deactivate the user.
+    """
+
     @staticmethod
     async def add_user(uow: IUnitOfWork, user: UserCreate) -> UserBase:
         """

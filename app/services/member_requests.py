@@ -8,6 +8,21 @@ from app.utils.user import filter_data
 
 
 class MemberRequests:
+    """
+    Service for managing member requests within a company.
+
+    This service handles operations related to member requests, including:
+    - Requesting to join a company
+    - Cancelling a request to join a company
+    - Accepting or declining a request to join a company
+
+    Methods:
+        - request_to_join_company: Creates a new invitation for a user to join a company.
+        - cancel_request_to_join: Cancels a request to join a company.
+        - accept_request: Accepts a request to join a company.
+        - decline_request: Declines a request to join a company.
+        - validate_owner: Checks if a user is the owner of a company.
+    """
 
     @staticmethod
     async def request_to_join_company(

@@ -16,6 +16,23 @@ from app.utils.user import get_pagination_urls, filter_data
 
 
 class CompanyService:
+    """
+    Service for managing company-related operations.
+
+    This service handles various company-related tasks, including adding, retrieving, updating, deleting,
+    and changing the visibility of companies. It ensures proper authorization for these operations and
+    manages relationships between companies and their owners. The service also provides pagination for listing
+    companies and includes methods for validating ownership and managing company membership.
+
+    Methods:
+        - add_company: Adds a new company and assigns the owner as a member.
+        - get_companies: Retrieves a list of companies visible to the current user and owned by them, with pagination.
+        - get_company_by_id: Retrieves the details of a company by its ID.
+        - update_company: Updates the details of a company, ensuring ownership by the current user.
+        - delete_company: Deletes a company, ensuring ownership by the current user.
+        - change_company_visibility: Changes the visibility of a company, ensuring ownership by the current user.
+    """
+
     @staticmethod
     async def add_company(
         uow: IUnitOfWork, company: CompanyCreate, owner_id: int

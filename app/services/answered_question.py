@@ -10,6 +10,25 @@ from sqlalchemy.exc import NoResultFound
 
 
 class AnsweredQuestionService:
+    """
+    Service for handling user answers to quizzes.
+
+    This service is responsible for processing and saving user answers to quizzes, managing quiz frequencies,
+    and storing quiz data in Redis. It provides functionality to handle and validate quiz answers, save them
+    to the database, and cache the results.
+
+    Methods:
+        - save_answered_quiz: Saves the user's answers to a quiz in the database and cache, and increments the quiz frequency.
+        - _process_quiz_answers: Processes and saves the answers provided for a quiz.
+        - _process_answer: Processes a single answer to a quiz question and saves or updates the answer record.
+        - _add_answered_question: Adds a new answered question record to the database.
+        - _increment_quiz_frequency: Increments the frequency count of a quiz.
+        - _prepare_redis_data: Prepares the data for storing in Redis.
+        - _fetch_answer_details: Fetches detailed information about each answer from the provided quiz data.
+        - _get_answer_text: Retrieves the text of an answer from the database.
+        - _is_correct_answer: Checks if the provided answer ID corresponds to a correct answer.
+    """
+
     @staticmethod
     async def save_answered_quiz(
         uow: UnitOfWork, quiz_data: SendAnsweredQuiz, user_id: int, quiz_id: int

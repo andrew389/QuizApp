@@ -9,6 +9,23 @@ from app.utils.role import Role
 
 
 class AnalyticsService:
+    """
+    Service for performing analytics-related operations involving user quiz performance.
+
+    This service provides methods to calculate and retrieve various analytics metrics related to quizzes
+    and user performance within a company or across the entire system. It includes functionality to compute
+    average scores, list users' last quiz attempts, and retrieve detailed scores within specified time ranges.
+
+    Methods:
+        - calculate_average_score_within_company: Computes the average quiz score for a specific user within a company.
+        - calculate_average_score_across_system: Computes the average quiz score for a user across the entire system.
+        - calculate_average_scores_by_quiz: Calculates average scores for each quiz taken by a user within a given time range.
+        - get_last_completion_timestamps: Retrieves the last completion timestamp for each quiz taken by a user.
+        - calculate_company_members_average_scores: Computes average scores for all members of a company within a specified time range.
+        - list_users_last_quiz_attempts: Lists all users in a company with the timestamp of their last quiz attempt.
+        - calculate_detailed_average_scores: Provides detailed average scores for each quiz taken by a user within a specified time range and company.
+    """
+
     @staticmethod
     async def calculate_average_score_within_company(
         uow: UnitOfWork, user_id: int, company_id: int

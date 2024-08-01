@@ -16,6 +16,27 @@ from app.utils.user import get_pagination_urls, filter_data
 
 
 class InvitationService:
+    """
+    Service for managing invitations within a company.
+
+    This service handles the creation, retrieval, and management of invitations sent between users for joining a company.
+    It includes functionality for sending, accepting, declining, and canceling invitations. The service also validates
+    user permissions and checks invitation statuses to ensure proper handling of requests.
+
+    Methods:
+        - send_invitation: Sends an invitation from a user to another user to join a company.
+        - get_invitations: Retrieves a list of invitations received by a specific user.
+        - get_sent_invitations: Retrieves a list of invitations sent by a specific user.
+        - cancel_invitation: Cancels a specific invitation.
+        - accept_invitation: Accepts a specific invitation and adds the user as a member of the company.
+        - decline_invitation: Declines a specific invitation.
+        - _get_invitation: Retrieves an invitation by its ID.
+        - _validate_sender: Validates if the sender is authorized to send invitations for the company.
+        - _check_existing_member: Checks if the user is already a member of the company.
+        - _validate_receiver: Validates if the receiver matches the invitation.
+        - _validate_pending_status: Validates if the invitation is in a pending status.
+        - _build_invitation_response: Constructs the response object for an invitation.
+    """
 
     @staticmethod
     async def send_invitation(

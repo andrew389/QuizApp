@@ -13,6 +13,21 @@ from app.utils.user import get_pagination_urls, filter_data
 
 
 class AnswerService:
+    """
+    Service for managing answers in the system.
+
+    This service provides methods to create, update, retrieve, list, and delete answers. It ensures
+    that the current user has the necessary permissions to perform these operations and handles various
+    scenarios such as checking for permissions, filtering data, and pagination.
+
+    Methods:
+        - create_answer: Creates a new answer with the provided data.
+        - update_answer: Updates an existing answer identified by its ID.
+        - get_answer_by_id: Retrieves an answer by its ID.
+        - get_answers: Retrieves a paginated list of answers for a given company.
+        - delete_answer: Deletes an answer identified by its ID.
+    """
+
     @staticmethod
     async def create_answer(
         uow: UnitOfWork, answer: AnswerCreate, current_user_id: int
