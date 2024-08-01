@@ -36,6 +36,7 @@ class QuestionCreate(BaseModel):
         default_factory=set,
         description="A set of unique identifiers for the associated answers.",
     )
+    company_id: int = Field(..., description="The unique identifier of the company.")
 
     @field_validator("answers", mode="before")
     def validate_answers_length(cls, answers):
