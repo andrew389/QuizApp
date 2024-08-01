@@ -1,21 +1,18 @@
 from datetime import datetime
-
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class Token(BaseModel):
     """
     Schema for an authentication token.
-
-    Attributes:
-        access_token (str): The access token string.
-        token_type (str): The type of the token (e.g., "Bearer").
-        expiration (float): The expiration time of the token as a timestamp.
     """
 
-    access_token: str
-    token_type: str
-    expiration: float
+    access_token: str = Field(..., description="The access token string.")
+    token_type: str = Field(..., description="The type of the token (e.g., 'Bearer').")
+    expiration: float = Field(
+        ...,
+        description="The expiration time of the token as a timestamp (seconds since the epoch).",
+    )
 
     @field_validator("expiration", mode="before")
     def parse_expiration(cls, value):
@@ -23,10 +20,10 @@ class Token(BaseModel):
         Parses the expiration value to a timestamp if it's a datetime object.
 
         Args:
-            value (datetime or float): The expiration time.
+            value (datetime or float): The expiration time, either as a datetime object or a timestamp.
 
         Returns:
-            float: The expiration time as a timestamp.
+            float: The expiration time as a timestamp (seconds since the epoch).
         """
         if isinstance(value, datetime):
             return value.timestamp()
@@ -38,7 +35,7 @@ class Token(BaseModel):
         Formats the expiration value to a datetime object if it's a timestamp.
 
         Args:
-            value (int or float): The expiration time as a timestamp.
+            value (int or float): The expiration time as a timestamp (seconds since the epoch).
 
         Returns:
             datetime: The expiration time as a datetime object.
@@ -51,11 +48,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     """
     Schema for token data.
-
-    Attributes:
-        email (str): The email associated with the token.
-        token (str): The token string.
     """
 
-    email: str
-    token: str
+    email: str = Field(..., description="The email associated with the token.")
+    token: str = Field(..., description="The token string.")

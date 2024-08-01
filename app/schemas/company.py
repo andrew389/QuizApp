@@ -1,43 +1,36 @@
 from typing import List, Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 from app.schemas.pagination import PaginationLinks
 
 
 class CompanyBase(BaseModel):
     """
     Base schema for a company.
-
-    Attributes:
-        id (Optional[int]): The unique identifier of the company. Default is None.
-        name (str): The name of the company.
-        description (str): A brief description of the company.
-        owner_id (int): The ID of the owner of the company.
-        is_visible (bool): Flag indicating if the company is visible.
     """
 
     model_config = ConfigDict(from_attributes=True)
-    id: Optional[int] = None
-    name: str
-    description: str
-    owner_id: int
-    is_visible: bool
+    id: Optional[int] = Field(
+        None, description="The unique identifier of the company. Default is None."
+    )
+    name: str = Field(..., description="The name of the company.")
+    description: str = Field(..., description="A brief description of the company.")
+    owner_id: int = Field(..., description="The ID of the owner of the company.")
+    is_visible: bool = Field(
+        ..., description="Flag indicating if the company is visible."
+    )
 
 
 class CompanyCreate(BaseModel):
     """
     Schema for creating a new company.
-
-    Attributes:
-        name (str): The name of the company.
-        description (str): A brief description of the company.
-        owner_id (int): The ID of the owner of the company.
-        is_visible (bool): Flag indicating if the company is visible.
     """
 
-    name: str
-    description: str
-    owner_id: int
-    is_visible: bool
+    name: str = Field(..., description="The name of the company.")
+    description: str = Field(..., description="A brief description of the company.")
+    owner_id: int = Field(..., description="The ID of the owner of the company.")
+    is_visible: bool = Field(
+        ..., description="Flag indicating if the company is visible."
+    )
 
 
 class CompanyDetail(CompanyBase):
@@ -52,26 +45,19 @@ class CompanyDetail(CompanyBase):
 class CompanyUpdate(BaseModel):
     """
     Schema for updating an existing company.
-
-    Attributes:
-        name (str): The updated name of the company.
-        description (str): The updated description of the company.
     """
 
-    name: str
-    description: str
+    name: str = Field(..., description="The updated name of the company.")
+    description: str = Field(..., description="The updated description of the company.")
 
 
 class CompaniesListResponse(BaseModel):
     """
     Schema for a paginated response containing a list of companies.
-
-    Attributes:
-        links (PaginationLinks): Pagination links for navigating through the list.
-        companies (List[CompanyBase]): A list of companies.
-        total (int): The total number of companies.
     """
 
-    links: PaginationLinks
-    companies: List[CompanyBase]
-    total: int
+    links: PaginationLinks = Field(
+        ..., description="Pagination links for navigating through the list."
+    )
+    companies: List[CompanyBase] = Field(..., description="A list of companies.")
+    total: int = Field(..., description="The total number of companies.")

@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.pagination import PaginationLinks
 from app.schemas.question import QuestionResponse
@@ -9,41 +9,36 @@ from app.schemas.question import QuestionResponse
 class QuizBase(BaseModel):
     """
     Base schema for a quiz.
-
-    Attributes:
-        id (Optional[int]): The unique identifier of the quiz.
-        title (str): The title of the quiz.
-        description (Optional[str]): The description of the quiz.
-        frequency (int): The frequency of the quiz.
-        company_id (int): The unique identifier of the associated company.
-        questions (List[int]): A list of unique identifiers for the associated questions.
     """
 
-    id: Optional[int] = None
-    title: str
-    description: Optional[str] = None
-    frequency: int = 0
-    company_id: int
-    questions: List[int] = []
+    id: Optional[int] = Field(None, description="The unique identifier of the quiz.")
+    title: str = Field(..., description="The title of the quiz.")
+    description: Optional[str] = Field(None, description="The description of the quiz.")
+    frequency: int = Field(0, description="The frequency of the quiz.")
+    company_id: int = Field(
+        ..., description="The unique identifier of the associated company."
+    )
+    questions: List[int] = Field(
+        default_factory=list,
+        description="A list of unique identifiers for the associated questions.",
+    )
 
 
 class QuizCreate(BaseModel):
     """
     Schema for creating a quiz.
-
-    Attributes:
-        title (str): The title of the quiz.
-        description (Optional[str]): The description of the quiz.
-        frequency (int): The frequency of the quiz.
-        company_id (int): The unique identifier of the associated company.
-        questions (List[int]): A list of unique identifiers for the associated questions.
     """
 
-    title: str
-    description: Optional[str] = None
-    frequency: int = 0
-    company_id: int
-    questions: List[int] = []
+    title: str = Field(..., description="The title of the quiz.")
+    description: Optional[str] = Field(None, description="The description of the quiz.")
+    frequency: int = Field(0, description="The frequency of the quiz.")
+    company_id: int = Field(
+        ..., description="The unique identifier of the associated company."
+    )
+    questions: List[int] = Field(
+        default_factory=list,
+        description="A list of unique identifiers for the associated questions.",
+    )
 
     @field_validator("questions", mode="before")
     def validate_questions_length(cls, questions):
@@ -67,31 +62,24 @@ class QuizCreate(BaseModel):
 class QuizUpdate(BaseModel):
     """
     Schema for updating a quiz.
-
-    Attributes:
-        title (str): The title of the quiz.
-        description (str): The description of the quiz.
     """
 
-    title: str
-    description: str
+    title: str = Field(..., description="The title of the quiz.")
+    description: str = Field(..., description="The description of the quiz.")
 
 
 class QuizResponse(BaseModel):
     """
     Schema for a quiz response.
-
-    Attributes:
-        title (str): The title of the quiz.
-        description (str): The description of the quiz.
-        frequency (int): The frequency of the quiz.
-        questions (List[QuestionResponse]): A list of responses for the associated questions.
     """
 
-    title: str
-    description: str
-    frequency: int
-    questions: List[QuestionResponse] = []
+    title: str = Field(..., description="The title of the quiz.")
+    description: str = Field(..., description="The description of the quiz.")
+    frequency: int = Field(..., description="The frequency of the quiz.")
+    questions: List[QuestionResponse] = Field(
+        default_factory=list,
+        description="A list of responses for the associated questions.",
+    )
 
     @field_validator("questions", mode="before")
     def validate_questions_length(cls, questions):
@@ -115,20 +103,15 @@ class QuizResponse(BaseModel):
 class QuizResponseForList(BaseModel):
     """
     Schema for a quiz response in a list.
-
-    Attributes:
-        id (int): The unique identifier of the quiz.
-        title (str): The title of the quiz.
-        description (str): The description of the quiz.
-        frequency (int): The frequency of the quiz.
-        company_id (int): The unique identifier of the associated company.
     """
 
-    id: int
-    title: str
-    description: str
-    frequency: int
-    company_id: int
+    id: int = Field(..., description="The unique identifier of the quiz.")
+    title: str = Field(..., description="The title of the quiz.")
+    description: str = Field(..., description="The description of the quiz.")
+    frequency: int = Field(..., description="The frequency of the quiz.")
+    company_id: int = Field(
+        ..., description="The unique identifier of the associated company."
+    )
 
     class Config:
         from_attributes = True
@@ -137,13 +120,10 @@ class QuizResponseForList(BaseModel):
 class QuizzesListResponse(BaseModel):
     """
     Schema for a list of quizzes.
-
-    Attributes:
-        links (PaginationLinks): The pagination links.
-        quizzes (List[QuizResponseForList]): A list of quiz responses.
-        total (int): The total number of quizzes.
     """
 
-    links: PaginationLinks
-    quizzes: List[QuizResponseForList] = []
-    total: int
+    links: PaginationLinks = Field(..., description="The pagination links.")
+    quizzes: List[QuizResponseForList] = Field(
+        default_factory=list, description="A list of quiz responses."
+    )
+    total: int = Field(..., description="The total number of quizzes.")
