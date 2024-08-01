@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import SessionDep
 from app.core.logger import logger
 from app.db.pg_db import get_async_session
 from app.db.redis_db import redis_connection
@@ -42,7 +43,7 @@ async def ping_redis():
 
 
 @router.get("/db")
-async def ping_db(session: AsyncSession = Depends(get_async_session)):
+async def ping_db(session: SessionDep):
     """
     Checks the connection to the PostgreSQL database.
 

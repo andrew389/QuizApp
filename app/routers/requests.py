@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from app.core.dependencies import UOWDep, MemberRequestsDep, AuthServiceDep
+from app.core.dependencies import UOWDep, MemberRequestsDep, CurrentUserDep
 from app.core.logger import logger
 from app.exceptions.base import (
     DeletingException,
@@ -19,7 +19,7 @@ async def cancel_request_to_join_to_company(
     request_id: int,
     uow: UOWDep,
     member_service: MemberRequestsDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Cancels a request to join a company.
@@ -51,7 +51,7 @@ async def accept_request_for_owner(
     request_id: int,
     uow: UOWDep,
     member_service: MemberRequestsDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Accepts a request to join a company.
@@ -83,7 +83,7 @@ async def decline_request_for_owner(
     request_id: int,
     uow: UOWDep,
     member_service: MemberRequestsDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Declines a request to join a company.

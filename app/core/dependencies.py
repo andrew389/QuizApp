@@ -1,7 +1,9 @@
 from typing import Annotated, Type
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.pg_db import get_async_session
 from app.services.analytics import AnalyticsService
 from app.services.answer import AnswerService
 from app.services.answered_question import AnsweredQuestionService
@@ -21,9 +23,12 @@ from app.uow.unitofwork import IUnitOfWork, UnitOfWork
 
 UOWDep: Type[IUnitOfWork] = Annotated[IUnitOfWork, Depends(UnitOfWork)]
 
+SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
+
 UserServiceDep = Annotated[UserService, Depends()]
 
 AuthServiceDep = Annotated[AuthService, Depends()]
+CurrentUserDep = Annotated[UserService, Depends(AuthService.get_current_user)]
 
 CompanyServiceDep = Annotated[CompanyService, Depends()]
 

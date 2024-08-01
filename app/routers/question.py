@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from app.core.dependencies import (
     UOWDep,
     QuestionServiceDep,
-    AuthServiceDep,
+    CurrentUserDep,
 )
 from app.core.logger import logger
 from app.exceptions.base import (
@@ -29,7 +29,7 @@ async def create_question(
     question: QuestionCreate,
     uow: UOWDep,
     question_service: QuestionServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Creates a new question.
@@ -59,7 +59,7 @@ async def update_question(
     question: QuestionUpdate,
     uow: UOWDep,
     question_service: QuestionServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Updates an existing question.
@@ -91,7 +91,7 @@ async def get_question_by_id(
     question_id: int,
     uow: UOWDep,
     question_service: QuestionServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Retrieves a question by its ID.
@@ -122,7 +122,7 @@ async def delete_question(
     question_id: int,
     uow: UOWDep,
     question_service: QuestionServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Deletes a question by its ID.
@@ -152,7 +152,7 @@ async def get_questions(
     uow: UOWDep,
     request: Request,
     question_service: QuestionServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):

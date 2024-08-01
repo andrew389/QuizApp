@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from app.core.dependencies import (
     UOWDep,
     AnswerServiceDep,
-    AuthServiceDep,
+    CurrentUserDep,
 )
 from app.core.logger import logger
 from app.exceptions.base import (
@@ -27,7 +27,7 @@ async def create_answer(
     answer: AnswerCreate,
     uow: UOWDep,
     answer_service: AnswerServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Creates a new answer.
@@ -54,7 +54,7 @@ async def update_answer(
     answer: AnswerUpdate,
     uow: UOWDep,
     answer_service: AnswerServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Updates an existing answer.
@@ -83,7 +83,7 @@ async def get_answer_by_id(
     answer_id: int,
     uow: UOWDep,
     answer_service: AnswerServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Retrieves an answer by its ID.
@@ -109,7 +109,7 @@ async def delete_answer(
     answer_id: int,
     uow: UOWDep,
     answer_service: AnswerServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Deletes an answer by its ID.
@@ -136,7 +136,7 @@ async def get_answers(
     uow: UOWDep,
     request: Request,
     answer_service: AnswerServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):

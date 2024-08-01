@@ -6,7 +6,6 @@ from fastapi import APIRouter, Query, Depends, Request
 from app.core.dependencies import (
     UOWDep,
     CompanyServiceDep,
-    AuthServiceDep,
     InvitationServiceDep,
     QuizServiceDep,
     MemberManagementDep,
@@ -15,6 +14,7 @@ from app.core.dependencies import (
     AnsweredQuestionServiceDep,
     DataExportServiceDep,
     AnalyticsServiceDep,
+    CurrentUserDep,
 )
 from app.exceptions.base import (
     UpdatingException,
@@ -50,7 +50,7 @@ async def add_company(
     company: CompanyCreate,
     uow: UOWDep,
     company_service: CompanyServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Creates a new company.
@@ -85,7 +85,7 @@ async def get_companies(
     uow: UOWDep,
     request: Request,
     company_service: CompanyServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
@@ -156,7 +156,7 @@ async def update_company(
     company_update: CompanyUpdate,
     uow: UOWDep,
     company_service: CompanyServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Updates a company by its ID.
@@ -190,7 +190,7 @@ async def delete_company(
     company_id: int,
     uow: UOWDep,
     company_service: CompanyServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Deletes a company by its ID.
@@ -224,7 +224,7 @@ async def appoint_admin(
     member_id: int,
     uow: UOWDep,
     member_service: MemberManagementDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Appoints a member as an admin in a company.
@@ -253,7 +253,7 @@ async def remove_admin(
     member_id: int,
     uow: UOWDep,
     member_service: MemberManagementDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Removes a member's admin status in a company.
@@ -282,7 +282,7 @@ async def change_company_visibility(
     is_visible: bool,
     uow: UOWDep,
     company_service: CompanyServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Changes the visibility of a company.
@@ -317,7 +317,7 @@ async def request_to_join_company_to_owner(
     request: MemberRequest,
     uow: UOWDep,
     member_service: MemberRequestsDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Requests to join a company.
@@ -351,7 +351,7 @@ async def send_invitation_to_user(
     uow: UOWDep,
     invitation_data: SendInvitation,
     invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Sends an invitation to a user to join a company.
@@ -453,7 +453,7 @@ async def get_quizzes(
     uow: UOWDep,
     request: Request,
     quiz_service: QuizServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
@@ -498,7 +498,7 @@ async def submit_quiz_answers(
     quiz_data: SendAnsweredQuiz,
     uow: UOWDep,
     answered_question_service: AnsweredQuestionServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Submits answers for a quiz.
@@ -529,7 +529,7 @@ async def get_quiz_results_by_user_id_company_id(
     is_csv: bool,
     data_export_service: DataExportServiceDep,
     uow: UOWDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Get quiz results for a specific user and company.
@@ -564,7 +564,7 @@ async def get_results_by_company_id_quiz_id(
     is_csv: bool,
     data_export_service: DataExportServiceDep,
     uow: UOWDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Get quiz results for a specific company and quiz.
@@ -598,7 +598,7 @@ async def get_results_by_company_id(
     is_csv: bool,
     data_export_service: DataExportServiceDep,
     uow: UOWDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Export quiz results for a specific company.
@@ -630,7 +630,7 @@ async def get_avg_score_within_company(
     company_id: int,
     uow: UOWDep,
     analytics_service: AnalyticsServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Get average score of users within a company.
@@ -661,7 +661,7 @@ async def get_company_members_average_scores(
     company_id: int,
     uow: UOWDep,
     analytics_service: AnalyticsServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     start_date: datetime = Query(..., alias="start_date"),
     end_date: datetime = Query(..., alias="end_date"),
 ):
@@ -702,7 +702,7 @@ async def get_users_last_quiz_attempts(
     company_id: int,
     uow: UOWDep,
     analytics_service: AnalyticsServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     List all users in a company with the timestamp of their last quiz attempt.
@@ -737,7 +737,7 @@ async def get_detailed_average_scores(
     analytics_service: AnalyticsServiceDep,
     member_id: int,
     company_id: int,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     start_date: datetime = Query(..., alias="start_date"),
     end_date: datetime = Query(..., alias="end_date"),
 ):
@@ -802,7 +802,7 @@ async def remove_member(
     member_id: int,
     uow: UOWDep,
     member_service: MemberManagementDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Removes a member from the company.
@@ -832,7 +832,7 @@ async def leave_company(
     company_id: int,
     uow: UOWDep,
     member_service: MemberManagementDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Allows a member to leave a company.

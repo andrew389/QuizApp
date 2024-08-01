@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from app.core.dependencies import UOWDep, AuthServiceDep, InvitationServiceDep
+from app.core.dependencies import UOWDep, InvitationServiceDep, CurrentUserDep
 from app.core.logger import logger
 from app.exceptions.base import (
     NotFoundException,
@@ -21,7 +21,7 @@ async def cancel_invitation_to_user(
     invitation_id: int,
     uow: UOWDep,
     invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Cancel an invitation by its ID.
@@ -53,7 +53,7 @@ async def accept_invitation_for_user(
     invitation_id: int,
     uow: UOWDep,
     invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Accept an invitation by its ID.
@@ -85,7 +85,7 @@ async def decline_invitation_for_user(
     invitation_id: int,
     uow: UOWDep,
     invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Decline an invitation by its ID.

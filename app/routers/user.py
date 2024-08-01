@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, Depends, Request
 from app.core.dependencies import (
     UOWDep,
     UserServiceDep,
-    AuthServiceDep,
+    CurrentUserDep,
 )
 from app.exceptions.base import (
     DeletingException,
@@ -120,7 +120,7 @@ async def update_user(
     uow: UOWDep,
     user_id: int,
     user_service: UserServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Updates an existing user.
@@ -154,7 +154,7 @@ async def deactivate_user(
     user_id: int,
     uow: UOWDep,
     user_service: UserServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Deactivates a user by their ID.

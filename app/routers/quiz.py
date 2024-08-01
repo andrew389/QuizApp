@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, UploadFile, File
 from app.core.dependencies import (
     UOWDep,
     QuizServiceDep,
-    AuthServiceDep,
     DataImportServiceDep,
+    CurrentUserDep,
 )
 from app.core.logger import logger
 from app.exceptions.base import (
@@ -29,7 +29,7 @@ async def create_quiz(
     quiz: QuizCreate,
     uow: UOWDep,
     quiz_service: QuizServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Creates a new quiz.
@@ -59,7 +59,7 @@ async def update_quiz(
     quiz: QuizUpdate,
     uow: UOWDep,
     quiz_service: QuizServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Updates an existing quiz.
@@ -89,7 +89,7 @@ async def get_quiz_by_id(
     quiz_id: int,
     uow: UOWDep,
     quiz_service: QuizServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Retrieves a quiz by its ID.
@@ -118,7 +118,7 @@ async def delete_quiz(
     quiz_id: int,
     uow: UOWDep,
     quiz_service: QuizServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Deletes a quiz by its ID.
@@ -146,8 +146,8 @@ async def delete_quiz(
 async def import_quizzes(
     uow: UOWDep,
     data_import_service: DataImportServiceDep,
+    current_user: CurrentUserDep,
     file: UploadFile = File(...),
-    current_user: User = Depends(AuthServiceDep.get_current_user),
 ):
     """
     Imports quiz data from an Excel file.

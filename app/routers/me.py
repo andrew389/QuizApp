@@ -10,6 +10,7 @@ from app.core.dependencies import (
     DataExportServiceDep,
     AnalyticsServiceDep,
     NotificationServiceDep,
+    CurrentUserDep,
 )
 from app.core.logger import logger
 from app.exceptions.base import (
@@ -55,7 +56,7 @@ async def login(uow: UOWDep, form_data: SignInRequest, auth_service: AuthService
 
 
 @router.get("/", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def get_info(current_user: User = Depends(AuthServiceDep.get_current_user)):
+async def get_info(current_user: CurrentUserDep):
     """
     Retrieve the current user's information.
 
@@ -73,7 +74,7 @@ async def get_new_invitations(
     uow: UOWDep,
     request: Request,
     invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
@@ -109,7 +110,7 @@ async def get_sent_invitations(
     uow: UOWDep,
     request: Request,
     invitation_service: InvitationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1),
 ):
@@ -144,7 +145,7 @@ async def get_sent_invitations(
 async def get_avg_score_across_system(
     uow: UOWDep,
     analytics_service: AnalyticsServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Retrieve the average score of the user across the system.
@@ -172,7 +173,7 @@ async def get_avg_score_across_system(
 @router.get("/results")
 async def get_quiz_results_for_last_48h(
     data_export_service: DataExportServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     is_csv: bool = Query(),
 ):
     """
@@ -200,7 +201,7 @@ async def get_quiz_results_for_last_48h(
 async def get_quiz_completion_timestamps(
     uow: UOWDep,
     analytics_service: AnalyticsServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Retrieve timestamps of the last completion of quizzes by the current user.
@@ -230,7 +231,7 @@ async def get_quiz_completion_timestamps(
 async def get_average_scores_by_quiz(
     uow: UOWDep,
     analytics_service: AnalyticsServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     start_date: datetime = Query(..., alias="start_date"),
     end_date: datetime = Query(..., alias="end_date"),
 ):
@@ -265,7 +266,7 @@ async def mark_notification_as_read(
     uow: UOWDep,
     notification_id: int,
     notification_service: NotificationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Mark a specific notification as read for the current user.
@@ -294,7 +295,7 @@ async def mark_notification_as_read(
 async def mark_all_notifications_as_read(
     uow: UOWDep,
     notification_service: NotificationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Mark all notifications as read for the current user.
@@ -323,7 +324,7 @@ async def get_notifications(
     uow: UOWDep,
     request: Request,
     notification_service: NotificationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
     skip: int = 0,
     limit: int = 10,
 ):
@@ -358,7 +359,7 @@ async def get_notification_by_id(
     notification_id: int,
     uow: UOWDep,
     notification_service: NotificationServiceDep,
-    current_user: User = Depends(AuthServiceDep.get_current_user),
+    current_user: CurrentUserDep,
 ):
     """
     Retrieve a specific notification by its ID for the current user.
