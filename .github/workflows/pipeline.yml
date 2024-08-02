@@ -63,11 +63,10 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-51-20-8-46.eu-north-1.compute.amazonaws.com <<EOF
             cd /home/ubuntu/meduzzen_internship
             git remote set-url origin https://${{ secrets.GIT_USERNAME }}:${{ secrets.GIT_PASSWORD }}@github.com/${{ secrets.GIT_USERNAME }}/meduzzen_internship.git
+            git reset --hard
             git fetch origin
-            git stash
             git checkout $BRANCH_NAME
             git pull origin $BRANCH_NAME
-            git stash pop
           EOF
 
       - name: Pull Docker image and run containers using Docker Compose
