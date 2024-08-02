@@ -64,8 +64,10 @@ jobs:
             cd /home/ubuntu/meduzzen_internship
             git remote set-url origin https://${{ secrets.GIT_USERNAME }}:${{ secrets.GIT_PASSWORD }}@github.com/${{ secrets.GIT_USERNAME }}/meduzzen_internship.git
             git fetch origin
+            git stash
             git checkout $BRANCH_NAME
             git pull origin $BRANCH_NAME
+            git stash pop
           EOF
 
       - name: Pull Docker image and run containers using Docker Compose
