@@ -2,13 +2,6 @@ version: '3.8'
 
 services:
 
-  redis:
-    image: redis:latest
-    env_file:
-      - .env.sample
-    ports:
-      - "6379:6379"
-
   app:
     build:
       context: .
@@ -20,9 +13,8 @@ services:
     environment:
       - POSTGRES_DB_HOST=db-internship.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis
-    depends_on:
-      - redis
+      - REDIS_DB_HOST=redis-internship-ro.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+      - REDIS_DB_PORT=6582
     env_file:
       - .env.sample
 
@@ -36,9 +28,8 @@ services:
     environment:
       - POSTGRES_DB_HOST=db-internship.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis
-    depends_on:
-      - redis
+      - REDIS_DB_HOST=redis-internship-ro.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+      - REDIS_DB_PORT=6582
     env_file:
       - .env.sample
 
@@ -52,9 +43,9 @@ services:
     environment:
       - POSTGRES_DB_HOST=db-internship.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis
+      - REDIS_DB_HOST=redis-internship-ro.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+      - REDIS_DB_PORT=6582
     depends_on:
-      - redis
       - celery_worker
     env_file:
       - .env.sample
@@ -69,9 +60,9 @@ services:
     environment:
       - POSTGRES_DB_HOST=db-internship.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis
+      - REDIS_DB_HOST=redis-internship-ro.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+      - REDIS_DB_PORT=6582
     depends_on:
-      - redis
       - celery_worker
     env_file:
       - .env.sample
