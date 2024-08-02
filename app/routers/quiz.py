@@ -165,7 +165,7 @@ async def import_quizzes(
         ImportingException: If an error occurs during importing quizzes.
     """
     try:
-        await data_import_service.parse_excel(file, uow, current_user.id)
+        await data_import_service.import_data(file, uow, current_user.id)
         return {"message": "Quizzes imported successfully"}
     except Exception as e:
         logger.error(f"{e}")
