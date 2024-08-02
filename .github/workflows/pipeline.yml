@@ -40,6 +40,10 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
           chmod 600 key.pem
 
+      - name: Copy Docker Compose file to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -i key.pem docker-compose.yml ubuntu@ec2-51-20-8-46.eu-north-1.compute.amazonaws.com:/home/ubuntu/meduzzen_internship
+
       - name: Remove orphan containers
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-51-20-8-46.eu-north-1.compute.amazonaws.com <<EOF
