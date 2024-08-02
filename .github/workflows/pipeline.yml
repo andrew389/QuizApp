@@ -2,7 +2,7 @@ name: Build on DockerHub and Deploy to AWS
 on:
   push:
     branches:
-      - main
+      - BE-21-add-import-data
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKER_PASSWORD }}
@@ -42,20 +42,20 @@ jobs:
 
       - name: Remove orphan containers
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-51-20-8-46.eu-north-1.compute.amazonaws.com <<EOF
             cd /home/ubuntu/meduzzen_internship
             docker-compose down --remove-orphans
           EOF
 
       - name: Verify containers
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-51-20-8-46.eu-north-1.compute.amazonaws.com <<EOF
             docker ps -a
           EOF
 
       - name: Update code on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-51-20-8-46.eu-north-1.compute.amazonaws.com <<EOF
             cd /home/ubuntu/meduzzen_internship
             git remote set-url origin https://${{ secrets.GIT_USERNAME }}:${{ secrets.GIT_PASSWORD }}@github.com/${{ secrets.GIT_USERNAME }}/meduzzen_internship.git
             git fetch
@@ -64,7 +64,7 @@ jobs:
 
       - name: Pull Docker image and run containers using Docker Compose
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-16-170-173-48.eu-north-1.compute.amazonaws.com <<EOF
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@ec2-51-20-8-46.eu-north-1.compute.amazonaws.com <<EOF
             cd /home/ubuntu/meduzzen_internship
             docker-compose pull
             docker-compose up -d
