@@ -12,14 +12,7 @@ from app.uow.unitofwork import IUnitOfWork
 
 
 @pytest.mark.asyncio
-async def test_send_notifications():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_member_repo = AsyncMock()
-    mock_notification_repo = AsyncMock()
-
-    mock_uow.member = mock_member_repo
-    mock_uow.notification = mock_notification_repo
-
+async def test_send_notifications(mock_uow, mock_member_repo, mock_notification_repo):
     company_id = 1
     message = "Test Notification"
     members = [MagicMock(user_id=1), MagicMock(user_id=2)]
@@ -44,16 +37,12 @@ async def test_send_notifications():
 
 
 @pytest.mark.asyncio
-async def test_mark_as_read_success():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_notification_repo = AsyncMock()
-
+async def test_mark_as_read_success(mock_uow, mock_notification_repo):
     notification_id = 1
     user_id = 1
     mock_notification = MagicMock(
         id=notification_id, receiver_id=user_id, status="pending"
     )
-    mock_uow.notification = mock_notification_repo
     mock_notification_repo.find_one.return_value = mock_notification
 
     await NotificationService.mark_as_read(mock_uow, user_id, notification_id)
@@ -64,14 +53,10 @@ async def test_mark_as_read_success():
 
 
 @pytest.mark.asyncio
-async def test_mark_as_read_unauthorized():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_notification_repo = AsyncMock()
-
+async def test_mark_as_read_unauthorized(mock_uow, mock_notification_repo):
     notification_id = 1
     user_id = 2
     mock_notification = MagicMock(id=notification_id, receiver_id=1, status="pending")
-    mock_uow.notification = mock_notification_repo
     mock_notification_repo.find_one.return_value = mock_notification
 
     with pytest.raises(UnAuthorizedException):
@@ -82,16 +67,12 @@ async def test_mark_as_read_unauthorized():
 
 
 @pytest.mark.asyncio
-async def test_mark_as_read_already_read():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_notification_repo = AsyncMock()
-
+async def test_mark_as_read_already_read(mock_uow, mock_notification_repo):
     notification_id = 1
     user_id = 1
     mock_notification = MagicMock(
         id=notification_id, receiver_id=user_id, status="read"
     )
-    mock_uow.notification = mock_notification_repo
     mock_notification_repo.find_one.return_value = mock_notification
 
     with pytest.raises(UpdatingException):
@@ -102,12 +83,7 @@ async def test_mark_as_read_already_read():
 
 
 @pytest.mark.asyncio
-async def test_get_notifications():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_notification_repo = AsyncMock()
-
-    mock_uow.notification = mock_notification_repo
-
+async def test_get_notifications(mock_uow, mock_notification_repo):
     user_id = 1
     skip = 0
     limit = 10
@@ -139,12 +115,7 @@ async def test_get_notifications():
 
 
 @pytest.mark.asyncio
-async def test_get_notification_by_id_success():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_notification_repo = AsyncMock()
-
-    mock_uow.notification = mock_notification_repo
-
+async def test_get_notification_by_id_success(mock_uow, mock_notification_repo):
     notification_id = 1
     user_id = 1
     mock_notification = MagicMock(id=notification_id, receiver_id=user_id)
@@ -161,12 +132,7 @@ async def test_get_notification_by_id_success():
 
 
 @pytest.mark.asyncio
-async def test_get_notification_by_id_not_found():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_notification_repo = AsyncMock()
-
-    mock_uow.notification = mock_notification_repo
-
+async def test_get_notification_by_id_not_found(mock_uow, mock_notification_repo):
     notification_id = 1
     user_id = 1
     mock_notification_repo.find_one.return_value = None

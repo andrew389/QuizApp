@@ -15,12 +15,7 @@ from app.utils.role import Role
 
 
 @pytest.mark.asyncio
-async def test_get_members():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "member", AsyncMock())
-
-    request = MagicMock(Request)
-
+async def test_get_members(mock_uow, mock_request):
     mock_uow.member.find_all_by_company.return_value = [
         MemberBase(
             id=1,
@@ -34,14 +29,12 @@ async def test_get_members():
 
     with pytest.raises(TypeError):
         await MemberQueries.get_members(
-            mock_uow, company_id=1, request=request, skip=0, limit=10
+            mock_uow, company_id=1, request=mock_request, skip=0, limit=10
         )
 
 
 @pytest.mark.asyncio
-async def test_get_member_by_id():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "member", AsyncMock())
+async def test_get_member_by_id(mock_uow):
     mock_uow.member.find_one.return_value = MemberBase(
         id=1,
         user_id=1,
@@ -58,9 +51,7 @@ async def test_get_member_by_id():
 
 
 @pytest.mark.asyncio
-async def test_cancel_request_to_join():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "invitation", AsyncMock())
+async def test_cancel_request_to_join(mock_uow):
     mock_uow.invitation.find_one.return_value = AsyncMock(sender_id=1, status="pending")
 
     request_id = 1
@@ -73,9 +64,7 @@ async def test_cancel_request_to_join():
 
 
 @pytest.mark.asyncio
-async def test_remove_member():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "member", AsyncMock())
+async def test_remove_member(mock_uow):
     mock_uow.member.find_one.return_value = AsyncMock(
         id=2, user_id=2, company_id=1, role=Role.MEMBER.value
     )
@@ -90,9 +79,7 @@ async def test_remove_member():
 
 
 @pytest.mark.asyncio
-async def test_send_invitation():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "member", AsyncMock())
+async def test_send_invitation(mock_uow):
     mock_uow.member.find_owner.return_value = AsyncMock(user_id=1)
 
     invitation_data = SendInvitation(
@@ -106,10 +93,7 @@ async def test_send_invitation():
 
 
 @pytest.mark.asyncio
-async def test_appoint_admin():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "member", AsyncMock())
-
+async def test_appoint_admin(mock_uow):
     owner_id = 1
     member_id = 2
     company_id = 1
@@ -130,12 +114,7 @@ async def test_appoint_admin():
 
 
 @pytest.mark.asyncio
-async def test_get_admins():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    setattr(mock_uow, "member", AsyncMock())
-
-    request = MagicMock(Request)
-
+async def test_get_admins(mock_uow, mock_request):
     company_id = 1
     admins_data = [
         AsyncMock(id=1, user_id=1, company_id=1, role=Role.ADMIN.value),
@@ -146,5 +125,5 @@ async def test_get_admins():
 
     with pytest.raises(TypeError):
         await MemberQueries.get_admins(
-            mock_uow, company_id=company_id, request=request, skip=0, limit=10
+            mock_uow, company_id=company_id, request=mock_request, skip=0, limit=10
         )

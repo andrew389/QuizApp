@@ -13,8 +13,7 @@ client = TestClient(app)
 
 
 @pytest.mark.asyncio
-async def test_login_for_access_token():
-    mock_uow = AsyncMock(IUnitOfWork)
+async def test_login_for_access_token(mock_uow):
     mock_user = User(
         id=1,
         email="test@test.com",
@@ -51,8 +50,7 @@ async def test_read_users_me():
 
 
 @pytest.mark.asyncio
-async def test_incorrect_login():
-    mock_uow = AsyncMock(IUnitOfWork)
+async def test_incorrect_login(mock_uow):
     AuthService.authenticate_user = AsyncMock(return_value=None)
 
     response = client.post(

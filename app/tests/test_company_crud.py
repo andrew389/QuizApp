@@ -16,13 +16,7 @@ from app.uow.unitofwork import IUnitOfWork
 
 
 @pytest.mark.asyncio
-async def test_add_company():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_company_repo = AsyncMock()
-    mock_member_repo = AsyncMock()
-    mock_uow.company = mock_company_repo
-    mock_uow.member = mock_member_repo
-
+async def test_add_company(mock_uow, mock_company_repo, mock_member_repo):
     company_data = CompanyCreate(
         name="Test Company",
         description="This is a test company",
@@ -51,12 +45,7 @@ async def test_add_company():
 
 
 @pytest.mark.asyncio
-async def test_get_companies():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_uow.company = AsyncMock()
-
-    request = MagicMock(Request)
-
+async def test_get_companies(mock_uow, mock_request):
     mock_companies = [
         CompanyBase(
             id=1,
@@ -71,14 +60,13 @@ async def test_get_companies():
     mock_uow.company.find_all_visible.return_value = mock_companies
 
     with pytest.raises(TypeError):
-        await CompanyService.get_companies(mock_uow, current_user_id=1, request=request)
+        await CompanyService.get_companies(
+            mock_uow, current_user_id=1, request=mock_request
+        )
 
 
 @pytest.mark.asyncio
-async def test_get_company_by_id():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_uow.company = AsyncMock()
-
+async def test_get_company_by_id(mock_uow):
     company_id = 1
     mock_company = CompanyDetail(
         id=company_id,
@@ -97,10 +85,7 @@ async def test_get_company_by_id():
 
 
 @pytest.mark.asyncio
-async def test_update_company():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_uow.company = AsyncMock()
-
+async def test_update_company(mock_uow):
     company_id = 1
     company_update = CompanyUpdate(
         name="Updated Company", description="This is an updated company"
@@ -136,10 +121,7 @@ async def test_update_company():
 
 
 @pytest.mark.asyncio
-async def test_delete_company():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_uow.company = AsyncMock()
-
+async def test_delete_company(mock_uow):
     company_id = 1
     mock_uow.company.delete_one.return_value = company_id
 
@@ -149,10 +131,7 @@ async def test_delete_company():
 
 
 @pytest.mark.asyncio
-async def test_change_company_visibility():
-    mock_uow = AsyncMock(IUnitOfWork)
-    mock_uow.company = AsyncMock()
-
+async def test_change_company_visibility(mock_uow):
     company_id = 1
     is_visible = False
     mock_company = CompanyCreate(

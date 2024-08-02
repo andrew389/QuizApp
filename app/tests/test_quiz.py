@@ -16,12 +16,7 @@ from app.exceptions.base import NotFoundException, FetchingException
 
 
 @pytest.mark.asyncio
-async def test_create_quiz_success():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.quiz = AsyncMock()
-    mock_uow.member = AsyncMock()
-    mock_uow.question = AsyncMock()
-
+async def test_create_quiz_success(mock_uow):
     quiz_data = QuizCreate(title="Test Quiz", company_id=1, questions=[1, 2])
     mock_uow.member.check_is_user_have_permission.return_value = True
     mock_uow.question.find_one.return_value = True
@@ -32,12 +27,7 @@ async def test_create_quiz_success():
 
 
 @pytest.mark.asyncio
-async def test_update_quiz_success():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.quiz = AsyncMock()
-    mock_uow.member = AsyncMock()
-    mock_uow.question = AsyncMock()
-
+async def test_update_quiz_success(mock_uow):
     quiz_id = 1
     quiz_update = QuizUpdate(title="Updated Quiz", description="Updated Description")
     mock_uow.quiz.find_one.return_value = QuizBase(
@@ -53,11 +43,7 @@ async def test_update_quiz_success():
 
 
 @pytest.mark.asyncio
-async def test_update_quiz_not_found():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.quiz = AsyncMock()
-    mock_uow.member = AsyncMock()
-
+async def test_update_quiz_not_found(mock_uow):
     quiz_id = 1
     quiz_update = QuizUpdate(title="Updated Quiz", description="Updated Description")
     mock_uow.quiz.find_one.return_value = None
@@ -67,11 +53,7 @@ async def test_update_quiz_not_found():
 
 
 @pytest.mark.asyncio
-async def test_get_quiz_by_id_not_found():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.quiz = AsyncMock()
-    mock_uow.member = AsyncMock()
-
+async def test_get_quiz_by_id_not_found(mock_uow):
     quiz_id = 1
     mock_uow.quiz.find_one.return_value = None
 
@@ -80,15 +62,12 @@ async def test_get_quiz_by_id_not_found():
 
 
 @pytest.mark.asyncio
-async def test_get_quizzes():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.member = AsyncMock()
-    mock_uow.quiz = AsyncMock()  # Ensure `quiz` is properly mocked
-    request = MagicMock(Request)
-
+async def test_get_quizzes(mock_uow, mock_request):
     company_id = 1
     current_user_id = 1
     mock_uow.member.check_is_user_member_or_higher.return_value = False
 
     with pytest.raises(TypeError):
-        await QuizService.get_quizzes(mock_uow, company_id, current_user_id, request)
+        await QuizService.get_quizzes(
+            mock_uow, company_id, current_user_id, mock_request
+        )

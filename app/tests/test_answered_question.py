@@ -8,13 +8,7 @@ from app.uow.unitofwork import UnitOfWork
 
 
 @pytest.mark.asyncio
-async def test_save_answered_quiz_with_invalid_question():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.question = AsyncMock()
-    mock_uow.answer = AsyncMock()
-    mock_uow.quiz = AsyncMock()
-    mock_uow.answered_question = AsyncMock()
-
+async def test_save_answered_quiz_with_invalid_question(mock_uow):
     # Mock data
     quiz_data = SendAnsweredQuiz(answers={1: 1})
     user_id = 1
@@ -34,10 +28,7 @@ async def test_save_answered_quiz_with_invalid_question():
 
 
 @pytest.mark.asyncio
-async def test_calculate_average_score_within_company():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answered_question = AsyncMock()
-
+async def test_calculate_average_score_within_company(mock_uow):
     # Mock data
     user_id = 1
     company_id = 1
@@ -54,10 +45,7 @@ async def test_calculate_average_score_within_company():
 
 
 @pytest.mark.asyncio
-async def test_calculate_average_score_across_system():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answered_question = AsyncMock()
-
+async def test_calculate_average_score_across_system(mock_uow):
     # Mock data
     user_id = 1
     answered_questions = [AsyncMock(is_correct=True), AsyncMock(is_correct=False)]

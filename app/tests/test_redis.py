@@ -6,26 +6,6 @@ from app.services.data_export import DataExportService
 from app.uow.unitofwork import UnitOfWork
 
 
-@pytest.fixture
-def mock_redis():
-    with patch("app.services.data_export.redis_connection.redis") as mock_redis:
-        mock_redis.keys = AsyncMock()
-        mock_redis.get = AsyncMock()
-        yield mock_redis
-
-
-@pytest.fixture
-def mock_member_management():
-    with patch("app.services.data_export.MemberManagement") as mock_member_management:
-        mock_member_management.check_is_user_have_permission = AsyncMock()
-        yield mock_member_management
-
-
-@pytest.fixture
-def mock_uow():
-    return MagicMock(spec=UnitOfWork)
-
-
 @pytest.mark.asyncio
 async def test_read_data_by_user_id(mock_redis):
     mock_redis.keys.return_value = ["answered_quiz_1_1_1"]
@@ -62,7 +42,6 @@ async def test_read_data_by_user_id(mock_redis):
 async def test_read_data_by_user_id_and_company_id(
     mock_redis, mock_member_management, mock_uow
 ):
-    # Mock data
     mock_redis.keys.return_value = ["answered_quiz_1_1_1"]
     mock_redis.get.return_value = json.dumps({"key": "value"})
     mock_member_management.check_is_user_have_permission.return_value = None

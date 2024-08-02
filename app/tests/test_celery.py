@@ -8,9 +8,7 @@ from app.core.tasks import notification_task, send_notification
 
 
 @pytest.mark.asyncio
-async def test_send_notification():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_notification_service = AsyncMock(NotificationService)
+async def test_send_notification(mock_uow, mock_notification_service):
     mock_uow.__aenter__.return_value = mock_uow
 
     user_id = 1
@@ -26,9 +24,7 @@ async def test_send_notification():
 
 
 @pytest.mark.asyncio
-async def test_notification_task():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_data_export_service = AsyncMock(DataExportService)
+async def test_notification_task(mock_uow, mock_data_export_service):
     mock_uow.__aenter__.return_value = mock_uow
 
     current_time = datetime.datetime.now()

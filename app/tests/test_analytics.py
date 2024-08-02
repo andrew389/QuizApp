@@ -7,9 +7,7 @@ from app.services.member_management import MemberManagement
 
 
 @pytest.mark.asyncio
-async def test_calculate_average_score_within_company():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answered_question = AsyncMock()
+async def test_calculate_average_score_within_company(mock_uow):
     mock_uow.answered_question.find_by_user_and_company = AsyncMock(
         return_value=[
             MagicMock(is_correct=True),
@@ -26,9 +24,7 @@ async def test_calculate_average_score_within_company():
 
 
 @pytest.mark.asyncio
-async def test_calculate_average_score_across_system():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answered_question = AsyncMock()
+async def test_calculate_average_score_across_system(mock_uow):
     mock_uow.answered_question.find_by_user = AsyncMock(
         return_value=[
             MagicMock(is_correct=True),
@@ -44,9 +40,7 @@ async def test_calculate_average_score_across_system():
 
 
 @pytest.mark.asyncio
-async def test_calculate_average_scores_by_quiz():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answered_question = AsyncMock()
+async def test_calculate_average_scores_by_quiz(mock_uow):
     mock_uow.answered_question.find_by_user_and_date_range = AsyncMock(
         return_value=[
             MagicMock(quiz_id=1, is_correct=True),
@@ -65,9 +59,7 @@ async def test_calculate_average_scores_by_quiz():
 
 
 @pytest.mark.asyncio
-async def test_get_last_completion_timestamps():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answered_question = AsyncMock()
+async def test_get_last_completion_timestamps(mock_uow):
     mock_uow.answered_question.find_by_user = AsyncMock(
         return_value=[
             MagicMock(quiz_id=1, created_at=datetime(2024, 7, 23)),
@@ -86,9 +78,7 @@ async def test_get_last_completion_timestamps():
 
 
 @pytest.mark.asyncio
-async def test_calculate_company_members_average_scores():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.member = AsyncMock()
+async def test_calculate_company_members_average_scores(mock_uow):
     mock_uow.member.find_one = AsyncMock(return_value=MagicMock(company_id=1))
     mock_uow.member.find_all_by_company_and_role = AsyncMock(
         return_value=[MagicMock(user_id=2), MagicMock(user_id=3)]
@@ -118,9 +108,7 @@ async def test_calculate_company_members_average_scores():
 
 
 @pytest.mark.asyncio
-async def test_list_users_last_quiz_attempts():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.member = AsyncMock()
+async def test_list_users_last_quiz_attempts(mock_uow):
     mock_uow.member.find_one = AsyncMock(return_value=MagicMock(company_id=1))
     mock_uow.member.find_all_by_company_and_role = AsyncMock(
         return_value=[MagicMock(user_id=2), MagicMock(user_id=3)]
@@ -149,9 +137,7 @@ async def test_list_users_last_quiz_attempts():
 
 
 @pytest.mark.asyncio
-async def test_calculate_detailed_average_scores():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.member = AsyncMock()
+async def test_calculate_detailed_average_scores(mock_uow):
     mock_uow.member.find_one = AsyncMock(return_value=MagicMock(company_id=1))
     mock_uow.answered_question = AsyncMock()
     mock_uow.answered_question.find_by_user_company_and_date_range = AsyncMock(

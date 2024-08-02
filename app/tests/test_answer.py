@@ -14,10 +14,7 @@ from app.exceptions.base import NotFoundException
 
 
 @pytest.mark.asyncio
-async def test_create_answer_success():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answer = AsyncMock()
-
+async def test_create_answer_success(mock_uow):
     answer_data = AnswerCreate(text="Sample text", is_correct=False, company_id=1)
     created_answer = AnswerBase(
         id=1, text="Sample text", is_correct=False, question_id=1, company_id=1
@@ -41,10 +38,7 @@ async def test_create_answer_success():
 
 
 @pytest.mark.asyncio
-async def test_update_answer_success():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answer = AsyncMock()
-
+async def test_update_answer_success(mock_uow):
     answer_id = 1
     answer_data = AnswerCreate(text="Updated Answer", is_correct=True, company_id=1)
     updated_answer = AnswerBase(
@@ -73,10 +67,7 @@ async def test_update_answer_success():
 
 
 @pytest.mark.asyncio
-async def test_get_answer_by_id_success():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answer = AsyncMock()
-
+async def test_get_answer_by_id_success(mock_uow):
     answer_id = 1
     answer_data = AnswerBase(
         id=answer_id, text="Test Answer", is_correct=True, question_id=1, company_id=1
@@ -98,10 +89,7 @@ async def test_get_answer_by_id_success():
 
 
 @pytest.mark.asyncio
-async def test_get_answer_by_id_not_found():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answer = AsyncMock()
-
+async def test_get_answer_by_id_not_found(mock_uow):
     answer_id = 1
     mock_uow.answer.find_one.return_value = None
 
@@ -116,13 +104,7 @@ async def test_get_answer_by_id_not_found():
 
 
 @pytest.mark.asyncio
-async def test_get_answers():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answer = AsyncMock()
-    mock_uow.member = AsyncMock()
-
-    request = MagicMock(Request)
-
+async def test_get_answers(mock_uow, mock_request):
     company_id = 1
     mock_answers = [
         AnswerBase(
@@ -133,15 +115,12 @@ async def test_get_answers():
 
     with pytest.raises(UnAuthorizedException):
         await AnswerService.get_answers(
-            mock_uow, company_id, current_user_id=1, request=request
+            mock_uow, company_id, current_user_id=1, request=mock_request
         )
 
 
 @pytest.mark.asyncio
-async def test_delete_answer_success():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answer = AsyncMock()
-
+async def test_delete_answer_success(mock_uow):
     answer_id = 1
     answer_data = AnswerBase(
         id=answer_id, text="Test Answer", is_correct=True, question_id=1, company_id=1
@@ -165,10 +144,7 @@ async def test_delete_answer_success():
 
 
 @pytest.mark.asyncio
-async def test_delete_answer_not_found():
-    mock_uow = AsyncMock(UnitOfWork)
-    mock_uow.answer = AsyncMock()
-
+async def test_delete_answer_not_found(mock_uow):
     answer_id = 1
     mock_uow.answer.find_one.return_value = None
 

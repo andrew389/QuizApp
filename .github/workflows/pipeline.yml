@@ -76,5 +76,12 @@ jobs:
             cd /home/ubuntu/meduzzen_internship
             docker-compose pull
             docker-compose up -d
+            if docker-compose exec -T app poetry run pytest --maxfail=1 --disable-warnings -q; then
+              echo "Tests passed."
+            else
+              echo "Tests failed."
+              docker-compose down
+              exit 1
+            fi
             exit
           EOF
