@@ -13,7 +13,7 @@ services:
     environment:
       - POSTGRES_DB_HOST=db-internship.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis-internship-ro.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+      - REDIS_DB_HOST=redis-internship.gtlhnu.ng.0001.eun1.cache.amazonaws.com
       - REDIS_DB_PORT=6582
     env_file:
       - .env.sample
@@ -28,7 +28,7 @@ services:
     environment:
       - POSTGRES_DB_HOST=db-internship.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis-internship-ro.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+      - REDIS_DB_HOST=redis-internship.gtlhnu.ng.0001.eun1.cache.amazonaws.com
       - REDIS_DB_PORT=6582
     env_file:
       - .env.sample
@@ -43,7 +43,7 @@ services:
     environment:
       - POSTGRES_DB_HOST=db-internship.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis-internship-ro.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+      - REDIS_DB_HOST=redis-internship.gtlhnu.ng.0001.eun1.cache.amazonaws.com
       - REDIS_DB_PORT=6582
     depends_on:
       - celery_worker
@@ -60,7 +60,7 @@ services:
     environment:
       - POSTGRES_DB_HOST=db-internship.c1cquyec4scf.eu-north-1.rds.amazonaws.com
       - POSTGRES_DB_NAME=postgres
-      - REDIS_DB_HOST=redis-internship-ro.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+      - REDIS_DB_HOST=redis-internship.gtlhnu.ng.0001.eun1.cache.amazonaws.com
       - REDIS_DB_PORT=6582
     depends_on:
       - celery_worker
