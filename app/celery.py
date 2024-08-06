@@ -9,7 +9,7 @@ nest_asyncio.apply()
 
 celery = Celery(
     "tasks",
-    broker=f"redis://{settings.redis.host}:{settings.redis.port}/0",
+    broker=settings.redis.celery_url,
 )
 
 

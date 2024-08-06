@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Depends, Request
+from fastapi import APIRouter, Query, Request
 from app.core.dependencies import (
     UOWDep,
     UserServiceDep,

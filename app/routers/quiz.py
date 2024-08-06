@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, UploadFile, File
 from app.core.dependencies import (
     UOWDep,
     QuizServiceDep,

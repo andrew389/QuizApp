@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import SessionDep
 from app.core.logger import logger
-from app.db.pg_db import get_async_session
 from app.db.redis_db import redis_connection
 from app.exceptions.db import BadConnectPostgres, BadConnectRedis
 

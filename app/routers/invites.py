@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
 from app.core.dependencies import UOWDep, InvitationServiceDep, CurrentUserDep
 from app.core.logger import logger

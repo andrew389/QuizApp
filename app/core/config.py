@@ -67,6 +67,13 @@ class RedisSettings(BaseSettings):
         """
         return f"redis://{self.host}:{self.port}"
 
+    @property
+    def celery_url(self):
+        """
+        Returns the Redis connection URL for Celery.
+        """
+        return f"redis://{self.host}:{self.port}/0"
+
 
 class AuthSettings(BaseSettings):
     """

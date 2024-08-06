@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Dict
 
-from fastapi import APIRouter, Depends, status, Query, Request
+from fastapi import APIRouter, status, Query, Request
 
 from app.core.dependencies import (
     UOWDep,
