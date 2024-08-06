@@ -1,15 +1,17 @@
 from abc import ABC, abstractmethod
 
 from app.db.pg_db import async_session_maker
-from app.repositories.answer import AnswerRepository
-from app.repositories.answered_question import AnsweredQuestionRepository
-from app.repositories.company import CompanyRepository
-from app.repositories.invitation import InvitationRepository
-from app.repositories.member import MemberRepository
-from app.repositories.notification import NotificationRepository
-from app.repositories.question import QuestionRepository
-from app.repositories.quiz import QuizRepository
-from app.repositories.user import UserRepository
+from app.repositories import (
+    UserRepository,
+    CompanyRepository,
+    InvitationRepository,
+    MemberRepository,
+    QuizRepository,
+    QuestionRepository,
+    AnswerRepository,
+    AnsweredQuestionRepository,
+    NotificationRepository,
+)
 
 
 class IUnitOfWork(ABC):
