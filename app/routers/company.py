@@ -24,7 +24,6 @@ from app.exceptions.base import (
     CalculatingException,
 )
 
-from app.models.user import User
 from app.schemas.answered_question import SendAnsweredQuiz
 from app.schemas.company import (
     CompanyCreate,

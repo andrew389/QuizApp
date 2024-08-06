@@ -6,7 +6,6 @@ from app.exceptions.base import (
     DeletingException,
     UpdatingException,
 )
-from app.models.user import User
 from app.schemas.invitation import InvitationResponse
 
 router = APIRouter(prefix="/requests", tags=["Requests"])

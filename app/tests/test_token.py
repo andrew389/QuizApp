@@ -5,7 +5,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models.user import User
+from app.models import User
 from app.services.auth import AuthService
 
 client = TestClient(app)

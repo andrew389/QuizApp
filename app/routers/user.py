@@ -11,7 +11,6 @@ from app.exceptions.base import (
     CreatingException,
     NotFoundException,
 )
-from app.models.user import User
 from app.schemas.user import UserResponse, UserCreate, UserUpdate, UsersListResponse
 from app.core.logger import logger
 

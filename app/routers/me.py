@@ -18,7 +18,6 @@ from app.exceptions.base import (
     CalculatingException,
     UpdatingException,
 )
-from app.models.user import User
 from app.schemas.invitation import InvitationsListResponse
 from app.schemas.notification import NotificationsListResponse, NotificationResponse
 from app.schemas.token import Token

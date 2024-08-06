@@ -13,7 +13,6 @@ from app.exceptions.base import (
     DeletingException,
     ImportingException,
 )
-from app.models.user import User
 from app.schemas.quiz import (
     QuizResponse,
     QuizCreate,

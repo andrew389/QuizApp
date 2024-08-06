@@ -1,6 +1,6 @@
 from sqlalchemy import select, func
 
-from app.models.notification import Notification
+from app.models import Notification
 from app.uow.repository import SQLAlchemyRepository
 
 

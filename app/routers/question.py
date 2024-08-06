@@ -11,7 +11,6 @@ from app.exceptions.base import (
     UpdatingException,
     DeletingException,
 )
-from app.models.user import User
 
 from app.schemas.question import (
     QuestionBase,
