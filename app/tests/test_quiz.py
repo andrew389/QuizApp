@@ -1,18 +1,13 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from fastapi import Request
-from pydantic import ValidationError
 
-from app.schemas.question import QuestionResponse
 from app.schemas.quiz import (
     QuizCreate,
     QuizBase,
     QuizUpdate,
 )
 from app.services.quiz import QuizService
-from app.uow.unitofwork import UnitOfWork
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException, FetchingException
+from app.exceptions.base import NotFoundException
 
 
 @pytest.mark.asyncio

@@ -1,18 +1,14 @@
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock
-from fastapi import Request
 
 import pytest
 
 from app.schemas.company import (
-    CompaniesListResponse,
     CompanyBase,
     CompanyCreate,
     CompanyDetail,
     CompanyUpdate,
 )
 from app.services.company import CompanyService
-from app.uow.unitofwork import IUnitOfWork
 
 
 @pytest.mark.asyncio

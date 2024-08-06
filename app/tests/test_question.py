@@ -1,7 +1,4 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
-from fastapi import Request
-from datetime import datetime
 
 from app.schemas.answer import AnswerBase
 from app.schemas.question import (
@@ -9,12 +6,9 @@ from app.schemas.question import (
     QuestionUpdate,
     QuestionResponse,
     QuestionBase,
-    QuestionsListResponse,
 )
 from app.services.question import QuestionService
-from app.uow.unitofwork import UnitOfWork
 from app.exceptions.auth import UnAuthorizedException
-from app.exceptions.base import NotFoundException, FetchingException
 
 
 @pytest.mark.asyncio

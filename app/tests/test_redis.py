@@ -1,9 +1,8 @@
 import json
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, AsyncMock
 from fastapi.responses import StreamingResponse
 import pytest
 from app.services.data_export import DataExportService
-from app.uow.unitofwork import UnitOfWork
 
 
 @pytest.mark.asyncio

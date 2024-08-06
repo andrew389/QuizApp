@@ -2,7 +2,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from datetime import datetime
 from app.services.analytics import AnalyticsService
-from app.uow.unitofwork import UnitOfWork
 from app.services.member_management import MemberManagement
 
 

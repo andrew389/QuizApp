@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 import pytest
 from fastapi import Request
 from app.exceptions.auth import UnAuthorizedException
@@ -8,7 +8,6 @@ from app.schemas.notification import (
     NotificationBase,
 )
 from app.services.notification import NotificationService
-from app.uow.unitofwork import IUnitOfWork
 
 
 @pytest.mark.asyncio

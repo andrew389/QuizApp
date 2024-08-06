@@ -1,6 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
-from fastapi import Request
+from unittest.mock import AsyncMock
 from datetime import datetime
 
 from app.exceptions.auth import UnAuthorizedException
@@ -9,8 +8,7 @@ from app.services.invitation import InvitationService
 from app.services.member_requests import MemberRequests
 from app.services.member_queries import MemberQueries
 from app.services.member_management import MemberManagement
-from app.schemas.member import MembersListResponse, MemberBase, AdminsListResponse
-from app.uow.unitofwork import IUnitOfWork
+from app.schemas.member import MemberBase
 from app.utils.role import Role
 
 

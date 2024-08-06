@@ -1,14 +1,10 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from fastapi import Request
+from unittest.mock import AsyncMock, patch
 from app.schemas.answer import (
     AnswerCreate,
-    AnswerUpdate,
     AnswerBase,
-    AnswersListResponse,
 )
 from app.services.answer import AnswerService
-from app.uow.unitofwork import UnitOfWork
 from app.exceptions.auth import UnAuthorizedException
 from app.exceptions.base import NotFoundException
 

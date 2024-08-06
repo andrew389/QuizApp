@@ -1,9 +1,6 @@
 import datetime
 import pytest
 from unittest.mock import AsyncMock, patch
-from app.services.data_export import DataExportService
-from app.services.notification import NotificationService
-from app.uow.unitofwork import UnitOfWork
 from app.core.tasks import notification_task, send_notification
 
 

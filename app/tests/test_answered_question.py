@@ -4,7 +4,6 @@ from app.exceptions.base import NotFoundException
 from app.schemas.answered_question import SendAnsweredQuiz
 from app.services.analytics import AnalyticsService
 from app.services.answered_question import AnsweredQuestionService
-from app.uow.unitofwork import UnitOfWork
 
 
 @pytest.mark.asyncio
