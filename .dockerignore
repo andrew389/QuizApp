@@ -1,9 +1,7 @@
-.idea
-.env
+venv
+.git
+README.md
 *.log
-__pycache__/
-
-app/exported_data
 
 celerybeat-schedule.bak
 celerybeat-schedule.dat
@@ -11,4 +9,3 @@ celerybeat-schedule.dir
 celerybeat-schedule
 
 .coverage
-app/.coverage

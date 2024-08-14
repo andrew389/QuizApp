@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/code
+    ports:
+      - "8010:8000"
+    environment:
+      - POSTGRES_DB_HOST=database-2.c1cquyec4scf.eu-north-1.rds.amazonaws.com
+      - POSTGRES_DB_NAME=test
+      - REDIS_DB_HOST=redisnocluster.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+    env_file:
+      - .env.sample
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery:celery worker --loglevel=info
+    volumes:
+      - .:/code
+    environment:
+      - POSTGRES_DB_HOST=database-2.c1cquyec4scf.eu-north-1.rds.amazonaws.com
+      - POSTGRES_DB_NAME=test
+      - REDIS_DB_HOST=redisnocluster.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+    env_file:
+      - .env.sample
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery:celery beat --loglevel=info
+    volumes:
+      - .:/code
+    environment:
+      - POSTGRES_DB_HOST=database-2.c1cquyec4scf.eu-north-1.rds.amazonaws.com
+      - POSTGRES_DB_NAME=test
+      - REDIS_DB_HOST=redisnocluster.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+    depends_on:
+      - celery_worker
+    env_file:
+      - .env.sample
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery:celery flower --port=5555
+    volumes:
+      - .:/code
+    environment:
+      - POSTGRES_DB_HOST=database-2.c1cquyec4scf.eu-north-1.rds.amazonaws.com
+      - POSTGRES_DB_NAME=test
+      - REDIS_DB_HOST=redisnocluster.gtlhnu.ng.0001.eun1.cache.amazonaws.com
+    depends_on:
+      - celery_worker
+    env_file:
+      - .env.sample
+    ports:
+      - "5555:5555"
+
+volumes:
+  postgres_data:
